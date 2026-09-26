@@ -1,0 +1,116 @@
+/* Custom Styling for Air Cargo & Intermodal Terminal Advisory Platform */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+:root {
+    --primary: #0284c7;
+    --primary-dark: #0369a1;
+    --accent: #38bdf8;
+    --bg-dark: #0b1329;
+    --card-bg: #111e38;
+}
+
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.font-mono {
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* Glassmorphism effects */
+.glass-panel {
+    background: rgba(17, 30, 56, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-panel-light {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.glass-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
+}
+
+/* Glowing animations */
+@keyframes pulse-glow {
+    0%, 100% {
+        box-shadow: 0 0 15px rgba(56, 189, 248, 0.35);
+    }
+    50% {
+        box-shadow: 0 0 30px rgba(56, 189, 248, 0.7);
+    }
+}
+
+.glow-active {
+    animation: pulse-glow 2s infinite ease-in-out;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0f172a;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+}
+
+/* Barcode visualization stripe */
+.barcode-stripe {
+    background: repeating-linear-gradient(
+        90deg,
+        #000,
+        #000 2px,
+        #fff 2px,
+        #fff 5px,
+        #000 5px,
+        #000 9px,
+        #fff 9px,
+        #fff 11px
+    );
+}
+
+/* JSON Code syntax coloring simulation */
+.code-container {
+    background: #090d16;
+    border: 1px solid #1e293b;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    color: #e2e8f0;
+    overflow-x: auto;
+}
+
+/* Print styles for blueprint report */
+@media print {
+    body {
+        background: #ffffff !important;
+        color: #000000 !important;
+    }
+    .no-print {
+        display: none !important;
+    }
+    .print-only {
+        display: block !important;
+    }
+    .glass-panel, .glass-card {
+        background: transparent !important;
+        border: 1px solid #ccc !important;
+        box-shadow: none !important;
+    }
+}
