@@ -92,6 +92,9 @@ $user = getCurrentUser();
                     <a href="blueprint.php" class="px-3 py-2 rounded-lg text-sm font-medium transition-all <?= ($currentPage === 'blueprint.php') ? 'bg-sky-600/20 text-sky-400 border border-sky-500/30' : 'text-slate-300 hover:text-white hover:bg-slate-800/60' ?>">
                         <i class="fa-solid fa-book-open mr-1.5 text-xs"></i> Blueprint SRS
                     </a>
+                    <a href="panduan.php" class="px-3 py-2 rounded-lg text-sm font-medium transition-all <?= ($currentPage === 'panduan.php') ? 'bg-amber-600/20 text-amber-300 border border-amber-500/30' : 'text-amber-400/90 hover:text-amber-300 hover:bg-amber-950/40' ?>">
+                        <i class="fa-solid fa-circle-question mr-1.5 text-xs"></i> Panduan Tim
+                    </a>
                 </nav>
 
                 <!-- User & Action Controls -->
