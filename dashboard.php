@@ -1,5 +1,5 @@
 <?php
-// dashboard.php
+// dashboard.php — Executive & Operations Dashboard (InJourney Airports Design System)
 require_once __DIR__ . '/config/database.php';
 requireAuth();
 
@@ -26,107 +26,117 @@ $cargoStmt = $db->query("
 $cargos = $cargoStmt->fetchAll();
 
 $pageTitle = 'Executive & Operations Dashboard';
+$bodyClass = 'bg-[#F8FAFC] text-slate-800';
 include __DIR__ . '/includes/header.php';
 ?>
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
     
-    <!-- Top Greeting & Header Bar -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between pb-6 mb-8 border-b border-slate-800 gap-4">
+    <!-- Top Greeting & Header Bar (InJourney Style) -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-gray-200 gap-4">
         <div>
-            <div class="flex items-center space-x-2">
-                <h1 class="text-2xl font-black text-white tracking-tight">Executive Dashboard Konsultan</h1>
-                <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-[#087F8A]/20 text-[#0CA1AF] border border-[#087F8A]/50 uppercase">
+            <div class="flex items-center space-x-2.5">
+                <span class="w-2.5 h-6 rounded-full bg-gradient-to-b from-[#0CA1AF] to-[#087F8A]"></span>
+                <h1 class="text-2xl lg:text-3xl font-extrabold text-[#0D1C42] tracking-tight">Executive Dashboard Konsultan</h1>
+                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#087F8A]/10 text-[#087F8A] border border-[#087F8A]/30 uppercase tracking-wider">
                     Live Operations
                 </span>
             </div>
-            <p class="text-xs text-slate-400 mt-1">
-                Pemantauan Real-Time Alur Kargo Udara & Rekomendasi Solusi untuk <strong class="text-slate-200"><?= htmlspecialchars($user['organization']) ?></strong>
+            <p class="text-xs lg:text-sm text-slate-500 mt-1 pl-5">
+                Pemantauan Real-Time Alur Kargo Udara &amp; Rekomendasi Solusi untuk <strong class="text-[#0D1C42] font-semibold"><?= htmlspecialchars($user['organization']) ?></strong>
             </p>
         </div>
 
-        <div class="flex items-center space-x-2">
-            <button onclick="openNewCargoModal()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-semibold text-xs shadow-lg shadow-teal-500/20 transition-all flex items-center">
-                <i class="fa-solid fa-plus mr-1.5"></i>
+        <div class="flex items-center space-x-2.5">
+            <button onclick="openNewCargoModal()" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-bold text-xs shadow-lg shadow-teal-500/25 transition-all flex items-center gap-1.5 transform hover:-translate-y-0.5">
+                <i class="fa-solid fa-plus text-xs"></i>
                 <span>Input Kargo Baru</span>
             </button>
-            <a href="simulation.php" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs border border-slate-700 transition-all flex items-center">
-                <i class="fa-solid fa-play mr-1.5 text-[#0CA1AF]"></i>
+            <a href="simulation.php" class="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-[#0D1C42] font-bold text-xs border border-gray-300 shadow-sm transition-all flex items-center gap-1.5 transform hover:-translate-y-0.5">
+                <i class="fa-solid fa-play text-xs text-[#087F8A]"></i>
                 <span>Buka Lab Simulasi</span>
             </a>
-            <button onclick="refreshDashboardData()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white border border-slate-700 text-xs transition-colors" title="Perbarui Data">
+            <button onclick="refreshDashboardData()" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-600 hover:text-[#087F8A] border border-gray-300 text-xs shadow-sm transition-colors" title="Perbarui Data">
                 <i class="fa-solid fa-arrows-rotate"></i>
             </button>
         </div>
     </div>
 
-    <!-- KPI Summary Grid (Cards) -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+    <!-- KPI Summary Grid (InJourney White Cards with Soft Shadow) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         
         <!-- Metric 1: Total Inbound -->
-        <div class="glass-panel p-5 rounded-2xl border border-slate-800 relative overflow-hidden group hover:border-[#0CA1AF]/50 transition-all">
+        <div class="bg-white p-6 rounded-2xl border border-gray-200/90 shadow-sm hover:shadow-xl hover:border-[#0CA1AF] transition-all group">
             <div class="flex items-center justify-between">
                 <div>
-                    <span class="text-xs text-slate-400 font-medium">Total Inbound Kargo</span>
-                    <h3 id="stat-total-cargos" class="text-2xl font-black text-white mt-1 font-mono"><?= count($cargos) ?></h3>
-                    <p class="text-[11px] text-[#0CA1AF] mt-1 flex items-center">
-                        <i class="fa-solid fa-barcode mr-1"></i> Standar GS1 SSCC
-                    </p>
+                    <span class="text-xs text-slate-500 font-bold uppercase tracking-wider block">Total Inbound Kargo</span>
+                    <h3 id="stat-total-cargos" class="text-3xl font-black text-[#0D1C42] mt-1.5 font-mono"><?= count($cargos) ?></h3>
+                    <div class="mt-2">
+                        <span class="text-[11px] font-bold text-[#087F8A] bg-teal-50 px-2.5 py-0.5 rounded-full border border-teal-200/60 inline-flex items-center">
+                            <i class="fa-solid fa-barcode mr-1 text-xs"></i> Standar GS1 SSCC
+                        </span>
+                    </div>
                 </div>
-                <div class="w-12 h-12 rounded-xl bg-[#087F8A]/20 border border-[#0CA1AF]/30 text-[#0CA1AF] flex items-center justify-center text-xl">
+                <div class="w-13 h-13 p-3.5 rounded-2xl bg-gradient-to-tr from-[#0CA1AF]/10 to-[#087F8A]/20 text-[#087F8A] border border-[#0CA1AF]/30 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
                     <i class="fa-solid fa-boxes-stacked"></i>
                 </div>
             </div>
         </div>
 
         <!-- Metric 2: AVSEC Status -->
-        <div class="glass-panel p-5 rounded-2xl border border-slate-800 relative overflow-hidden group hover:border-emerald-500/50 transition-all">
+        <div class="bg-white p-6 rounded-2xl border border-gray-200/90 shadow-sm hover:shadow-xl hover:border-emerald-400 transition-all group">
             <div class="flex items-center justify-between">
                 <div>
-                    <span class="text-xs text-slate-400 font-medium">Pemeriksaan AVSEC X-Ray</span>
-                    <div class="flex items-center space-x-2 mt-1">
-                        <span id="stat-avsec-cleared" class="text-2xl font-black text-emerald-400 font-mono">0</span>
-                        <span class="text-xs text-slate-400">Cleared /</span>
-                        <span id="stat-avsec-suspect" class="text-base font-bold text-rose-400 font-mono">0</span>
-                        <span class="text-[10px] text-rose-400">Suspect</span>
+                    <span class="text-xs text-slate-500 font-bold uppercase tracking-wider block">Pemeriksaan AVSEC X-Ray</span>
+                    <div class="flex items-baseline space-x-2 mt-1.5">
+                        <span id="stat-avsec-cleared" class="text-3xl font-black text-emerald-600 font-mono">0</span>
+                        <span class="text-xs text-slate-500 font-semibold">Cleared /</span>
+                        <span id="stat-avsec-suspect" class="text-xl font-bold text-rose-600 font-mono">0</span>
+                        <span class="text-[10px] text-rose-600 font-bold">Suspect</span>
                     </div>
-                    <p class="text-[11px] text-emerald-400 mt-1 flex items-center">
-                        <i class="fa-solid fa-shield-halved mr-1"></i> CSD Digital Ready
-                    </p>
+                    <div class="mt-2">
+                        <span class="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 inline-flex items-center">
+                            <i class="fa-solid fa-shield-halved mr-1 text-xs"></i> CSD Digital Ready
+                        </span>
+                    </div>
                 </div>
-                <div class="w-12 h-12 rounded-xl bg-emerald-950/70 border border-emerald-500/30 text-emerald-400 flex items-center justify-center text-xl">
+                <div class="w-13 h-13 p-3.5 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
                     <i class="fa-solid fa-person-military-pointing"></i>
                 </div>
             </div>
         </div>
 
         <!-- Metric 3: ULD Build-Up Status -->
-        <div class="glass-panel p-5 rounded-2xl border border-slate-800 relative overflow-hidden group hover:border-[#0CA1AF]/50 transition-all">
+        <div class="bg-white p-6 rounded-2xl border border-gray-200/90 shadow-sm hover:shadow-xl hover:border-[#087F8A] transition-all group">
             <div class="flex items-center justify-between">
                 <div>
-                    <span class="text-xs text-slate-400 font-medium">Kontainer ULD Aktif</span>
-                    <h3 class="text-2xl font-black text-white mt-1 font-mono"><?= count($ulds) ?></h3>
-                    <p class="text-[11px] text-teal-300 mt-1 flex items-center">
-                        <i class="fa-solid fa-weight-hanging mr-1"></i> Weight &amp; Balance Safe
-                    </p>
+                    <span class="text-xs text-slate-500 font-bold uppercase tracking-wider block">Kontainer ULD Aktif</span>
+                    <h3 class="text-3xl font-black text-[#0D1C42] mt-1.5 font-mono"><?= count($ulds) ?></h3>
+                    <div class="mt-2">
+                        <span class="text-[11px] font-bold text-[#014D54] bg-teal-50 px-2.5 py-0.5 rounded-full border border-teal-200/60 inline-flex items-center">
+                            <i class="fa-solid fa-weight-hanging mr-1 text-xs"></i> W&amp;B OIML R76
+                        </span>
+                    </div>
                 </div>
-                <div class="w-12 h-12 rounded-xl bg-[#014D54]/50 border border-[#0CA1AF]/30 text-teal-300 flex items-center justify-center text-xl">
+                <div class="w-13 h-13 p-3.5 rounded-2xl bg-teal-50 text-[#014D54] border border-teal-200 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
                     <i class="fa-solid fa-box-open"></i>
                 </div>
             </div>
         </div>
 
         <!-- Metric 4: Flight Manifests -->
-        <div class="glass-panel p-5 rounded-2xl border border-slate-800 relative overflow-hidden group hover:border-amber-500/50 transition-all">
+        <div class="bg-white p-6 rounded-2xl border border-gray-200/90 shadow-sm hover:shadow-xl hover:border-amber-400 transition-all group">
             <div class="flex items-center justify-between">
                 <div>
-                    <span class="text-xs text-slate-400 font-medium">Penerbangan Kargo</span>
-                    <h3 class="text-2xl font-black text-white mt-1 font-mono"><?= count($flights) ?></h3>
-                    <p class="text-[11px] text-amber-400 mt-1 flex items-center">
-                        <i class="fa-solid fa-plane-up mr-1"></i> GA-707 &amp; SQ-801
-                    </p>
+                    <span class="text-xs text-slate-500 font-bold uppercase tracking-wider block">Penerbangan Kargo</span>
+                    <h3 class="text-3xl font-black text-[#0D1C42] mt-1.5 font-mono"><?= count($flights) ?></h3>
+                    <div class="mt-2">
+                        <span class="text-[11px] font-bold text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200 inline-flex items-center">
+                            <i class="fa-solid fa-plane-up mr-1 text-xs"></i> GA-707 &amp; SQ-801
+                        </span>
+                    </div>
                 </div>
-                <div class="w-12 h-12 rounded-xl bg-amber-950/70 border border-amber-500/30 text-amber-400 flex items-center justify-center text-xl">
+                <div class="w-13 h-13 p-3.5 rounded-2xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
                     <i class="fa-solid fa-plane"></i>
                 </div>
             </div>
@@ -134,210 +144,222 @@ include __DIR__ . '/includes/header.php';
 
     </div>
 
-    <!-- 7-Stage Pipeline Live Breakdown Tracker -->
-    <div class="glass-panel p-6 rounded-2xl border border-slate-800 mb-8">
-        <div class="flex items-center justify-between mb-4">
+    <!-- 7-Stage Pipeline Live Breakdown Tracker (InJourney Clean White Card) -->
+    <div class="bg-white p-6 lg:p-7 rounded-2xl border border-gray-200/90 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-4 border-b border-gray-100">
             <div>
-                <h3 class="text-sm font-bold text-white flex items-center">
-                    <i class="fa-solid fa-network-wired text-[#0CA1AF] mr-2"></i>
+                <h3 class="text-base font-extrabold text-[#0D1C42] flex items-center gap-2">
+                    <i class="fa-solid fa-network-wired text-[#087F8A]"></i>
                     Status Pipeline Kargo di 7 Tahapan Rekomendasi
                 </h3>
-                <p class="text-[11px] text-slate-400">Monitoring jumlah kargo yang sedang berada di setiap workstation</p>
+                <p class="text-xs text-slate-500 mt-0.5">Monitoring kuantitas kargo yang sedang aktif di setiap workstation terminal</p>
             </div>
-            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">Real-Time Sync</span>
+            <span class="text-[11px] font-mono font-bold px-3 py-1 rounded-full bg-teal-50 text-[#087F8A] border border-teal-200 self-start sm:self-auto flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-[#0CA1AF] animate-pulse"></span>
+                <span>Real-Time Sync</span>
+            </span>
         </div>
 
-        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3" id="pipeline-counters-container">
+        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3.5" id="pipeline-counters-container">
             <!-- Stage 1 -->
-            <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 text-center">
-                <span class="text-[10px] text-slate-400 font-semibold block uppercase">1. Truk Tiba</span>
-                <span id="stage-count-1" class="text-xl font-bold text-[#0CA1AF] font-mono my-1 block">0</span>
-                <span class="text-[10px] text-slate-400">TMS/TAS</span>
+            <div class="bg-[#F8FAFC] p-3.5 rounded-xl border border-gray-200/80 text-center hover:border-[#0CA1AF] hover:bg-teal-50/20 hover:shadow-md transition-all">
+                <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">1. Truk Tiba</span>
+                <span id="stage-count-1" class="text-2xl font-black text-[#087F8A] font-mono my-1 block">0</span>
+                <span class="text-[10px] font-semibold text-slate-500 bg-white px-2 py-0.5 rounded-md border border-gray-200 inline-block">TMS / TAS</span>
             </div>
             <!-- Stage 2 -->
-            <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 text-center">
-                <span class="text-[10px] text-slate-400 font-semibold block uppercase">2. Scan RFID</span>
-                <span id="stage-count-2" class="text-xl font-bold text-[#0CA1AF] font-mono my-1 block">0</span>
-                <span class="text-[10px] text-slate-400">Gate AIDC</span>
+            <div class="bg-[#F8FAFC] p-3.5 rounded-xl border border-gray-200/80 text-center hover:border-[#0CA1AF] hover:bg-teal-50/20 hover:shadow-md transition-all">
+                <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">2. Scan RFID</span>
+                <span id="stage-count-2" class="text-2xl font-black text-[#087F8A] font-mono my-1 block">0</span>
+                <span class="text-[10px] font-semibold text-slate-500 bg-white px-2 py-0.5 rounded-md border border-gray-200 inline-block">Gate AIDC</span>
             </div>
             <!-- Stage 3 -->
-            <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 text-center">
-                <span class="text-[10px] text-slate-400 font-semibold block uppercase">3. CMS e-AWB</span>
-                <span id="stage-count-3" class="text-xl font-bold text-[#0CA1AF] font-mono my-1 block">0</span>
-                <span class="text-[10px] text-slate-400">Registrasi</span>
+            <div class="bg-[#F8FAFC] p-3.5 rounded-xl border border-gray-200/80 text-center hover:border-[#0CA1AF] hover:bg-teal-50/20 hover:shadow-md transition-all">
+                <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">3. CMS e-AWB</span>
+                <span id="stage-count-3" class="text-2xl font-black text-[#087F8A] font-mono my-1 block">0</span>
+                <span class="text-[10px] font-semibold text-slate-500 bg-white px-2 py-0.5 rounded-md border border-gray-200 inline-block">Registrasi</span>
             </div>
             <!-- Stage 4 -->
-            <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 text-center">
-                <span class="text-[10px] text-slate-400 font-semibold block uppercase">4. AVSEC X-Ray</span>
-                <span id="stage-count-4" class="text-xl font-bold text-[#0CA1AF] font-mono my-1 block">0</span>
-                <span class="text-[10px] text-slate-400">Dual-View</span>
+            <div class="bg-[#F8FAFC] p-3.5 rounded-xl border border-gray-200/80 text-center hover:border-[#0CA1AF] hover:bg-teal-50/20 hover:shadow-md transition-all">
+                <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">4. AVSEC X-Ray</span>
+                <span id="stage-count-4" class="text-2xl font-black text-[#087F8A] font-mono my-1 block">0</span>
+                <span class="text-[10px] font-semibold text-slate-500 bg-white px-2 py-0.5 rounded-md border border-gray-200 inline-block">Dual-View</span>
             </div>
             <!-- Stage 5 -->
-            <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 text-center">
-                <span class="text-[10px] text-slate-400 font-semibold block uppercase">5. Penimbangan</span>
-                <span id="stage-count-5" class="text-xl font-bold text-[#0CA1AF] font-mono my-1 block">0</span>
-                <span class="text-[10px] text-slate-400">Scale 15T</span>
+            <div class="bg-[#F8FAFC] p-3.5 rounded-xl border border-gray-200/80 text-center hover:border-[#0CA1AF] hover:bg-teal-50/20 hover:shadow-md transition-all">
+                <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">5. Penimbangan</span>
+                <span id="stage-count-5" class="text-2xl font-black text-[#087F8A] font-mono my-1 block">0</span>
+                <span class="text-[10px] font-semibold text-slate-500 bg-white px-2 py-0.5 rounded-md border border-gray-200 inline-block">Scale 15T</span>
             </div>
             <!-- Stage 6 -->
-            <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 text-center">
-                <span class="text-[10px] text-slate-400 font-semibold block uppercase">6. Build ULD</span>
-                <span id="stage-count-6" class="text-xl font-bold text-[#0CA1AF] font-mono my-1 block">0</span>
-                <span class="text-[10px] text-slate-400">Weight &amp; Bal</span>
+            <div class="bg-[#F8FAFC] p-3.5 rounded-xl border border-gray-200/80 text-center hover:border-[#0CA1AF] hover:bg-teal-50/20 hover:shadow-md transition-all">
+                <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">6. Build ULD</span>
+                <span id="stage-count-6" class="text-2xl font-black text-[#087F8A] font-mono my-1 block">0</span>
+                <span class="text-[10px] font-semibold text-slate-500 bg-white px-2 py-0.5 rounded-md border border-gray-200 inline-block">Weight &amp; Bal</span>
             </div>
             <!-- Stage 7 -->
-            <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 text-center">
-                <span class="text-[10px] text-slate-400 font-semibold block uppercase">7. Flight Load</span>
-                <span id="stage-count-7" class="text-xl font-bold text-emerald-400 font-mono my-1 block">0</span>
-                <span class="text-[10px] text-slate-400">Departed</span>
+            <div class="bg-[#F8FAFC] p-3.5 rounded-xl border border-gray-200/80 text-center hover:border-emerald-400 hover:bg-emerald-50/20 hover:shadow-md transition-all">
+                <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">7. Flight Load</span>
+                <span id="stage-count-7" class="text-2xl font-black text-emerald-600 font-mono my-1 block">0</span>
+                <span class="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 inline-block">Departed</span>
             </div>
         </div>
     </div>
 
-    <!-- Middle Row: Charts & Flight Status -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+    <!-- Middle Row: Charts & Flight Status (InJourney Light White Cards) -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         <!-- Chart 1: Commodity Types -->
-        <div class="glass-panel p-5 rounded-2xl border border-slate-800">
-            <h3 class="text-xs font-bold text-white mb-3 flex items-center">
-                <i class="fa-solid fa-chart-pie text-[#0CA1AF] mr-2"></i>
-                Komposisi Kargo Berdasarkan Komoditas
-            </h3>
-            <div class="h-52 relative flex items-center justify-center">
+        <div class="bg-white p-6 rounded-2xl border border-gray-200/90 shadow-sm flex flex-col justify-between">
+            <div>
+                <h3 class="text-sm font-extrabold text-[#0D1C42] mb-1 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-pie text-[#087F8A]"></i>
+                    Komposisi Kargo per Komoditas
+                </h3>
+                <p class="text-xs text-slate-500 mb-4">Distribusi jenis kargo pada manifes aktif</p>
+            </div>
+            <div class="h-56 relative flex items-center justify-center">
                 <canvas id="commodityChart"></canvas>
             </div>
         </div>
 
         <!-- Chart 2: ULD Capacities -->
-        <div class="glass-panel p-5 rounded-2xl border border-slate-800">
-            <h3 class="text-xs font-bold text-white mb-3 flex items-center">
-                <i class="fa-solid fa-chart-bar text-teal-300 mr-2"></i>
-                Utilisasi Beban Kontainer ULD (kg)
-            </h3>
-            <div class="h-52 relative">
+        <div class="bg-white p-6 rounded-2xl border border-gray-200/90 shadow-sm flex flex-col justify-between">
+            <div>
+                <h3 class="text-sm font-extrabold text-[#0D1C42] mb-1 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-bar text-[#087F8A]"></i>
+                    Status Utilisasi Kontainer ULD
+                </h3>
+                <p class="text-xs text-slate-500 mb-4">Kondisi muatan ULD (Empty, Loading, Full, Loaded)</p>
+            </div>
+            <div class="h-56 relative">
                 <canvas id="uldWeightChart"></canvas>
             </div>
         </div>
 
         <!-- Panel 3: Active Flights & Loadsheet Status -->
-        <div class="glass-panel p-5 rounded-2xl border border-slate-800 flex flex-col justify-between">
+        <div class="bg-white p-6 rounded-2xl border border-gray-200/90 shadow-sm flex flex-col justify-between">
             <div>
-                <h3 class="text-xs font-bold text-white mb-3 flex items-center">
-                    <i class="fa-solid fa-plane-departure text-emerald-400 mr-2"></i>
-                    Jadwal Penerbangan & Manifes Kargo
+                <h3 class="text-sm font-extrabold text-[#0D1C42] mb-1 flex items-center gap-2">
+                    <i class="fa-solid fa-plane-departure text-[#087F8A]"></i>
+                    Jadwal Penerbangan &amp; Manifes
                 </h3>
-                <div class="space-y-2.5">
+                <p class="text-xs text-slate-500 mb-4">Monitoring kapasitas dan loadsheet pesawat</p>
+                
+                <div class="space-y-3">
                     <?php foreach ($flights as $f): ?>
-                        <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 text-xs">
+                        <div class="p-3.5 rounded-xl bg-[#F8FAFC] border border-gray-200 text-xs hover:border-[#0CA1AF] transition-all">
                             <div class="flex items-center justify-between">
-                                <span class="font-bold text-white"><?= htmlspecialchars($f['flight_number']) ?></span>
-                                <span class="px-2 py-0.5 rounded text-[10px] font-semibold <?= $f['status'] === 'CLOSED' ? 'bg-amber-950 text-amber-300 border border-amber-800' : 'bg-emerald-950 text-emerald-300 border border-emerald-800' ?>">
+                                <span class="font-extrabold text-sm text-[#0D1C42]"><?= htmlspecialchars($f['flight_number']) ?></span>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold <?= $f['status'] === 'CLOSED' ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-emerald-100 text-emerald-800 border border-emerald-300' ?>">
                                     <?= htmlspecialchars($f['status']) ?>
                                 </span>
                             </div>
-                            <p class="text-[11px] text-slate-400 mt-1">
-                                Rute: <strong class="text-slate-200"><?= htmlspecialchars($f['origin']) ?> &rarr; <?= htmlspecialchars($f['destination']) ?></strong>
+                            <p class="text-[11.5px] text-slate-600 mt-1">
+                                Rute: <strong class="text-[#0D1C42]"><?= htmlspecialchars($f['origin']) ?> &rarr; <?= htmlspecialchars($f['destination']) ?></strong>
                             </p>
-                            <div class="mt-2 flex items-center justify-between text-[11px] text-slate-400">
-                                <span>Pesawat: <?= htmlspecialchars($f['aircraft_type']) ?></span>
-                                <span class="font-mono text-[#0CA1AF]"><?= number_format($f['current_total_weight_kg']) ?> / <?= number_format($f['max_cargo_weight_kg']) ?> kg</span>
+                            <div class="mt-2 flex items-center justify-between text-[11px] text-slate-500">
+                                <span>Pesawat: <strong class="text-slate-700"><?= htmlspecialchars($f['aircraft_type']) ?></strong></span>
+                                <span class="font-mono text-[#087F8A] font-bold"><?= number_format($f['current_total_weight_kg']) ?> / <?= number_format($f['max_cargo_weight_kg']) ?> kg</span>
                             </div>
-                            <div class="w-full bg-slate-800 h-1.5 rounded-full mt-1.5 overflow-hidden">
+                            <div class="w-full bg-gray-200 h-2 rounded-full mt-1.5 overflow-hidden">
                                 <?php 
                                     $pct = $f['max_cargo_weight_kg'] > 0 ? min(100, round(($f['current_total_weight_kg'] / $f['max_cargo_weight_kg']) * 100)) : 0;
                                 ?>
-                                <div class="bg-gradient-to-r from-[#04AFBF] to-[#087F8A] h-full rounded-full" style="width: <?= $pct ?>%"></div>
+                                <div class="bg-gradient-to-r from-[#04AFBF] to-[#087F8A] h-full rounded-full transition-all" style="width: <?= $pct ?>%"></div>
                             </div>
                         </div>
                     <?php endforeach; ?>
                 </div>
             </div>
 
-            <a href="simulation.php" class="mt-4 block text-center py-2 px-3 rounded-xl bg-slate-800 hover:bg-[#087F8A]/30 text-[#0CA1AF] text-xs font-semibold border border-slate-700 hover:border-[#087F8A]/50 transition-colors">
+            <a href="simulation.php" class="mt-4 block text-center py-2.5 px-3 rounded-xl bg-[#F8FAFC] hover:bg-teal-50 text-[#087F8A] hover:text-[#014D54] text-xs font-bold border border-gray-200 hover:border-teal-300 transition-all shadow-sm">
                 <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i> Buka Simulasi Pemuatan ULD
             </a>
         </div>
 
     </div>
 
-    <!-- Active Cargo Shipments Table -->
-    <div class="glass-panel rounded-2xl border border-slate-800 overflow-hidden">
-        <div class="p-5 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <!-- Active Cargo Shipments Table (InJourney Modern Clean Table) -->
+    <div class="bg-white rounded-2xl border border-gray-200/90 shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-                <h3 class="text-sm font-bold text-white flex items-center">
-                    <i class="fa-solid fa-list-check text-[#0CA1AF] mr-2"></i>
-                    Daftar Kargo Masuk & Status Tahapan Terkini
+                <h3 class="text-base font-extrabold text-[#0D1C42] flex items-center gap-2">
+                    <i class="fa-solid fa-list-check text-[#087F8A]"></i>
+                    Daftar Kargo Masuk &amp; Status Tahapan Terkini
                 </h3>
-                <p class="text-[11px] text-slate-400">Pilih kargo untuk melanjutkan atau menguji simulasinya di laboratorium sistem</p>
+                <p class="text-xs text-slate-500 mt-0.5">Pilih kargo untuk melanjutkan atau menguji simulasinya di laboratorium sistem</p>
             </div>
-            <a href="database_viewer.php?table=cargo_shipments" class="text-xs text-[#0CA1AF] hover:text-teal-200 font-semibold flex items-center">
+            <a href="database_viewer.php?table=cargo_shipments" class="text-xs text-[#087F8A] hover:text-[#0CA1AF] font-bold flex items-center gap-1 self-start sm:self-auto">
                 <span>Buka di Database Explorer</span>
-                <i class="fa-solid fa-chevron-right ml-1 text-[10px]"></i>
+                <i class="fa-solid fa-chevron-right text-[10px]"></i>
             </a>
         </div>
 
         <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs text-slate-300">
-                <thead class="bg-slate-900/90 text-slate-400 font-medium border-b border-slate-800 uppercase text-[10px] tracking-wider">
+            <table class="w-full text-left text-xs text-slate-600">
+                <thead class="bg-[#F8FAFC] text-slate-600 font-bold border-b border-gray-200 uppercase text-[10.5px] tracking-wider">
                     <tr>
-                        <th class="py-3 px-4">AWB & ID Kargo</th>
-                        <th class="py-3 px-4">GS1 SSCC (18-Digit)</th>
-                        <th class="py-3 px-4">Shipper & Komoditas</th>
-                        <th class="py-3 px-4">Koli / Berat</th>
-                        <th class="py-3 px-4">Tahapan & Status</th>
-                        <th class="py-3 px-4">Alokasi Dock / ULD</th>
-                        <th class="py-3 px-4 text-center">Aksi Simulasi</th>
+                        <th class="py-3.5 px-5">AWB &amp; ID Kargo</th>
+                        <th class="py-3.5 px-5">GS1 SSCC (18-Digit)</th>
+                        <th class="py-3.5 px-5">Shipper &amp; Komoditas</th>
+                        <th class="py-3.5 px-5">Koli / Berat</th>
+                        <th class="py-3.5 px-5">Tahapan &amp; Status</th>
+                        <th class="py-3.5 px-5">Alokasi Dock / ULD</th>
+                        <th class="py-3.5 px-5 text-center">Aksi Simulasi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-800/60 font-mono text-[11px]">
+                <tbody class="divide-y divide-gray-100 font-mono text-[11.5px]">
                     <?php if (empty($cargos)): ?>
                         <tr>
-                            <td colspan="7" class="py-8 text-center text-slate-500 font-sans">
+                            <td colspan="7" class="py-12 text-center text-slate-400 font-sans">
+                                <i class="fa-solid fa-box-open text-3xl mb-2 text-slate-300 block"></i>
                                 Belum ada data kargo. Silakan klik tombol "Input Kargo Baru" di atas.
                             </td>
                         </tr>
                     <?php else: ?>
                         <?php foreach ($cargos as $c): ?>
-                            <tr class="hover:bg-slate-800/40 transition-colors">
-                                <td class="py-3 px-4">
-                                    <div class="font-bold text-white"><?= htmlspecialchars($c['awb_number']) ?></div>
-                                    <span class="text-[10px] text-slate-500"><?= htmlspecialchars($c['id']) ?></span>
+                            <tr class="hover:bg-teal-50/40 transition-colors">
+                                <td class="py-3.5 px-5">
+                                    <div class="font-extrabold text-[#0D1C42]"><?= htmlspecialchars($c['awb_number']) ?></div>
+                                    <span class="text-[10px] text-slate-400 font-mono"><?= htmlspecialchars($c['id']) ?></span>
                                 </td>
-                                <td class="py-3 px-4">
-                                    <span class="text-[#0CA1AF] font-bold"><?= htmlspecialchars($c['sscc']) ?></span>
-                                    <span class="text-[10px] text-slate-500 block">GTIN: <?= htmlspecialchars($c['gtin']) ?></span>
+                                <td class="py-3.5 px-5">
+                                    <span class="text-[#087F8A] font-bold"><?= htmlspecialchars($c['sscc']) ?></span>
+                                    <span class="text-[10px] text-slate-400 block font-mono">GTIN: <?= htmlspecialchars($c['gtin']) ?></span>
                                 </td>
-                                <td class="py-3 px-4 font-sans">
-                                    <div class="text-slate-200 font-medium"><?= htmlspecialchars($c['shipper']) ?></div>
-                                    <div class="text-[11px] text-slate-400 truncate max-w-xs"><?= htmlspecialchars($c['description']) ?></div>
+                                <td class="py-3.5 px-5 font-sans">
+                                    <div class="text-slate-800 font-bold"><?= htmlspecialchars($c['shipper']) ?></div>
+                                    <div class="text-[11px] text-slate-500 truncate max-w-xs"><?= htmlspecialchars($c['description']) ?></div>
                                 </td>
-                                <td class="py-3 px-4">
-                                    <span class="text-white font-bold"><?= $c['quantity'] ?> koli</span>
-                                    <span class="text-[10px] text-slate-400 block"><?= number_format($c['actual_weight_kg'] ?? $c['declared_weight_kg'], 1) ?> kg</span>
+                                <td class="py-3.5 px-5">
+                                    <span class="text-slate-900 font-bold"><?= $c['quantity'] ?> koli</span>
+                                    <span class="text-[10.5px] text-slate-500 block"><?= number_format($c['actual_weight_kg'] ?? $c['declared_weight_kg'], 1) ?> kg</span>
                                 </td>
-                                <td class="py-3 px-4 font-sans">
-                                    <div class="flex items-center space-x-1.5">
-                                        <span class="w-5 h-5 rounded-full bg-[#087F8A]/20 text-[#0CA1AF] border border-[#087F8A]/50 text-[10px] font-bold flex items-center justify-center">
+                                <td class="py-3.5 px-5 font-sans">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="w-6 h-6 rounded-full bg-teal-50 text-[#087F8A] border border-teal-200 text-[11px] font-bold flex items-center justify-center font-mono">
                                             <?= $c['current_stage'] ?>
                                         </span>
                                         <?php
-                                            $badgeClass = 'bg-slate-800 text-slate-300';
-                                            if ($c['status'] === 'CLEARED') $badgeClass = 'bg-emerald-950/80 text-emerald-300 border border-emerald-700/60';
-                                            elseif ($c['status'] === 'SUSPECT') $badgeClass = 'bg-rose-950/80 text-rose-300 border border-rose-700/60';
-                                            elseif ($c['status'] === 'LOADED') $badgeClass = 'bg-[#014D54] text-teal-200 border border-teal-600/60';
-                                            elseif ($c['status'] === 'ALLOCATED') $badgeClass = 'bg-[#087F8A]/20 text-[#0CA1AF] border border-[#087F8A]/50';
+                                            $badgeClass = 'bg-slate-100 text-slate-700 border-slate-300';
+                                            if ($c['status'] === 'CLEARED') $badgeClass = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+                                            elseif ($c['status'] === 'SUSPECT') $badgeClass = 'bg-rose-100 text-rose-800 border-rose-300';
+                                            elseif ($c['status'] === 'LOADED') $badgeClass = 'bg-teal-100 text-[#014D54] border-teal-300';
+                                            elseif ($c['status'] === 'ALLOCATED') $badgeClass = 'bg-blue-100 text-blue-800 border-blue-300';
                                         ?>
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold <?= $badgeClass ?>">
+                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border <?= $badgeClass ?>">
                                             <?= htmlspecialchars($c['status']) ?>
                                         </span>
                                     </div>
                                 </td>
-                                <td class="py-3 px-4">
-                                    <div class="text-slate-300">Dock: <span class="text-[#0CA1AF]"><?= htmlspecialchars($c['dock_slot'] ?? '-') ?></span></div>
-                                    <div class="text-[10px] text-slate-500">ULD: <?= htmlspecialchars($c['uld_code'] ?? 'Belum Di-build') ?></div>
+                                <td class="py-3.5 px-5 font-sans">
+                                    <div class="text-slate-700">Dock: <span class="text-[#087F8A] font-bold font-mono"><?= htmlspecialchars($c['dock_slot'] ?? '-') ?></span></div>
+                                    <div class="text-[10.5px] text-slate-400 font-mono">ULD: <?= htmlspecialchars($c['uld_code'] ?? 'Belum Di-build') ?></div>
                                 </td>
-                                <td class="py-3 px-4 text-center font-sans">
-                                    <a href="simulation.php?cargo_id=<?= urlencode($c['id']) ?>" class="inline-flex items-center px-2.5 py-1 rounded-lg bg-[#087F8A]/20 hover:bg-[#087F8A] text-[#0CA1AF] hover:text-white border border-[#087F8A]/40 text-[11px] font-semibold transition-all">
-                                        <i class="fa-solid fa-play mr-1 text-[10px]"></i> Simulasi
+                                <td class="py-3.5 px-5 text-center font-sans">
+                                    <a href="simulation.php?cargo_id=<?= urlencode($c['id']) ?>" class="inline-flex items-center px-3 py-1.5 rounded-lg bg-teal-50 hover:bg-[#087F8A] text-[#087F8A] hover:text-white border border-teal-200 hover:border-[#087F8A] text-xs font-bold transition-all shadow-sm">
+                                        <i class="fa-solid fa-play mr-1.5 text-[10px]"></i> Simulasi
                                     </a>
                                 </td>
                             </tr>
@@ -350,33 +372,33 @@ include __DIR__ . '/includes/header.php';
 
 </div>
 
-<!-- Modal Input Kargo Baru -->
-<div id="newCargoModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="glass-panel w-full max-w-lg rounded-2xl border border-slate-700 p-6 shadow-2xl relative">
-        <button onclick="closeNewCargoModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">
+<!-- Modal Input Kargo Baru (InJourney Light Card) -->
+<div id="newCargoModal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-lg rounded-2xl border border-gray-200 p-6 shadow-2xl relative">
+        <button onclick="closeNewCargoModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-700 text-lg transition-colors">
             <i class="fa-solid fa-xmark"></i>
         </button>
         
-        <h3 class="text-base font-bold text-white mb-1 flex items-center">
-            <i class="fa-solid fa-truck-ramp-box text-[#0CA1AF] mr-2"></i>
+        <h3 class="text-base font-extrabold text-[#0D1C42] mb-1 flex items-center gap-2">
+            <i class="fa-solid fa-truck-ramp-box text-[#087F8A]"></i>
             Input Kargo Inbound Baru (TMS Gate)
         </h3>
-        <p class="text-xs text-slate-400 mb-5">Sistem akan secara otomatis men-generate nomor SSCC 18 digit standar GS1 dan kode booking slot dock.</p>
+        <p class="text-xs text-slate-500 mb-5">Sistem akan secara otomatis men-generate nomor SSCC 18 digit standar GS1 dan kode booking slot dock.</p>
 
         <form id="newCargoForm" onsubmit="handleCreateCargo(event)" class="space-y-3.5 text-xs">
             <div>
-                <label class="block text-slate-300 font-medium mb-1">Nama Pengirim (Shipper)</label>
-                <input type="text" id="inp_shipper" required value="PT Indo Pharma Laboratories" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:ring-2 focus:ring-[#0CA1AF] focus:border-[#0CA1AF] focus:outline-none">
+                <label class="block text-slate-700 font-bold mb-1">Nama Pengirim (Shipper)</label>
+                <input type="text" id="inp_shipper" required value="PT Indo Pharma Laboratories" class="w-full bg-[#F8FAFC] border border-gray-300 rounded-xl px-3.5 py-2.5 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#0CA1AF] focus:border-[#0CA1AF] focus:outline-none transition-all">
             </div>
 
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="block text-slate-300 font-medium mb-1">Penerima (Consignee)</label>
-                    <input type="text" id="inp_consignee" required value="Singapore General Hospital Logistics" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:ring-2 focus:ring-[#0CA1AF] focus:border-[#0CA1AF] focus:outline-none">
+                    <label class="block text-slate-700 font-bold mb-1">Penerima (Consignee)</label>
+                    <input type="text" id="inp_consignee" required value="Singapore General Hospital Logistics" class="w-full bg-[#F8FAFC] border border-gray-300 rounded-xl px-3.5 py-2.5 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#0CA1AF] focus:border-[#0CA1AF] focus:outline-none transition-all">
                 </div>
                 <div>
-                    <label class="block text-slate-300 font-medium mb-1">Tipe Komoditas</label>
-                    <select id="inp_commodity_type" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:ring-2 focus:ring-[#0CA1AF] focus:border-[#0CA1AF] focus:outline-none">
+                    <label class="block text-slate-700 font-bold mb-1">Tipe Komoditas</label>
+                    <select id="inp_commodity_type" class="w-full bg-[#F8FAFC] border border-gray-300 rounded-xl px-3.5 py-2.5 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#0CA1AF] focus:border-[#0CA1AF] focus:outline-none transition-all font-sans">
                         <option value="GENERAL_CARGO">General Cargo (Umum)</option>
                         <option value="PHARMA" selected>Pharma / Vaksin (Cold Chain)</option>
                         <option value="PERISHABLE">Perishable (Makanan/Ikan)</option>
@@ -386,30 +408,30 @@ include __DIR__ . '/includes/header.php';
             </div>
 
             <div>
-                <label class="block text-slate-300 font-medium mb-1">Deskripsi Barang</label>
-                <input type="text" id="inp_description" required value="Vaksin Rantai Dingin & Suplemen Kesehatan" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:ring-2 focus:ring-[#0CA1AF] focus:border-[#0CA1AF] focus:outline-none">
+                <label class="block text-slate-700 font-bold mb-1">Deskripsi Barang</label>
+                <input type="text" id="inp_description" required value="Vaksin Rantai Dingin & Suplemen Kesehatan" class="w-full bg-[#F8FAFC] border border-gray-300 rounded-xl px-3.5 py-2.5 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#0CA1AF] focus:border-[#0CA1AF] focus:outline-none transition-all">
             </div>
 
             <div class="grid grid-cols-3 gap-3">
                 <div>
-                    <label class="block text-slate-300 font-medium mb-1">Jumlah Koli</label>
-                    <input type="number" id="inp_quantity" required value="60" min="1" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:ring-2 focus:ring-[#0CA1AF] focus:border-[#0CA1AF] focus:outline-none">
+                    <label class="block text-slate-700 font-bold mb-1">Jumlah Koli</label>
+                    <input type="number" id="inp_quantity" required value="60" min="1" class="w-full bg-[#F8FAFC] border border-gray-300 rounded-xl px-3.5 py-2.5 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#0CA1AF] focus:border-[#0CA1AF] focus:outline-none transition-all font-mono">
                 </div>
                 <div>
-                    <label class="block text-slate-300 font-medium mb-1">Berat Deklarasi (kg)</label>
-                    <input type="number" step="0.1" id="inp_weight" required value="420.0" min="1" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:ring-2 focus:ring-[#0CA1AF] focus:border-[#0CA1AF] focus:outline-none">
+                    <label class="block text-slate-700 font-bold mb-1">Berat Deklarasi (kg)</label>
+                    <input type="number" step="0.1" id="inp_weight" required value="420.0" min="1" class="w-full bg-[#F8FAFC] border border-gray-300 rounded-xl px-3.5 py-2.5 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#0CA1AF] focus:border-[#0CA1AF] focus:outline-none transition-all font-mono">
                 </div>
                 <div>
-                    <label class="block text-slate-300 font-medium mb-1">Supir Truk</label>
-                    <input type="text" id="inp_driver" required value="Joko Susanto" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:ring-2 focus:ring-[#0CA1AF] focus:border-[#0CA1AF] focus:outline-none">
+                    <label class="block text-slate-700 font-bold mb-1">Supir Truk</label>
+                    <input type="text" id="inp_driver" required value="Joko Susanto" class="w-full bg-[#F8FAFC] border border-gray-300 rounded-xl px-3.5 py-2.5 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#0CA1AF] focus:border-[#0CA1AF] focus:outline-none transition-all">
                 </div>
             </div>
 
-            <div class="pt-3 flex items-center justify-end space-x-2">
-                <button type="button" onclick="closeNewCargoModal()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-400 hover:text-white text-xs font-semibold">
+            <div class="pt-4 flex items-center justify-end space-x-2.5 border-t border-gray-100">
+                <button type="button" onclick="closeNewCargoModal()" class="px-4 py-2.5 rounded-xl bg-gray-100 text-slate-700 hover:bg-gray-200 text-xs font-bold transition-all">
                     Batal
                 </button>
-                <button type="submit" class="px-5 py-2 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-semibold text-xs shadow-lg shadow-teal-500/20">
+                <button type="submit" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-bold text-xs shadow-lg shadow-teal-500/20 transition-all">
                     Daftarkan Kargo &amp; Truk
                 </button>
             </div>
@@ -462,7 +484,8 @@ include __DIR__ . '/includes/header.php';
                 datasets: [{
                     data: dataValues,
                     backgroundColor: ['#087F8A', '#0CA1AF', '#014D54', '#f59e0b', '#10b981'],
-                    borderWidth: 0
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
                 }]
             },
             options: {
@@ -471,7 +494,11 @@ include __DIR__ . '/includes/header.php';
                 plugins: {
                     legend: {
                         position: 'bottom',
-                        labels: { color: '#94a3b8', font: { size: 10 } }
+                        labels: { 
+                            color: '#404042', 
+                            font: { family: 'Barlow', size: 11, weight: '600' },
+                            padding: 12
+                        }
                     }
                 }
             }
@@ -488,7 +515,7 @@ include __DIR__ . '/includes/header.php';
                 datasets: [{
                     label: 'Jumlah ULD',
                     data: [uldStats.EMPTY || 0, uldStats.LOADING || 0, uldStats.FULL || 0, uldStats.LOADED || 0],
-                    backgroundColor: ['#64748b', '#087F8A', '#0CA1AF', '#10b981'],
+                    backgroundColor: ['#94a3b8', '#087F8A', '#0CA1AF', '#10b981'],
                     borderRadius: 6
                 }]
             },
@@ -501,11 +528,11 @@ include __DIR__ . '/includes/header.php';
                 scales: {
                     y: {
                         beginAtZero: true,
-                        ticks: { stepSize: 1, color: '#94a3b8' },
-                        grid: { color: '#162a52' }
+                        ticks: { stepSize: 1, color: '#64748b', font: { family: 'Barlow' } },
+                        grid: { color: '#f1f5f9' }
                     },
                     x: {
-                        ticks: { color: '#94a3b8' },
+                        ticks: { color: '#64748b', font: { family: 'Barlow', weight: '600' } },
                         grid: { display: false }
                     }
                 }
@@ -544,11 +571,14 @@ include __DIR__ . '/includes/header.php';
                 closeNewCargoModal();
                 Swal.fire({
                     title: 'Kargo Berhasil Didaftarkan!',
-                    html: `AWB: <b>${res.awb_number}</b><br>GS1 SSCC: <b>${res.sscc}</b>`,
+                    html: `Nomor AWB: <b class="text-[#087F8A] font-mono">${res.awb_number}</b><br>GS1 SSCC: <b class="text-[#0CA1AF] font-mono">${res.sscc}</b>`,
                     icon: 'success',
-                    background: '#0D1C42',
-                    color: '#fff',
-                    confirmButtonColor: '#087F8A'
+                    background: '#ffffff',
+                    color: '#0D1C42',
+                    confirmButtonColor: '#087F8A',
+                    customClass: {
+                        popup: 'rounded-2xl shadow-2xl border border-gray-200'
+                    }
                 }).then(() => {
                     window.location.reload();
                 });

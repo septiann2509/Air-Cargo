@@ -1,101 +1,107 @@
 <?php
 // panduan.php
-// Buku Panduan Sistem & Prompting Guide untuk Anggota Kelompok
+header("Location: index.php");
+exit;
 require_once __DIR__ . '/config/database.php';
 $user = getCurrentUser();
 
 $pageTitle = 'Buku Panduan Sistem & Prompting Guide';
+$bodyClass = 'bg-[#F8FAFC] text-slate-800';
 include __DIR__ . '/includes/header.php';
 ?>
 
-<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
     
     <!-- Top Action Toolbar -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-6 mb-8 border-b border-slate-800 gap-4">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-gray-200 gap-4">
         <div>
             <div class="flex items-center space-x-2">
-                <span class="px-2.5 py-0.5 rounded text-[10px] font-bold bg-amber-950 text-amber-300 border border-amber-700/60 uppercase">
+                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200 uppercase tracking-wider">
                     Internal Team Guide
                 </span>
-                <span class="text-xs text-slate-400">&bull; Panduan Standar & Kolaborasi Tim</span>
+                <span class="text-xs text-slate-500 font-medium">&bull; Panduan Standar &amp; Kolaborasi Tim</span>
             </div>
-            <h1 class="text-2xl font-black text-white tracking-tight mt-1">Buku Panduan Sistem & Prompting AI Guide</h1>
-            <p class="text-xs text-slate-400">Panduan terstruktur agar setiap anggota kelompok tetap selaras saat mengeksekusi prompt AI atau mengembangkan sistem.</p>
+            <h1 class="text-2xl lg:text-3xl font-extrabold text-[#0D1C42] tracking-tight mt-1.5">
+                Buku Panduan Sistem &amp; Prompting AI Guide
+            </h1>
+            <p class="text-xs lg:text-sm text-slate-500 mt-1">
+                Panduan terstruktur agar setiap anggota konsultan tetap selaras saat mengeksekusi prompt AI atau mempresentasikan sistem.
+            </p>
         </div>
 
-        <div class="flex items-center space-x-2">
-            <a href="simulation.php" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors flex items-center">
-                <i class="fa-solid fa-play mr-1.5 text-sky-400"></i>
+        <div class="flex items-center space-x-2.5">
+            <a href="simulation.php" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-bold text-xs shadow-md shadow-teal-500/25 transition-all flex items-center transform hover:-translate-y-0.5">
+                <i class="fa-solid fa-play mr-2 text-xs"></i>
                 <span>Buka Simulator</span>
             </a>
-            <button onclick="window.print()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 transition-colors">
+            <button onclick="window.print()" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-600 hover:text-[#087F8A] text-xs font-semibold border border-gray-300 shadow-sm transition-colors">
                 <i class="fa-solid fa-print"></i>
             </button>
         </div>
     </div>
 
-    <div class="space-y-8 text-xs sm:text-sm text-slate-300 leading-relaxed">
+    <div class="space-y-8 text-xs sm:text-sm text-slate-700 leading-relaxed">
         
         <!-- Section 1: Ground Rules & Role Mindset -->
-        <div class="glass-panel p-6 sm:p-8 rounded-2xl border border-slate-800">
-            <div class="flex items-center space-x-3 mb-4 pb-3 border-b border-slate-800">
-                <div class="w-10 h-10 rounded-xl bg-sky-950 text-sky-400 border border-sky-500/30 flex items-center justify-center text-lg">
+        <div class="bg-white p-6 sm:p-8 rounded-2xl border border-gray-200/90 shadow-sm">
+            <div class="flex items-center space-x-3 mb-4 pb-3 border-b border-gray-100">
+                <div class="w-10 h-10 rounded-xl bg-teal-50 text-[#087F8A] border border-teal-200 flex items-center justify-center text-lg">
                     <i class="fa-solid fa-bullhorn"></i>
                 </div>
                 <div>
-                    <span class="text-[10px] text-sky-400 font-mono uppercase font-bold">Aturan Dasar #1</span>
-                    <h2 class="text-base font-bold text-white">Mindset Proyek: Kita adalah KONSULTAN</h2>
+                    <span class="text-[10px] text-[#087F8A] font-mono uppercase font-bold tracking-wider">Aturan Dasar #1</span>
+                    <h2 class="text-base font-bold text-[#0D1C42]">Mindset Proyek: Kita adalah KONSULTAN</h2>
                 </div>
             </div>
 
-            <div class="p-4 rounded-xl bg-sky-950/40 border border-sky-500/30 text-sky-200 text-xs mb-4">
-                <strong>PENTING DIPAHAMI SEMUA ANGGOTA:</strong><br>
-                Proyek ini <strong>BUKAN</strong> untuk membuat aplikasi operasional nyata dari nol, melainkan kita bertindak sebagai <strong>Tim Konsultan Teknologi Logistik</strong> yang memberikan <strong>saran, rekomendasi arsitektur, dan blueprint alur kerja</strong> kepada pihak klien (Perusahaan Pengelola Terminal Kargo Bandara). Web ini berfungsi sebagai <strong>Alat Peraga / Media Simulasi Bukti Konsep (PoC)</strong> saat presentasi.
+            <div class="p-4 rounded-xl bg-teal-50 border border-teal-200 text-[#014D54] text-xs mb-4">
+                <strong class="text-[#0D1C42]">PENTING DIPAHAMI SEMUA ANGGOTA:</strong><br>
+                Proyek ini <strong>BUKAN</strong> untuk membuat aplikasi operasional nyata dari nol, melainkan kita bertindak sebagai <strong>Tim Konsultan Teknologi Logistik (PT Aerospace Consultant)</strong> yang memberikan <strong>saran, rekomendasi arsitektur, dan blueprint alur kerja</strong> kepada pihak klien (Perusahaan Pengelola Terminal Kargo Bandara). Web ini berfungsi sebagai <strong>Alat Peraga / Media Simulasi Bukti Konsep (PoC)</strong> saat presentasi.
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-                    <strong class="text-white block mb-1">1. Fokus Aliran Data</strong>
-                    <span class="text-slate-400 text-[11px]">Menjelaskan bagaimana data berpindah antar Hardware (Layer 1) dan Software (Layer 3).</span>
+                <div class="bg-slate-50 p-3.5 rounded-xl border border-gray-200">
+                    <strong class="text-[#0D1C42] block mb-1">1. Fokus Aliran Data</strong>
+                    <span class="text-slate-600 text-[11px]">Menjelaskan bagaimana data berpindah antar Hardware (Layer 1) dan Software (Layer 3).</span>
                 </div>
-                <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-                    <strong class="text-white block mb-1">2. Standar Global GS1</strong>
-                    <span class="text-slate-400 text-[11px]">Wajib menggunakan kode SSCC 18-digit, GTIN, Batch, Expiry, dan format e-AWB IATA.</span>
+                <div class="bg-slate-50 p-3.5 rounded-xl border border-gray-200">
+                    <strong class="text-[#0D1C42] block mb-1">2. Standar Global GS1</strong>
+                    <span class="text-slate-600 text-[11px]">Wajib menggunakan kode SSCC 18-digit, GTIN, Batch, Expiry, dan format e-AWB IATA.</span>
                 </div>
-                <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-                    <strong class="text-white block mb-1">3. Tech Stack Baku</strong>
-                    <span class="text-slate-400 text-[11px]">PHP Native + MySQL (XAMPP localhost) + Tailwind CSS + Vanilla JS.</span>
+                <div class="bg-slate-50 p-3.5 rounded-xl border border-gray-200">
+                    <strong class="text-[#0D1C42] block mb-1">3. Tech Stack Baku</strong>
+                    <span class="text-slate-600 text-[11px]">PHP Native + MySQL (XAMPP localhost) + Tailwind CSS + Vanilla JS.</span>
                 </div>
             </div>
         </div>
 
         <!-- Section 2: Copy-Paste Prompt Prefix Generator -->
-        <div class="glass-panel p-6 sm:p-8 rounded-2xl border border-amber-500/30">
-            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
+        <div class="bg-white p-6 sm:p-8 rounded-2xl border border-amber-200 shadow-sm">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
                 <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 rounded-xl bg-amber-950 text-amber-400 border border-amber-500/30 flex items-center justify-center text-lg">
+                    <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 border border-amber-200 flex items-center justify-center text-lg">
                         <i class="fa-solid fa-robot"></i>
                     </div>
                     <div>
-                        <span class="text-[10px] text-amber-400 font-mono uppercase font-bold">Wajib Digunakan</span>
-                        <h2 class="text-base font-bold text-white">System Prompt Wajib untuk AI (Prompt Prefix)</h2>
+                        <span class="text-[10px] text-amber-700 font-mono uppercase font-bold tracking-wider">Wajib Digunakan</span>
+                        <h2 class="text-base font-bold text-[#0D1C42]">System Prompt Wajib untuk AI (Prompt Prefix)</h2>
                     </div>
                 </div>
-                <button onclick="copySystemPrompt()" class="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center shadow-lg shadow-amber-500/20 transition-all">
+                <button onclick="copySystemPrompt()" class="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold text-xs flex items-center shadow-md shadow-amber-500/20 transition-all">
                     <i class="fa-solid fa-copy mr-1.5"></i> Salin Prompt Ini
                 </button>
             </div>
 
-            <p class="text-xs text-slate-300 mb-3">
+            <p class="text-xs text-slate-600 mb-3">
                 Sebelum meminta AI (ChatGPT, Claude, Gemini, dll.) membuat dokumen, kode, atau materi apapun, <strong>kopikan teks di bawah ini terlebih dahulu</strong> agar AI tidak menyimpang dari alur yang sudah kita buat:
             </p>
 
-            <div class="code-container font-mono text-[11px] text-amber-200 relative p-4 rounded-xl max-h-60 overflow-y-auto" id="systemPromptText">Halo AI, saya sedang mengerjakan Proyek Akhir Mata Kuliah "Teknologi dan Perangkat Lunak Logistik" di ITL Trisakti.
-Topik Kelompok kami adalah Topik 6: "Air Cargo & Intermodal Terminal (Bandara)".
+            <div class="bg-[#0D1C42] font-mono text-[11px] text-amber-200 relative p-4 rounded-xl max-h-60 overflow-y-auto shadow-inner" id="systemPromptText">Halo AI, saya sedang mengerjakan Proyek Akhir Mata Kuliah "Teknologi dan Perangkat Lunak Logistik" di ITL Trisakti.
+Topik kami adalah Topik 6: "Air Cargo &amp; Intermodal Terminal (Bandara)".
 Dosen Pengampu: Dr. Tigor Franky, S.T., M.T.
 
 PERAN KITA:
-Kami adalah TIM KONSULTAN TEKNOLOGI LOGISTIK yang memberikan saran, rekomendasi arsitektur, dan blueprint integrasi kepada pihak KLIEN (Pengelola Terminal Kargo Bandara). Kami BUKAN membuat software komersial skala penuh, melainkan membuat sistem konsultansi dan prototipe simulasi Proof-of-Concept (PoC) aliran perpindahan data.
+Kami adalah PT AEROSPACE CONSULTANT (TIM KONSULTAN TEKNOLOGI LOGISTIK) yang memberikan saran, rekomendasi arsitektur, dan blueprint integrasi kepada pihak KLIEN (Pengelola Terminal Kargo Bandara). Kami BUKAN membuat software komersial skala penuh, melainkan membuat sistem konsultansi dan prototipe simulasi Proof-of-Concept (PoC) aliran perpindahan data.
 
 SPESIFIKASI SISTEM YANG SUDAH BERJALAN:
 - Lokasi Web: c:\xampp\htdocs\Air_Cargo_Intermodal_Terminal\ (PHP 8.2 + MySQL air_cargo_db + Tailwind CSS)
@@ -115,58 +121,58 @@ Tolong bantu saya untuk:
         </div>
 
         <!-- Section 3: Pembagian Tugas & Contoh Prompt Spesifik -->
-        <div class="glass-panel p-6 sm:p-8 rounded-2xl border border-slate-800">
-            <h2 class="text-base font-bold text-white mb-4 pb-3 border-b border-slate-800 flex items-center">
-                <i class="fa-solid fa-users text-indigo-400 mr-2"></i>
-                Pembagian Tugas Anggota & Template Prompt Khusus
+        <div class="bg-white p-6 sm:p-8 rounded-2xl border border-gray-200/90 shadow-sm">
+            <h2 class="text-base font-bold text-[#0D1C42] mb-4 pb-3 border-b border-gray-100 flex items-center">
+                <i class="fa-solid fa-users text-[#087F8A] mr-2"></i>
+                Pembagian Tugas Anggota &amp; Template Prompt Khusus
             </h2>
 
-            <div class="space-y-6">
+            <div class="space-y-4">
                 
                 <!-- Peran 1 -->
-                <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
+                <div class="p-4 rounded-xl bg-slate-50 border border-gray-200">
                     <div class="flex items-center justify-between mb-2">
-                        <span class="font-bold text-sky-400 text-xs">Peran 1: Lead System Architect & Blueprint SRS</span>
-                        <span class="text-[10px] font-mono text-slate-500">Raden Panji</span>
+                        <span class="font-bold text-[#087F8A] text-xs">Peran 1: Lead System Architect &amp; Blueprint SRS</span>
+                        <span class="text-[10px] font-mono text-slate-500 font-bold bg-white px-2 py-0.5 rounded border border-gray-200">Raden Panji</span>
                     </div>
-                    <p class="text-xs text-slate-400 mb-3">Tanggung Jawab: Merancang arsitektur integrasi utama, dokumen Blueprint SRS, dan analisis gap As-Is vs To-Be.</p>
-                    <div class="bg-black/60 p-3 rounded-lg font-mono text-[11px] text-slate-300">
+                    <p class="text-xs text-slate-600 mb-2">Tanggung Jawab: Merancang arsitektur integrasi utama, dokumen Blueprint SRS, dan analisis gap As-Is vs To-Be.</p>
+                    <div class="bg-white p-3 rounded-lg font-mono text-[11px] text-slate-700 border border-gray-200">
                         "Saya ingin menyusun Bab 2 SRS mengenai 'Analisis Gap Kondisi As-Is vs Rekomendasi To-Be Terminal Kargo Bandara'. Buatkan perbandingan mendalam untuk 4 aspek (antrean gate, entri manual, AVSEC, weight & balance) dalam format tabel dan narasi konsultan formal."
                     </div>
                 </div>
 
                 <!-- Peran 2 -->
-                <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
+                <div class="p-4 rounded-xl bg-slate-50 border border-gray-200">
                     <div class="flex items-center justify-between mb-2">
-                        <span class="font-bold text-indigo-400 text-xs">Peran 2: Data Integration Specialist</span>
-                        <span class="text-[10px] font-mono text-slate-500">Muhammad Fathir</span>
+                        <span class="font-bold text-[#087F8A] text-xs">Peran 2: Data Integration Specialist</span>
+                        <span class="text-[10px] font-mono text-slate-500 font-bold bg-white px-2 py-0.5 rounded border border-gray-200">Muhammad Fathir</span>
                     </div>
-                    <p class="text-xs text-slate-400 mb-3">Tanggung Jawab: Struktur payload JSON, integrasi API, pengujian simulator, dan validasi standar GS1 SSCC 18 digit.</p>
-                    <div class="bg-black/60 p-3 rounded-lg font-mono text-[11px] text-slate-300">
+                    <p class="text-xs text-slate-600 mb-2">Tanggung Jawab: Struktur payload JSON, integrasi API, pengujian simulator, dan validasi standar GS1 SSCC 18 digit.</p>
+                    <div class="bg-white p-3 rounded-lg font-mono text-[11px] text-slate-700 border border-gray-200">
                         "Saya ingin membuat variasi payload JSON untuk jenis komoditas khusus: 'Produk Segar Tuna Perishable' dan 'Kargo Farmasi Cold Chain'. Tunjukkan data AI (00), (01), (10), dan (17) yang cocok dikirim ke tabel scan_logs di MySQL."
                     </div>
                 </div>
 
                 <!-- Peran 3 -->
-                <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
+                <div class="p-4 rounded-xl bg-slate-50 border border-gray-200">
                     <div class="flex items-center justify-between mb-2">
-                        <span class="font-bold text-emerald-400 text-xs">Peran 3: Software & ERP Process Specialist</span>
-                        <span class="text-[10px] font-mono text-slate-500">Riepka Tiara</span>
+                        <span class="font-bold text-[#087F8A] text-xs">Peran 3: Software &amp; ERP Process Specialist</span>
+                        <span class="text-[10px] font-mono text-slate-500 font-bold bg-white px-2 py-0.5 rounded border border-gray-200">Riepka Tiara</span>
                     </div>
-                    <p class="text-xs text-slate-400 mb-3">Tanggung Jawab: Flowchart proses bisnis CMS, validasi e-AWB, alur isolasi kargo SUSPECT di AVSEC, dan SOP kargo.</p>
-                    <div class="bg-black/60 p-3 rounded-lg font-mono text-[11px] text-slate-300">
+                    <p class="text-xs text-slate-600 mb-2">Tanggung Jawab: Flowchart proses bisnis CMS, validasi e-AWB, alur isolasi kargo SUSPECT di AVSEC, dan SOP kargo.</p>
+                    <div class="bg-white p-3 rounded-lg font-mono text-[11px] text-slate-700 border border-gray-200">
                         "Buatkan flowchart diagram alur proses penanganan kargo berstatus SUSPECT di AVSEC: bagaimana sistem secara otomatis memblokir kargo agar tidak dapat melanjutkan ke penimbangan ULD dan bagaimana alur notifikasinya ke CMS."
                     </div>
                 </div>
 
                 <!-- Peran 4 -->
-                <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
+                <div class="p-4 rounded-xl bg-slate-50 border border-gray-200">
                     <div class="flex items-center justify-between mb-2">
-                        <span class="font-bold text-amber-400 text-xs">Peran 4: Hardware & Business Analyst QA</span>
-                        <span class="text-[10px] font-mono text-slate-500">Nessa Amanda</span>
+                        <span class="font-bold text-[#087F8A] text-xs">Peran 4: Hardware &amp; Business Analyst QA</span>
+                        <span class="text-[10px] font-mono text-slate-500 font-bold bg-white px-2 py-0.5 rounded border border-gray-200">Nessa Amanda</span>
                     </div>
-                    <p class="text-xs text-slate-400 mb-3">Tanggung Jawab: Spesifikasi teknis perangkat keras lapangan, pengujian fungsional sistem, dan kalkulasi manfaat ROI untuk klien.</p>
-                    <div class="bg-black/60 p-3 rounded-lg font-mono text-[11px] text-slate-300">
+                    <p class="text-xs text-slate-600 mb-2">Tanggung Jawab: Spesifikasi teknis perangkat keras lapangan, pengujian fungsional sistem, dan kalkulasi manfaat ROI untuk klien.</p>
+                    <div class="bg-white p-3 rounded-lg font-mono text-[11px] text-slate-700 border border-gray-200">
                         "Buatkan rincian spesifikasi teknis 3 perangkat keras utama (High-Speed Scanner, Dual-View X-Ray, Smart ULD Scale) beserta analisis kelayakan finansial: estimasi penurunan dwell time sebesar 81% dan penghematan biaya operasional terminal kargo."
                     </div>
                 </div>
@@ -175,71 +181,71 @@ Tolong bantu saya untuk:
         </div>
 
         <!-- Section 4: Alur Baku 7 Tahapan Kargo -->
-        <div class="glass-panel p-6 sm:p-8 rounded-2xl border border-slate-800">
-            <h2 class="text-base font-bold text-white mb-3 pb-3 border-b border-slate-800 flex items-center">
-                <i class="fa-solid fa-arrows-turn-to-dots text-emerald-400 mr-2"></i>
+        <div class="bg-white p-6 sm:p-8 rounded-2xl border border-gray-200/90 shadow-sm">
+            <h2 class="text-base font-bold text-[#0D1C42] mb-3 pb-3 border-b border-gray-100 flex items-center">
+                <i class="fa-solid fa-arrows-turn-to-dots text-[#087F8A] mr-2"></i>
                 Tabel Acuan Baku: 7 Tahapan Perpindahan Data Kargo
             </h2>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs border border-slate-800 rounded-xl overflow-hidden">
-                    <thead class="bg-slate-900 text-slate-300 font-semibold uppercase text-[10px]">
+            <div class="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
+                <table class="w-full text-left text-xs divide-y divide-gray-200">
+                    <thead class="bg-slate-50 text-slate-600 font-bold uppercase text-[10.5px]">
                         <tr>
-                            <th class="py-2.5 px-3">#</th>
-                            <th class="py-2.5 px-3">Nama Tahapan</th>
-                            <th class="py-2.5 px-3">Hardware (Layer 1)</th>
-                            <th class="py-2.5 px-3">Software (Layer 3)</th>
-                            <th class="py-2.5 px-3">Data Kunci yang Berpindah</th>
+                            <th class="py-3 px-3">#</th>
+                            <th class="py-3 px-3">Nama Tahapan</th>
+                            <th class="py-3 px-3">Hardware (Layer 1)</th>
+                            <th class="py-3 px-3">Software (Layer 3)</th>
+                            <th class="py-3 px-3">Data Kunci yang Berpindah</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-800 text-[11px]">
+                    <tbody class="divide-y divide-gray-100 text-[11.5px] bg-white">
                         <tr>
-                            <td class="py-2.5 px-3 font-bold text-sky-400">1</td>
-                            <td class="py-2.5 px-3 font-semibold text-white">Kedatangan Truk</td>
-                            <td class="py-2.5 px-3 text-slate-400">Barrier Gate & RFID Reader</td>
-                            <td class="py-2.5 px-3 text-slate-300">TMS / TAS</td>
-                            <td class="py-2.5 px-3 text-slate-400">Plat truk, slot dock, booking code, ETA</td>
+                            <td class="py-3 px-3 font-bold text-[#087F8A]">1</td>
+                            <td class="py-3 px-3 font-bold text-[#0D1C42]">Kedatangan Truk</td>
+                            <td class="py-3 px-3 text-slate-600">Barrier Gate &amp; RFID Reader</td>
+                            <td class="py-3 px-3 text-slate-700 font-semibold">TMS / TAS</td>
+                            <td class="py-3 px-3 text-slate-500 font-mono text-[11px]">Plat truk, slot dock, booking code, ETA</td>
                         </tr>
                         <tr>
-                            <td class="py-2.5 px-3 font-bold text-sky-400">2</td>
-                            <td class="py-2.5 px-3 font-semibold text-white">Scan RFID Gate</td>
-                            <td class="py-2.5 px-3 text-slate-400">High-Speed Scanner (2.5 m/s)</td>
-                            <td class="py-2.5 px-3 text-slate-300">CMS Inbound Gate</td>
-                            <td class="py-2.5 px-3 text-slate-400">GS1 SSCC (18 digit), GTIN, batch, expiry</td>
+                            <td class="py-3 px-3 font-bold text-[#087F8A]">2</td>
+                            <td class="py-3 px-3 font-bold text-[#0D1C42]">Scan RFID Gate</td>
+                            <td class="py-3 px-3 text-slate-600">High-Speed Scanner (2.5 m/s)</td>
+                            <td class="py-3 px-3 text-slate-700 font-semibold">CMS Inbound Gate</td>
+                            <td class="py-3 px-3 text-slate-500 font-mono text-[11px]">GS1 SSCC (18 digit), GTIN, batch, expiry</td>
                         </tr>
                         <tr>
-                            <td class="py-2.5 px-3 font-bold text-sky-400">3</td>
-                            <td class="py-2.5 px-3 font-semibold text-white">Registrasi di CMS</td>
-                            <td class="py-2.5 px-3 text-slate-400">CMS Core Server</td>
-                            <td class="py-2.5 px-3 text-slate-300">Cargo Management Software</td>
-                            <td class="py-2.5 px-3 text-slate-400">Nomor e-AWB, shipper, consignee, routing</td>
+                            <td class="py-3 px-3 font-bold text-[#087F8A]">3</td>
+                            <td class="py-3 px-3 font-bold text-[#0D1C42]">Registrasi di CMS</td>
+                            <td class="py-3 px-3 text-slate-600">CMS Core Server</td>
+                            <td class="py-3 px-3 text-slate-700 font-semibold">Cargo Management Software</td>
+                            <td class="py-3 px-3 text-slate-500 font-mono text-[11px]">Nomor e-AWB, shipper, consignee, routing</td>
                         </tr>
                         <tr>
-                            <td class="py-2.5 px-3 font-bold text-sky-400">4</td>
-                            <td class="py-2.5 px-3 font-semibold text-white">X-Ray AVSEC</td>
-                            <td class="py-2.5 px-3 text-slate-400">Dual-View X-Ray (180x180cm)</td>
-                            <td class="py-2.5 px-3 text-slate-300">AVSEC System</td>
-                            <td class="py-2.5 px-3 text-slate-400">Status CLEARED/SUSPECT, sertifikat CSD</td>
+                            <td class="py-3 px-3 font-bold text-[#087F8A]">4</td>
+                            <td class="py-3 px-3 font-bold text-[#0D1C42]">X-Ray AVSEC</td>
+                            <td class="py-3 px-3 text-slate-600">Dual-View X-Ray (180x180cm)</td>
+                            <td class="py-3 px-3 text-slate-700 font-semibold">AVSEC System</td>
+                            <td class="py-3 px-3 text-slate-500 font-mono text-[11px]">Status CLEARED/SUSPECT, sertifikat CSD</td>
                         </tr>
                         <tr>
-                            <td class="py-2.5 px-3 font-bold text-sky-400">5</td>
-                            <td class="py-2.5 px-3 font-semibold text-white">Penimbangan</td>
-                            <td class="py-2.5 px-3 text-slate-400">Smart ULD Floor Scale (15 Ton)</td>
-                            <td class="py-2.5 px-3 text-slate-300">CMS & Weight Module</td>
-                            <td class="py-2.5 px-3 text-slate-400">Berat aktual (kg), verifikasi toleransi e-AWB</td>
+                            <td class="py-3 px-3 font-bold text-[#087F8A]">5</td>
+                            <td class="py-3 px-3 font-bold text-[#0D1C42]">Penimbangan</td>
+                            <td class="py-3 px-3 text-slate-600">Smart ULD Floor Scale (15 Ton)</td>
+                            <td class="py-3 px-3 text-slate-700 font-semibold">CMS &amp; Weight Module</td>
+                            <td class="py-3 px-3 text-slate-500 font-mono text-[11px]">Berat aktual (kg), verifikasi toleransi e-AWB</td>
                         </tr>
                         <tr>
-                            <td class="py-2.5 px-3 font-bold text-sky-400">6</td>
-                            <td class="py-2.5 px-3 font-semibold text-white">Build-Up ULD</td>
-                            <td class="py-2.5 px-3 text-slate-400">Workstation ULD Dock</td>
-                            <td class="py-2.5 px-3 text-slate-300">Weight & Balance / CoG</td>
-                            <td class="py-2.5 px-3 text-slate-400">Kode ULD (AKE/PMC), kompartemen, CoG</td>
+                            <td class="py-3 px-3 font-bold text-[#087F8A]">6</td>
+                            <td class="py-3 px-3 font-bold text-[#0D1C42]">Build-Up ULD</td>
+                            <td class="py-3 px-3 text-slate-600">Workstation ULD Dock</td>
+                            <td class="py-3 px-3 text-slate-700 font-semibold">Weight &amp; Balance / CoG</td>
+                            <td class="py-3 px-3 text-slate-500 font-mono text-[11px]">Kode ULD (AKE/PMC), kompartemen, CoG</td>
                         </tr>
                         <tr>
-                            <td class="py-2.5 px-3 font-bold text-sky-400">7</td>
-                            <td class="py-2.5 px-3 font-semibold text-white">Loading Pesawat</td>
-                            <td class="py-2.5 px-3 text-slate-400">Cargo High-Loader / EFB</td>
-                            <td class="py-2.5 px-3 text-slate-300">CMS & Flight Ops</td>
-                            <td class="py-2.5 px-3 text-slate-400">Electronic Loadsheet, status DEPARTED</td>
+                            <td class="py-3 px-3 font-bold text-[#087F8A]">7</td>
+                            <td class="py-3 px-3 font-bold text-[#0D1C42]">Loading Pesawat</td>
+                            <td class="py-3 px-3 text-slate-600">Cargo High-Loader / EFB</td>
+                            <td class="py-3 px-3 text-slate-700 font-semibold">CMS &amp; Flight Ops</td>
+                            <td class="py-3 px-3 text-slate-500 font-mono text-[11px]">Electronic Loadsheet, status DEPARTED</td>
                         </tr>
                     </tbody>
                 </table>
@@ -262,8 +268,9 @@ Tolong bantu saya untuk:
                 icon: 'success',
                 showConfirmButton: false,
                 timer: 3000,
-                background: '#111e38',
-                color: '#fff'
+                background: '#ffffff',
+                color: '#0D1C42',
+                customClass: { popup: 'rounded-xl shadow-lg border border-gray-200' }
             });
         });
     }

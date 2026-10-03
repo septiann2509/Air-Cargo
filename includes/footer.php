@@ -1,109 +1,105 @@
 <?php
-// includes/footer.php
+// includes/footer.php — 100% Sesuai Layout Footer InJourney & Profil Perusahaan PT Aerospace Consultant
 ?>
     </main>
 
     <!-- Footer InJourney Airports Design System -->
-    <footer class="bg-footer-gradient text-white mt-20 pt-14 pb-8 text-xs select-none shadow-2xl border-t border-teal-400/20">
+    <footer style="background: linear-gradient(to right, #0CA1AF, #087F8A, #014D54) !important;" class="bg-footer-gradient text-white mt-20 pt-14 pb-8 text-xs select-none shadow-2xl border-t border-teal-400/20">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 pb-8 border-b border-white/20">
-                <!-- Col 1: Context & Brand -->
-                <div class="space-y-3">
+            
+            <!-- 4-Column Footer Grid (Sesuai Referensi Gambar) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 pb-10 border-b border-white/20">
+                
+                <!-- Col 1: Profil Perusahaan PT Aerospace Consultant -->
+                <div class="space-y-3.5">
                     <div class="flex items-center space-x-3">
                         <div class="w-9 h-9 rounded-xl bg-white text-[#087F8A] font-extrabold flex items-center justify-center text-sm shadow-md">
                             AC
                         </div>
                         <div>
                             <span class="font-extrabold text-sm text-white tracking-tight block">PT Aerospace Consultant</span>
-                            <span class="text-[10.5px] text-teal-200 block font-medium">Air Cargo &amp; Intermodal Advisory</span>
+                            <span class="text-[10px] text-teal-200 block uppercase tracking-wider font-semibold">AIR CARGO &amp; INTERMODAL ADVISORY</span>
                         </div>
                     </div>
-                    <p class="text-white/80 text-[11px] leading-relaxed text-justify">
-                        Proyek konsultansi rancang bangun sistem otomasi terminal kargo bandara dan integrasi logistik multimoda di bawah bimbingan ITL Trisakti.
+                    <p class="text-white/85 text-[11px] leading-relaxed text-justify">
+                        Firma konsultan independen spesialis rancang bangun arsitektur teknologi kargo udara, integrasi alur logistik multimoda, dan implementasi otomasi alur fisik-digital bandara berstandar global.
                     </p>
-                    <div class="pt-1 space-y-1 text-[11px] text-teal-100">
-                        <p><i class="fa-solid fa-graduation-cap mr-1.5 text-teal-300"></i> ITL Trisakti &bull; S1 Logistik</p>
-                        <p><i class="fa-solid fa-user-tie mr-1.5 text-teal-300"></i> Dosen: <strong>Dr. Tigor Franky, S.T., M.T.</strong></p>
+                    <div class="pt-1 space-y-1.5 text-[11px] text-teal-100">
+                        <p class="flex items-start">
+                            <i class="fa-solid fa-location-dot mr-2 mt-0.5 text-teal-300 text-xs"></i>
+                            <span>Treasury Tower Lt. 28, District 8 SCBD, Jakarta Selatan</span>
+                        </p>
+                        <p class="flex items-center">
+                            <i class="fa-solid fa-envelope mr-2 text-teal-300 text-xs"></i>
+                            <span>corporate@aerospace-consultant.co.id</span>
+                        </p>
+                        <p class="flex items-center">
+                            <i class="fa-solid fa-phone mr-2 text-teal-300 text-xs"></i>
+                            <span>+62 (21) 5088-2890 | Hotline Konsultansi</span>
+                        </p>
                     </div>
                 </div>
 
-                <!-- Col 2: Tim Konsultan (NO NIM) -->
-                <div>
-                    <h4 class="text-white font-bold text-xs mb-3 uppercase tracking-wider text-teal-200 flex items-center">
-                        <i class="fa-solid fa-users text-teal-300 mr-2"></i> Tim Konsultan
-                    </h4>
-                    <ul class="space-y-1.5 text-[11px]">
-                        <li class="flex items-center justify-between bg-black/20 backdrop-blur-sm px-2.5 py-1.5 rounded-lg border border-white/10">
-                            <span class="text-white font-medium">Raden Panji Atha Firjatullah</span>
-                            <span class="text-teal-200 font-semibold text-[10px]">Lead Architect</span>
-                        </li>
-                        <li class="flex items-center justify-between bg-black/20 backdrop-blur-sm px-2.5 py-1.5 rounded-lg border border-white/10">
-                            <span class="text-white font-medium">Muhammad Fathir Septianto</span>
-                            <span class="text-teal-200 font-semibold text-[10px]">Data Integration</span>
-                        </li>
-                        <li class="flex items-center justify-between bg-black/20 backdrop-blur-sm px-2.5 py-1.5 rounded-lg border border-white/10">
-                            <span class="text-white font-medium">Riepka Tiara</span>
-                            <span class="text-teal-200 font-semibold text-[10px]">Software Process</span>
-                        </li>
-                        <li class="flex items-center justify-between bg-black/20 backdrop-blur-sm px-2.5 py-1.5 rounded-lg border border-white/10">
-                            <span class="text-white font-medium">Nessa Amanda Ghassani</span>
-                            <span class="text-teal-200 font-semibold text-[10px]">Hardware &amp; QA</span>
-                        </li>
-                    </ul>
-                </div>
-
-                <!-- Col 3: Standar & Ekosistem -->
-                <div>
-                    <h4 class="text-white font-bold text-xs mb-3 uppercase tracking-wider text-teal-200 flex items-center">
-                        <i class="fa-solid fa-cubes-stacked text-teal-300 mr-2"></i> Standar Operasi
+                <!-- Col 2: NAVIGASI UTAMA -->
+                <div class="space-y-3">
+                    <h4 class="font-bold text-xs uppercase tracking-wider text-teal-200">
+                        NAVIGASI UTAMA
                     </h4>
                     <ul class="space-y-2 text-[11px] text-white/85">
-                        <li class="flex items-center space-x-2">
-                            <i class="fa-solid fa-check text-teal-300 text-[10px]"></i>
-                            <span>GS1 SSCC 18-Digit Barcode</span>
-                        </li>
-                        <li class="flex items-center space-x-2">
-                            <i class="fa-solid fa-check text-teal-300 text-[10px]"></i>
-                            <span>IATA Cargo-XML &amp; e-AWB Standard</span>
-                        </li>
-                        <li class="flex items-center space-x-2">
-                            <i class="fa-solid fa-check text-teal-300 text-[10px]"></i>
-                            <span>ICAO Security CSD Digital Protocol</span>
-                        </li>
-                        <li class="flex items-center space-x-2">
-                            <i class="fa-solid fa-check text-teal-300 text-[10px]"></i>
-                            <span>Truck Appointment System (TAS) Slot</span>
-                        </li>
+                        <li><a href="index.php" class="hover:text-white transition-colors">Beranda Konsultansi</a></li>
+                        <li><a href="dashboard.php" class="hover:text-white transition-colors">Dashboard Eksekutif</a></li>
+                        <li><a href="simulation.php" class="hover:text-white transition-colors">Simulasi 7-Tahap PoC</a></li>
+                        <li><a href="database_viewer.php" class="hover:text-white transition-colors">Database Viewer Live</a></li>
                     </ul>
                 </div>
 
-                <!-- Col 4: Quick Action & Kontak -->
+                <!-- Col 3: STANDAR & EKOSISTEM -->
                 <div class="space-y-3">
-                    <h4 class="text-white font-bold text-xs uppercase tracking-wider text-teal-200 flex items-center">
-                        <i class="fa-solid fa-headset text-teal-300 mr-2"></i> Hub InJourney Airports
+                    <h4 class="font-bold text-xs uppercase tracking-wider text-teal-200">
+                        STANDAR &amp; EKOSISTEM
                     </h4>
-                    <p class="text-white/80 text-[11px] leading-relaxed">
-                        Bandar Udara Internasional Soekarno-Hatta<br>
-                        Call Center Layanan: <strong class="text-amber-300 font-extrabold text-sm">172</strong>
-                    </p>
-                    <div class="flex flex-col space-y-2 pt-2">
-                        <a href="blueprint.php" class="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white font-semibold text-[11px] border border-white/20 transition-all text-center flex items-center justify-center">
-                            <i class="fa-solid fa-file-contract mr-1.5 text-teal-300"></i> Blueprint Dokumen SRS
-                        </a>
-                        <button onclick="confirmResetData()" class="px-3 py-1.5 rounded-lg bg-rose-900/40 hover:bg-rose-900/60 text-rose-200 font-semibold text-[11px] border border-rose-400/30 transition-all text-center flex items-center justify-center">
-                            <i class="fa-solid fa-rotate-left mr-1.5 text-rose-300"></i> Reset Database Demo
+                    <ul class="space-y-2 text-[11px] text-white/85">
+                        <li><span class="text-white/70">GS1 SSCC 18-Digit (AI 00)</span></li>
+                        <li><span class="text-white/70">IATA Cargo Services (e-AWB)</span></li>
+                        <li><span class="text-white/70">ICAO Security CSD Protocol</span></li>
+                        <li><span class="text-white/70">OIML R76 Weighing Standard</span></li>
+                        <li><span class="text-white/70">Truck Appointment System (TAS)</span></li>
+                        <li><span class="text-white/70">REST API Integration Spec</span></li>
+                    </ul>
+                </div>
+
+                <!-- Col 4: KONTAK & ALAMAT PERUSAHAAN (BUKAN BANDARA SOEKARNO) -->
+                <div class="space-y-3">
+                    <h4 class="font-bold text-xs uppercase tracking-wider text-teal-200">
+                        KONTAK &amp; ALAMAT
+                    </h4>
+                    <div class="space-y-1.5 text-[11px] text-white/85">
+                        <p class="font-extrabold text-white text-xs">Kantor Pusat PT Aerospace Consultant</p>
+                        <p class="text-white/90">Treasury Tower Lt. 28, District 8 SCBD</p>
+                        <p class="text-white/70 leading-relaxed">Jl. Jend. Sudirman Kav. 52-53, Senayan, Kebayoran Baru, Kota Jakarta Selatan, DKI Jakarta 12190</p>
+                        <div class="pt-2">
+                            <span class="block text-white/60 text-[10px] uppercase font-bold tracking-wider">LAYANAN CONTACT CENTER</span>
+                            <span class="text-base font-extrabold text-amber-300 block my-0.5">(021) 5088-2890</span>
+                            <span class="block text-[10px] text-white/70">(021) 5088-2890 / WA: 0811-9840-2890</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2 pt-2">
+                        <button onclick="confirmResetData()" class="px-3 py-1.5 rounded-lg bg-rose-900/40 hover:bg-rose-900/60 text-rose-200 font-semibold text-[10.5px] border border-rose-400/30 transition-all text-center flex items-center justify-center">
+                            <i class="fa-solid fa-rotate-left mr-1.5 text-rose-300"></i> Reset Demo
                         </button>
                     </div>
                 </div>
+
             </div>
 
-            <!-- Bottom Row -->
-            <div class="flex flex-col sm:flex-row items-center justify-between text-[11px] text-white/70">
-                <p>&copy; <?= date('Y') ?> <strong class="text-white">PT Aerospace Consultant</strong> &bull; Hak Cipta Dilindungi.</p>
-                <div class="mt-2 sm:mt-0 flex items-center space-x-3 font-mono text-[10px] text-teal-100">
-                    <span>Stack: PHP 8.2 &bull; MySQL 8 &bull; GS1 SSCC &bull; IATA e-AWB</span>
+            <!-- Bottom Row: Copyright & Navigasi -->
+            <div class="flex flex-col sm:flex-row items-center justify-between text-[11px] text-white/70 gap-2">
+                <p>&copy; <?= date('Y') ?> <strong class="text-white">PT Aerospace Consultant</strong>. Seluruh Hak Cipta Dilindungi &bull; Air Cargo &amp; Intermodal Terminal Advisory.</p>
+                <div class="flex items-center gap-3 text-[11px]">
+                    <span>Desain Terinspirasi dari InJourney Airports</span>
                 </div>
             </div>
+
         </div>
     </footer>
 
@@ -116,13 +112,13 @@
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#087F8A',
-                cancelButtonColor: '#475569',
+                cancelButtonColor: '#94a3b8',
                 confirmButtonText: 'Ya, Reset Data Demo',
                 cancelButtonText: 'Batal',
-                background: '#0D1C42',
-                color: '#fff',
+                background: '#ffffff',
+                color: '#0D1C42',
                 customClass: {
-                    popup: 'border border-teal-500/30 shadow-2xl'
+                    popup: 'rounded-2xl shadow-2xl border border-gray-200'
                 }
             }).then((result) => {
                 if (result.isConfirmed) {
@@ -131,10 +127,10 @@
                         text: 'Mengembalikan skema dan data benih awal.',
                         allowOutsideClick: false,
                         didOpen: () => { Swal.showLoading(); },
-                        background: '#0D1C42',
-                        color: '#fff',
+                        background: '#ffffff',
+                        color: '#0D1C42',
                         customClass: {
-                            popup: 'border border-teal-500/30 shadow-2xl'
+                            popup: 'rounded-2xl shadow-2xl border border-gray-200'
                         }
                     });
 
@@ -146,9 +142,10 @@
                                     title: 'Berhasil!',
                                     text: data.message,
                                     icon: 'success',
-                                    background: '#0D1C42',
-                                    color: '#fff',
-                                    confirmButtonColor: '#087F8A'
+                                    background: '#ffffff',
+                                    color: '#0D1C42',
+                                    confirmButtonColor: '#087F8A',
+                                    customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
                                 }).then(() => {
                                     window.location.reload();
                                 });
@@ -157,9 +154,10 @@
                                     title: 'Gagal',
                                     text: data.message,
                                     icon: 'error',
-                                    background: '#0D1C42',
-                                    color: '#fff',
-                                    confirmButtonColor: '#087F8A'
+                                    background: '#ffffff',
+                                    color: '#0D1C42',
+                                    confirmButtonColor: '#087F8A',
+                                    customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
                                 });
                             }
                         })
@@ -168,8 +166,9 @@
                                 title: 'Error',
                                 text: 'Gagal memproses reset: ' + err,
                                 icon: 'error',
-                                background: '#0D1C42',
-                                color: '#fff'
+                                background: '#ffffff',
+                                color: '#0D1C42',
+                                customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
                             });
                         });
                 }

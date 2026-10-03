@@ -91,12 +91,12 @@ $companyShort   = 'AC';
             background: linear-gradient(to right, #0CA1AF, #087F8A, #014D54);
         }
 
-        /* High clarity hero text shadow agar teks tetap sangat jelas terbaca di atas video yang terang */
+        /* High clarity hero text shadow agar teks tetap sangat jelas terbaca di atas video yang sangat terang */
         .hero-title-shadow {
-            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.75), 0 1px 3px rgba(0, 0, 0, 0.85);
+            text-shadow: 0 3px 14px rgba(0, 0, 0, 0.95), 0 1px 4px rgba(0, 0, 0, 1), 0 0 24px rgba(0, 0, 0, 0.75);
         }
         .hero-desc-shadow {
-            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.75), 0 1px 2px rgba(0, 0, 0, 0.85);
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.95), 0 1px 3px rgba(0, 0, 0, 1), 0 0 16px rgba(0, 0, 0, 0.75);
         }
 
         /* Video styling */
@@ -108,92 +108,76 @@ $companyShort   = 'AC';
 <body class="selection:bg-[#0CA1AF] selection:text-white">
 
 <!-- ═══════════════════════════════════════════════════════════════════════════
-     HEADER & NAVBAR (100% PERSIS INJOURNEY DESKTOP & RESPONSIVE HEADER)
-     - Transparent saat di atas hero (scrollY < 160) dengan teks berbayang halus
-     - Menjadi solid putih (bg-white text-black shadow-md) saat di-scroll
+     HEADER & NAVBAR (Menyatu Sempurna & Terang Mengikuti Video Beranda)
      ═══════════════════════════════════════════════════════════════════════════ -->
-<header id="main-header" class="fixed top-0 z-50 flex items-center justify-between w-full pt-3 2xl:pt-4 text-lg font-medium px-6 lg:px-12 xl:px-16 3xl:px-32 transition-all duration-300 bg-transparent text-white">
+<header id="main-header" class="fixed top-0 z-50 flex items-center justify-between w-full h-16 px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 text-white transition-all duration-300" style="background: linear-gradient(to bottom, rgba(0, 0, 0, 0.28) 0%, rgba(0, 0, 0, 0.06) 60%, transparent 100%);">
     
     <!-- Brand Logo -->
-    <a href="index.php" class="flex items-center gap-3 cursor-pointer select-none">
-        <div class="w-10 h-10 lg:w-11 lg:h-11 rounded-xl bg-gradient-to-tr from-[#0CA1AF] to-[#014D54] flex items-center justify-center text-white font-extrabold shadow-lg shadow-teal-500/30">
-            <span class="text-base tracking-tighter"><?= $companyShort ?></span>
+    <a href="index.php" class="flex items-center gap-3 cursor-pointer select-none group flex-shrink-0">
+        <div class="w-10 h-10 rounded-xl bg-white text-[#081126] flex items-center justify-center font-black shadow-md group-hover:scale-105 transition-transform border border-white/40">
+            <span class="text-sm font-black tracking-tight">AC</span>
         </div>
         <div class="leading-tight">
-            <span id="brand-title" class="font-extrabold text-base lg:text-lg block tracking-tight transition-colors duration-300 text-white hero-desc-shadow">
-                <?= $companyName ?>
-            </span>
-            <span id="brand-subtitle" class="text-[10px] uppercase tracking-widest font-semibold block transition-colors duration-300 text-teal-200 hero-desc-shadow">
+            <div class="flex items-center space-x-2">
+                <span id="brand-title" class="font-extrabold text-sm sm:text-base block tracking-tight text-white whitespace-nowrap">
+                    <?= $companyName ?>
+                </span>
+                <span class="text-[9px] px-2 py-0.5 rounded-full bg-white/15 text-teal-300 font-extrabold uppercase tracking-wider border border-white/20 backdrop-blur-sm hidden sm:inline-block whitespace-nowrap">Advisory</span>
+            </div>
+            <span id="brand-subtitle" class="text-[10px] uppercase tracking-widest font-semibold block text-slate-300 whitespace-nowrap">
                 <?= $companyTagline ?>
             </span>
         </div>
     </a>
 
-    <!-- Navigation Menus -->
-    <nav class="hidden xl:flex items-center text-sm 2xl:text-base">
-        <ul class="flex items-center gap-2 2xl:gap-6">
-            <li>
-                <a href="index.php" class="nav-item p-1.5 font-semibold link-underline link-underline-white transition-colors duration-300 hero-desc-shadow">
-                    Beranda
-                </a>
-            </li>
-            <li class="relative group">
-                <a href="dashboard.php" class="nav-item p-1.5 font-medium link-underline link-underline-white transition-colors duration-300 hero-desc-shadow">
-                    Dashboard Eksekutif
-                </a>
-            </li>
-            <li class="relative group">
-                <a href="simulation.php" class="nav-item p-1.5 font-medium link-underline link-underline-white transition-colors duration-300 flex items-center gap-1 hero-desc-shadow">
-                    <span>Simulasi 7-Tahap PoC</span>
-                    <span class="text-[10px] px-1.5 py-0.2 rounded-full bg-[#04AFBF] text-white font-bold animate-pulse shadow">Live</span>
-                </a>
-            </li>
-            <li>
-                <a href="database_viewer.php" class="nav-item p-1.5 font-medium link-underline link-underline-white transition-colors duration-300 hero-desc-shadow">
-                    Database Live
-                </a>
-            </li>
-            <li>
-                <a href="blueprint.php" class="nav-item p-1.5 font-medium link-underline link-underline-white transition-colors duration-300 hero-desc-shadow">
-                    Blueprint SRS
-                </a>
-            </li>
-            <li>
-                <a href="panduan.php" class="nav-item p-1.5 font-semibold text-amber-300 hover:text-amber-200 transition-colors duration-300 flex items-center gap-1 hero-desc-shadow">
-                    <i class="fa-solid fa-book-open-reader text-xs"></i>
-                    <span>Panduan Tim</span>
-                </a>
-            </li>
-        </ul>
+    <!-- Navigation Menus (Rapih, 1 Baris Sejajar, Bebas Text-Wrap) -->
+    <nav class="hidden xl:flex items-center gap-1 2xl:gap-2">
+        <a href="index.php" class="px-3.5 py-1.5 rounded-lg bg-white text-[#081126] font-extrabold shadow-sm flex items-center gap-1.5 whitespace-nowrap text-xs xl:text-[13px] 2xl:text-sm">
+            <i class="fa-solid fa-compass text-xs text-[#087F8A]"></i>
+            <span>Beranda</span>
+        </a>
+        <a href="dashboard.php" class="px-3 py-1.5 rounded-lg text-white/85 hover:text-white hover:bg-white/10 transition-all flex items-center gap-1.5 whitespace-nowrap text-xs xl:text-[13px] 2xl:text-sm font-semibold">
+            <i class="fa-solid fa-chart-pie text-xs text-teal-300"></i>
+            <span>Dashboard Eksekutif</span>
+        </a>
+        <a href="simulation.php" class="px-3 py-1.5 rounded-lg text-white/85 hover:text-white hover:bg-white/10 transition-all flex items-center gap-1.5 whitespace-nowrap text-xs xl:text-[13px] 2xl:text-sm font-semibold">
+            <i class="fa-solid fa-microchip text-xs text-teal-300"></i>
+            <span>Simulasi 7-Tahap</span>
+            <span class="text-[9px] px-1.5 py-0.2 rounded-full bg-teal-400/20 text-teal-300 border border-teal-300/30 font-bold">PoC</span>
+        </a>
+        <a href="database_viewer.php" class="px-3 py-1.5 rounded-lg text-white/85 hover:text-white hover:bg-white/10 transition-all flex items-center gap-1.5 whitespace-nowrap text-xs xl:text-[13px] 2xl:text-sm font-semibold">
+            <i class="fa-solid fa-database text-xs text-teal-300"></i>
+            <span>Database Live</span>
+        </a>
     </nav>
 
     <!-- Right Controls: Language Selector & Auth Portal -->
-    <div class="flex items-center gap-3 lg:gap-5">
+    <div class="flex items-center gap-2.5 flex-shrink-0">
         
-        <!-- Language Switcher Pill (InJourney style) -->
-        <div class="hidden sm:flex items-center gap-1 text-xs font-bold">
-            <button id="lang-id" class="border-2 rounded-full px-3 py-0.5 border-white bg-white text-black transition-all shadow">ID</button>
-            <button id="lang-en" class="border-2 rounded-full px-3 py-0.5 border-white text-white hover:bg-white/20 transition-all">EN</button>
+        <!-- Language Switcher Pill (Compact) -->
+        <div class="hidden 2xl:flex items-center rounded-lg bg-white/10 p-0.5 border border-white/20 text-xs font-bold flex-shrink-0">
+            <button id="lang-id" class="px-2 py-0.5 rounded-md bg-white text-[#081126] font-bold shadow-sm text-xs">ID</button>
+            <button id="lang-en" class="px-2 py-0.5 rounded-md text-white/80 hover:text-white text-xs">EN</button>
         </div>
 
         <!-- Auth Button / User Status -->
         <?php if ($user): ?>
-            <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-xs">
+            <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/15 backdrop-blur-md border border-white/25 text-xs text-white flex-shrink-0 whitespace-nowrap">
                 <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span class="font-semibold"><?= htmlspecialchars($user['full_name']) ?></span>
-                <a href="logout.php" title="Keluar" class="ml-1 text-red-300 hover:text-red-100">
-                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                <span class="font-bold text-white"><?= htmlspecialchars($user['full_name']) ?></span>
+                <a href="logout.php" title="Keluar" class="ml-1 text-white/70 hover:text-white transition-colors">
+                    <i class="fa-solid fa-arrow-right-from-bracket text-xs"></i>
                 </a>
             </div>
         <?php else: ?>
-            <a href="login.php" class="flex items-center gap-2 px-4 py-1.5 lg:px-5 lg:py-2 rounded-full bg-[#04AFBF] hover:bg-[#087F8A] text-white text-xs lg:text-sm font-bold shadow-lg shadow-teal-500/20 transition-all transform hover:-translate-y-0.5">
+            <a href="login.php" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#04AFBF] hover:bg-[#087F8A] text-white text-xs font-extrabold shadow-md transition-all whitespace-nowrap">
                 <i class="fa-solid fa-lock text-xs"></i>
                 <span>Masuk Portal</span>
             </a>
         <?php endif; ?>
 
         <!-- Mobile Menu Toggle Button -->
-        <button id="mobile-toggle" class="xl:hidden p-2 text-xl focus:outline-none" aria-label="Toggle Navigation">
+        <button id="mobile-toggle" class="xl:hidden p-2 text-white hover:text-teal-200 text-lg focus:outline-none" aria-label="Toggle Navigation">
             <i class="fa-solid fa-bars"></i>
         </button>
     </div>
@@ -206,11 +190,9 @@ $companyShort   = 'AC';
         <a href="dashboard.php" class="hover:text-teal-200">Dashboard Eksekutif</a>
         <a href="simulation.php" class="hover:text-teal-200">Simulasi 7-Tahap PoC</a>
         <a href="database_viewer.php" class="hover:text-teal-200">Database Live</a>
-        <a href="blueprint.php" class="hover:text-teal-200">Blueprint SRS</a>
-        <a href="panduan.php" class="text-amber-300 hover:text-amber-100">Panduan Tim</a>
     </div>
     <div class="text-center text-xs text-white/70 space-y-1">
-        <p><?= $companyName ?> &bull; Topik 6 ITL Trisakti 2026</p>
+        <p><?= $companyName ?> &bull; Air Cargo &amp; Intermodal Advisory 2026</p>
         <p>InJourney Airports Ecosystem &bull; All Rights Reserved</p>
     </div>
 </div>
@@ -219,31 +201,31 @@ $companyShort   = 'AC';
 <!-- ═══════════════════════════════════════════════════════════════════════════
      HERO SECTION DENGAN VIDEO LOKAL TERANG & JELAS TERLIHAT
      - Video diputar langsung dari file lokal: assets/video/injourney_hero.mp4
-     - Overlay tipis & transparan (black/30 dengan gradient halus) agar video terlihat jernih
+     - Full viewport dari koordinat paling atas menyatu dengan navbar
+     - Overlay tipis transparan agar video terlihat jernih
      - Signature curved cutout InJourney tetap ada di sudut kanan bawah
      ═══════════════════════════════════════════════════════════════════════════ -->
-<section class="relative h-screen lg:pr-6 overflow-hidden bg-slate-900 select-none">
+<section class="relative h-screen lg:pr-6 overflow-hidden bg-[#081126] select-none">
     
-    <!-- Background Video Lokal (Terang, Jernih & Sangat Jelas Terlihat) -->
+    <!-- Background Video Lokal (Ekstra Terang, Jernih & Pemandangan Bandara Sangat Jelas Terlihat) -->
     <div class="relative w-full h-screen">
-        <!-- Overlay sangat lembut hanya di belakang teks kiri (black/40 ke transparan) agar pemandangan video tetap terang benderang -->
-        <div class="absolute inset-0 bg-gradient-to-r from-black/45 via-black/15 to-transparent z-10 pointer-events-none"></div>
-        <div class="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent z-10 pointer-events-none"></div>
+        <!-- Overlay ultra-ringan hanya di sisi kiri teks agar video bandara 100% terang benderang dan terlihat jelas -->
+        <div class="absolute inset-0 bg-gradient-to-r from-black/25 via-transparent to-transparent z-10 pointer-events-none"></div>
         
-        <video id="hero-video" class="object-cover w-full h-screen" style="filter: brightness(1.22) contrast(1.05);" width="100%" loop autoplay muted playsinline preload="auto">
+        <video id="hero-video" class="object-cover w-full h-screen" style="filter: brightness(1.75) contrast(1.15) saturate(1.25);" width="100%" loop autoplay muted playsinline preload="auto">
             <source src="assets/video/injourney_hero.mp4" type="video/mp4">
             <source src="https://injourneyairports.id/assets/home-background-video-renamed-BHhD8CQ5.mp4" type="video/mp4">
         </video>
     </div>
 
     <!-- Hero Content Overlay (Persis posisi InJourney Hero) -->
-    <div class="absolute top-1/2 -translate-y-1/2 lg:top-[260px] lg:translate-y-0 2xl:top-[280px] 3xl:top-72 px-6 lg:px-16 2xl:px-32 w-full z-20">
+    <div class="absolute top-1/2 -translate-y-1/2 lg:top-[200px] lg:translate-y-0 2xl:top-[220px] px-6 lg:px-16 2xl:px-32 w-full z-20">
         <div class="flex flex-col space-y-6 lg:space-y-10 items-start justify-start max-w-5xl">
             
             <!-- Category Tagline -->
             <div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-black/40 border border-teal-300/60 text-teal-300 text-xs 2xl:text-sm font-bold tracking-wider uppercase backdrop-blur-md shadow-lg">
                 <i class="fa-solid fa-plane-departure text-xs text-amber-300"></i>
-                <span>Laporan Konsultansi Teknologi Logistik &bull; Topik 6</span>
+                <span>Laporan Konsultansi Teknologi Logistik Bandara</span>
             </div>
 
             <!-- Big Main Headline (Barlow ExtraBold dengan teks bayangan tajam) -->
@@ -262,9 +244,9 @@ $companyShort   = 'AC';
                     <span>Uji Coba Simulasi 7-Tahap PoC</span>
                 </a>
                 
-                <a href="blueprint.php" class="px-6 py-3.5 lg:px-8 lg:py-4 rounded-full bg-black/40 hover:bg-black/60 border-2 border-white/60 text-white font-semibold text-sm lg:text-base backdrop-blur-md transition-all flex items-center gap-2 shadow-lg">
-                    <i class="fa-solid fa-file-invoice text-sm"></i>
-                    <span>Baca Dokumen Blueprint SRS</span>
+                <a href="dashboard.php" class="px-6 py-3.5 lg:px-8 lg:py-4 rounded-full bg-black/40 hover:bg-black/60 border-2 border-white/60 text-white font-semibold text-sm lg:text-base backdrop-blur-md transition-all flex items-center gap-2 shadow-lg">
+                    <i class="fa-solid fa-chart-pie text-sm"></i>
+                    <span>Buka Dashboard Eksekutif</span>
                 </a>
             </div>
 
@@ -289,7 +271,7 @@ $companyShort   = 'AC';
         <img src="assets/img/injourney/kawung-logo-side-CktPU2GK.png" alt="InJourney Kawung" class="object-contain w-8 lg:w-12">
         <div class="leading-tight">
             <span class="text-xs lg:text-sm font-extrabold text-[#0D1C42] block"><?= $companyName ?></span>
-            <span class="text-[10px] lg:text-xs text-gray-500 font-medium block">Advisory Portal &bull; ITL Trisakti 2026</span>
+            <span class="text-[10px] lg:text-xs text-gray-500 font-medium block">Advisory Portal &bull; Air Cargo Architecture 2026</span>
         </div>
     </div>
 
@@ -327,30 +309,59 @@ $companyShort   = 'AC';
             </div>
 
             <!-- InJourney Styled Pill Button -->
-            <a href="blueprint.php" class="hidden xl:inline-flex items-center gap-2 px-6 py-2.5 border-2 border-[#0D1C42] hover:bg-[#0D1C42] hover:text-white rounded-full font-bold text-sm transition-all duration-300 transform hover:-translate-y-0.5">
-                <span>Pelajari Blueprint SRS</span>
+            <a href="dashboard.php" class="hidden xl:inline-flex items-center gap-2 px-6 py-2.5 border-2 border-[#0D1C42] hover:bg-[#0D1C42] hover:text-white rounded-full font-bold text-sm transition-all duration-300 transform hover:-translate-y-0.5">
+                <span>Eksplor Dashboard Eksekutif</span>
                 <i class="fa-solid fa-arrow-right text-xs"></i>
             </a>
         </div>
 
-        <!-- 2-Column Justified Description (Sama seperti InJourney full_profile 1 & 2) -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 text-justify text-base lg:text-lg text-slate-700 leading-relaxed">
-            <div class="space-y-4">
+        <!-- 2-Column: Deskripsi di Kiri & Foto di Sebelah Kanan (Sesuai InJourney Corporate Profile) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+            
+            <!-- Left Column: Deskripsi Profil & Keahlian (7 Cols) -->
+            <div class="lg:col-span-7 space-y-5 text-justify text-base lg:text-lg text-slate-700 leading-relaxed">
                 <p>
                     <strong class="text-[#0D1C42] font-semibold"><?= $companyName ?></strong> adalah firma konsultan teknologi logistik independen yang dibentuk untuk memberikan arahan strategis dan perancangan arsitektur sistem informasi kepada pengelola terminal kargo bandara serta entitas multimoda. Kami memposisikan diri secara tegas sebagai <span class="font-semibold text-[#087F8A]">penasihat teknis (advisory team)</span> yang merumuskan rekomendasi komprehensif, bukan sebagai vendor pelaksana perangkat keras semata.
                 </p>
-                <p>
-                    Tantangan utama yang dihadapi terminal kargo modern saat ini meliputi tingginya waktu inap kargo (<em>dwell time</em>), inkonsistensi pencatatan manifes kertas e-AWB, serta belum optimalnya interoperabilitas antara sistem transportasi darat (TMS/TAS) dengan sistem kargo udara bandara (CMS).
+                <p class="text-sm lg:text-base text-slate-600">
+                    Untuk menjawab tantangan tingginya <em>dwell time</em> dan fragmentasi sistem, kami merekomendasikan integrasi standardisasi internasional <span class="font-semibold text-[#0D1C42]">GS1 Serial Shipping Container Code (SSCC 18-Digit)</span> sebagai pengenal tunggal palet kargo, sensor otomatis RFID UHF, timbangan cerdas OIML R76, dan screening AVSEC Dual-View yang terkoneksi langsung ke Cargo Security Declaration (CSD).
                 </p>
+                <div class="pt-2 flex flex-wrap items-center gap-3">
+                    <span class="px-3 py-1 rounded-full bg-teal-50 text-[#087F8A] border border-teal-200 text-xs font-bold inline-flex items-center gap-1.5">
+                        <i class="fa-solid fa-certificate text-[11px]"></i> IATA Strategic Advisory
+                    </span>
+                    <span class="px-3 py-1 rounded-full bg-teal-50 text-[#087F8A] border border-teal-200 text-xs font-bold inline-flex items-center gap-1.5">
+                        <i class="fa-solid fa-barcode text-[11px]"></i> GS1 Solution Partner
+                    </span>
+                    <a href="simulation.php" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white text-xs font-bold shadow-md shadow-teal-500/20 transition-all">
+                        <span>Uji Coba Simulasi 7-Tahap</span>
+                        <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                    </a>
+                </div>
             </div>
-            <div class="space-y-4">
-                <p>
-                    Untuk menjawab tantangan tersebut, kami merekomendasikan integrasi standardisasi internasional <span class="font-semibold text-[#0D1C42]">GS1 Serial Shipping Container Code (SSCC 18-Digit)</span> sebagai pengenal identitas tunggal setiap palet kargo, sensor otomatis RFID UHF, jembatan timbang cerdas OIML R76, dan screening AVSEC Dual-View yang terkoneksi langsung ke Cargo Security Declaration (CSD).
-                </p>
-                <p>
-                    Melalui portal ini, kami menyajikan dokumen <strong class="text-[#0D1C42]">Blueprint Software Requirements Specification (SRS)</strong> lengkap beserta simulator Proof-of-Concept interaktif agar pihak manajemen klien dapat memvalidasi seluruh aliran data secara transparan sebelum mengambil keputusan investasi modal.
-                </p>
+
+            <!-- Right Column: Foto di Sebelah Kanan (5 Cols) -->
+            <div class="lg:col-span-5 relative">
+                <div class="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-white group">
+                    <img src="assets/img/company_profile.jpg" alt="PT Aerospace Consultant Operations" class="w-full h-80 lg:h-96 object-cover group-hover:scale-105 transition-transform duration-500">
+                    <div class="absolute inset-0 bg-gradient-to-t from-[#0D1C42]/85 via-[#0D1C42]/20 to-transparent"></div>
+                    
+                    <!-- Floating Overlay Card -->
+                    <div class="absolute bottom-5 left-5 right-5 p-4 rounded-2xl bg-white/95 backdrop-blur-md border border-white/60 shadow-xl">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <span class="text-[10px] text-[#087F8A] font-bold uppercase tracking-wider block">Air Cargo Infrastructure Advisory</span>
+                                <h4 class="text-sm font-extrabold text-[#0D1C42]">PT Aerospace Consultant</h4>
+                                <span class="text-[10.5px] text-slate-500 block mt-0.5">Automated Air Freight Terminal Integration</span>
+                            </div>
+                            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#0CA1AF] to-[#087F8A] text-white flex items-center justify-center font-bold text-xs shadow-md">
+                                AC
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
+
         </div>
 
     </div>
@@ -472,8 +483,8 @@ $companyShort   = 'AC';
                 <p class="text-sm text-slate-600 text-justify leading-relaxed">
                     Perancangan alur kargo inbound dan outbound, pengelolaan zonasi gudang domestik dan internasional, serta integrasi platform Cargo Management System (CMS) berstandar IATA e-AWB.
                 </p>
-                <a href="blueprint.php" class="inline-flex items-center gap-1.5 text-xs font-bold text-[#087F8A] hover:text-[#0CA1AF] pt-2">
-                    <span>Lihat Spesifikasi Teknis</span>
+                <a href="dashboard.php" class="inline-flex items-center gap-1.5 text-xs font-bold text-[#087F8A] hover:text-[#0CA1AF] pt-2">
+                    <span>Lihat Dashboard Terminal</span>
                     <i class="fa-solid fa-chevron-right text-[10px]"></i>
                 </a>
             </div>
@@ -532,8 +543,8 @@ $companyShort   = 'AC';
                 <p class="text-sm text-slate-600 text-justify leading-relaxed">
                     Implementasi barcode 18-digit Serial Shipping Container Code (AI 00) dan Global Trade Item Number (GTIN) guna meniadakan duplikasi data dan human error pelabelan.
                 </p>
-                <a href="blueprint.php" class="inline-flex items-center gap-1.5 text-xs font-bold text-[#087F8A] hover:text-[#0CA1AF] pt-2">
-                    <span>Struktur AI (00) &amp; Check Digit</span>
+                <a href="database_viewer.php" class="inline-flex items-center gap-1.5 text-xs font-bold text-[#087F8A] hover:text-[#0CA1AF] pt-2">
+                    <span>Lihat Data Serial GS1 Live</span>
                     <i class="fa-solid fa-chevron-right text-[10px]"></i>
                 </a>
             </div>
@@ -547,8 +558,8 @@ $companyShort   = 'AC';
                 <p class="text-sm text-slate-600 text-justify leading-relaxed">
                     Analisis Return on Investment (ROI), pemetaan risiko implementasi bertahap (Phased Rollout), serta strategi manajemen perubahan bagi operator lapangan dan maskapai.
                 </p>
-                <a href="blueprint.php" class="inline-flex items-center gap-1.5 text-xs font-bold text-[#087F8A] hover:text-[#0CA1AF] pt-2">
-                    <span>Baca Bab 7 Analisis ROI</span>
+                <a href="dashboard.php" class="inline-flex items-center gap-1.5 text-xs font-bold text-[#087F8A] hover:text-[#0CA1AF] pt-2">
+                    <span>Lihat Metrik ROI Eksekutif</span>
                     <i class="fa-solid fa-chevron-right text-[10px]"></i>
                 </a>
             </div>
@@ -703,7 +714,7 @@ $companyShort   = 'AC';
 
 
 <!-- ═══════════════════════════════════════════════════════════════════════════
-     SECTION 6: TIM KONSULTAN (CARGOPINNACLE CONSULTING — NO NIM)
+     SECTION 6: TIM KONSULTAN (PT AEROSPACE CONSULTANT — NO NIM)
      - Bersih, profesional, nama perusahaan konsultan, tanpa NIM sesuai instruksi
      ═══════════════════════════════════════════════════════════════════════════ -->
 <section class="py-16 lg:py-24 px-6 lg:px-16 2xl:px-32 bg-white">
@@ -792,7 +803,7 @@ $companyShort   = 'AC';
                 <span class="text-xs uppercase font-bold tracking-widest text-[#087F8A]">Publikasi &bull; Berita Terkini</span>
                 <h2 class="text-3xl lg:text-4xl font-extrabold text-[#0D1C42]">Wawasan Industri &amp; Regulasi</h2>
             </div>
-            <a href="blueprint.php" class="text-xs font-bold text-[#087F8A] hover:text-[#0CA1AF] flex items-center gap-1">
+            <a href="dashboard.php" class="text-xs font-bold text-[#087F8A] hover:text-[#0CA1AF] flex items-center gap-1">
                 <span>Lihat Seluruh Publikasi</span>
                 <i class="fa-solid fa-arrow-right text-[10px]"></i>
             </a>
@@ -819,8 +830,8 @@ $companyShort   = 'AC';
                         </p>
                     </div>
                     <div class="pt-4 border-t border-gray-100">
-                        <a href="blueprint.php" class="text-xs font-bold text-[#087F8A] flex items-center gap-1.5">
-                            <span>Baca Selengkapnya</span>
+                        <a href="simulation.php" class="text-xs font-bold text-[#087F8A] flex items-center gap-1.5">
+                            <span>Simulasikan Alur Kargo</span>
                             <i class="fa-solid fa-chevron-right text-[10px]"></i>
                         </a>
                     </div>
@@ -849,8 +860,8 @@ $companyShort   = 'AC';
                         </p>
                     </div>
                     <div class="pt-4 border-t border-gray-100">
-                        <a href="blueprint.php" class="text-xs font-bold text-[#087F8A] flex items-center gap-1.5">
-                            <span>Baca Selengkapnya</span>
+                        <a href="database_viewer.php" class="text-xs font-bold text-[#087F8A] flex items-center gap-1.5">
+                            <span>Lihat Database SSCC Live</span>
                             <i class="fa-solid fa-chevron-right text-[10px]"></i>
                         </a>
                     </div>
@@ -879,8 +890,8 @@ $companyShort   = 'AC';
                         </p>
                     </div>
                     <div class="pt-4 border-t border-gray-100">
-                        <a href="blueprint.php" class="text-xs font-bold text-[#087F8A] flex items-center gap-1.5">
-                            <span>Baca Selengkapnya</span>
+                        <a href="simulation.php" class="text-xs font-bold text-[#087F8A] flex items-center gap-1.5">
+                            <span>Uji Penimbangan Smart Scale</span>
                             <i class="fa-solid fa-chevron-right text-[10px]"></i>
                         </a>
                     </div>
@@ -898,7 +909,7 @@ $companyShort   = 'AC';
      - Gradient: linear-gradient(to right, #0CA1AF, #087F8A, #014D54)
      - Logo Resmi InJourney + Alamat Kantor Pusat Bandara Soekarno Hatta + Call Center 172
      ═══════════════════════════════════════════════════════════════════════════ -->
-<footer class="bg-footer-gradient text-white pt-16 pb-10 px-6 lg:px-16 2xl:px-32 select-none">
+<footer style="background: linear-gradient(to right, #0CA1AF, #087F8A, #014D54) !important;" class="bg-footer-gradient text-white pt-16 pb-10 px-6 lg:px-16 2xl:px-32 select-none">
     <div class="max-w-7xl mx-auto space-y-12">
         
         <!-- 5-Column InJourney Footer Grid -->
@@ -916,13 +927,21 @@ $companyShort   = 'AC';
                     </div>
                 </div>
                 <p class="text-xs text-white/80 leading-relaxed text-justify max-w-sm">
-                    Firma penasihat transformasi digital terminal kargo bandara dan integrasi logistik multimoda. Proyek konsultansi akademik di bawah bimbingan Institut Transportasi &amp; Logistik (ITL) Trisakti, Jakarta.
+                    Firma konsultan independen spesialis rancang bangun arsitektur teknologi kargo udara, integrasi alur logistik multimoda, dan implementasi otomasi alur fisik-digital bandara berstandar global.
                 </p>
-                <div class="flex items-center gap-3 pt-2">
-                    <span class="px-2.5 py-1 rounded bg-white/10 text-[10px] font-semibold tracking-wider">PHP 8.2</span>
-                    <span class="px-2.5 py-1 rounded bg-white/10 text-[10px] font-semibold tracking-wider">MySQL 8</span>
-                    <span class="px-2.5 py-1 rounded bg-white/10 text-[10px] font-semibold tracking-wider">GS1 SSCC</span>
-                    <span class="px-2.5 py-1 rounded bg-white/10 text-[10px] font-semibold tracking-wider">IATA e-AWB</span>
+                <div class="pt-2 space-y-1.5 text-xs text-teal-100">
+                    <p class="flex items-start">
+                        <i class="fa-solid fa-location-dot mr-2 mt-0.5 text-teal-300 text-xs"></i>
+                        <span>Treasury Tower Lt. 28, District 8 SCBD, Jakarta Selatan</span>
+                    </p>
+                    <p class="flex items-center">
+                        <i class="fa-solid fa-envelope mr-2 text-teal-300 text-xs"></i>
+                        <span>corporate@aerospace-consultant.co.id</span>
+                    </p>
+                    <p class="flex items-center">
+                        <i class="fa-solid fa-phone mr-2 text-teal-300 text-xs"></i>
+                        <span>+62 (21) 5088-2890 | Hotline Konsultansi</span>
+                    </p>
                 </div>
             </div>
 
@@ -934,8 +953,6 @@ $companyShort   = 'AC';
                     <li><a href="dashboard.php" class="hover:text-white transition-colors">Dashboard Eksekutif</a></li>
                     <li><a href="simulation.php" class="hover:text-white transition-colors">Simulasi 7-Tahap PoC</a></li>
                     <li><a href="database_viewer.php" class="hover:text-white transition-colors">Database Viewer Live</a></li>
-                    <li><a href="blueprint.php" class="hover:text-white transition-colors">Blueprint Dokumen SRS</a></li>
-                    <li><a href="panduan.php" class="text-amber-300 hover:text-amber-100 font-bold">Panduan Prompting Tim</a></li>
                 </ul>
             </div>
 
@@ -952,17 +969,17 @@ $companyShort   = 'AC';
                 </ul>
             </div>
 
-            <!-- Col 4: Official InJourney Address & Contact Center -->
+            <!-- Col 4: Corporate Office Address & Contact Center (PT Aerospace Consultant) -->
             <div class="space-y-3">
                 <h4 class="font-bold text-sm tracking-wider uppercase text-teal-200">Kontak &amp; Alamat</h4>
                 <div class="space-y-1.5 text-xs text-white/85">
-                    <p class="font-semibold text-white">InJourney Airports Center</p>
-                    <p>Bandar Udara Internasional Soekarno-Hatta</p>
-                    <p class="text-white/70">Jl. M2, Pajang, Kec. Benda, Kota Tangerang, Banten 15126</p>
+                    <p class="font-extrabold text-white">Kantor Pusat PT Aerospace Consultant</p>
+                    <p class="text-white/90">Treasury Tower Lt. 28, District 8 SCBD</p>
+                    <p class="text-white/70">Jl. Jend. Sudirman Kav. 52-53, Senayan, Kebayoran Baru, Jakarta Selatan 12190</p>
                     <div class="pt-2">
                         <span class="block text-white/60 text-[10px] uppercase font-bold">Layanan Contact Center</span>
-                        <span class="text-lg font-extrabold text-amber-300">172</span>
-                        <span class="block text-[10px] text-white/70">(021) 1500-138 / WA: 0811984138</span>
+                        <span class="text-lg font-extrabold text-amber-300">(021) 5088-2890</span>
+                        <span class="block text-[10px] text-white/70">(021) 5088-2890 / WA: 0811-9840-2890</span>
                     </div>
                 </div>
             </div>
@@ -972,12 +989,10 @@ $companyShort   = 'AC';
         <!-- Copyright Row -->
         <div class="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/70 text-center sm:text-left">
             <div>
-                &copy; <?= date('Y') ?> <strong class="text-white"><?= $companyName ?></strong>. Proyek Akademik ITL Trisakti &bull; Topik 6: Air Cargo &amp; Intermodal Terminal.
+                &copy; <?= date('Y') ?> <strong class="text-white"><?= $companyName ?></strong>. Seluruh Hak Cipta Dilindungi &bull; Air Cargo &amp; Intermodal Terminal Advisory.
             </div>
             <div class="flex items-center gap-4 text-[11px]">
                 <span>Desain Terinspirasi dari InJourney Airports</span>
-                <span>&bull;</span>
-                <a href="panduan.php" class="text-amber-300 hover:underline">Panduan Sistem</a>
             </div>
         </div>
 
@@ -1007,47 +1022,13 @@ $companyShort   = 'AC';
     const mobileDrawer = document.getElementById('mobile-drawer');
 
     function updateHeaderOnScroll() {
-        const scrolled = window.scrollY > 160;
+        const scrolled = window.scrollY > 40;
         if (scrolled) {
-            header.classList.remove('bg-transparent', 'text-white');
-            header.classList.add('bg-white', 'text-black', 'shadow-md', 'py-3');
-            
-            brandTitle.classList.remove('text-white', 'hero-desc-shadow');
-            brandTitle.classList.add('text-[#0D1C42]');
-            
-            brandSubtitle.classList.remove('text-teal-200', 'hero-desc-shadow');
-            brandSubtitle.classList.add('text-[#087F8A]');
-
-            navItems.forEach(el => {
-                el.classList.remove('link-underline-white', 'hero-desc-shadow');
-                el.classList.add('link-underline-black');
-            });
-
-            langId.classList.remove('border-white', 'bg-white', 'text-black');
-            langId.classList.add('border-black', 'bg-black', 'text-white');
-            langEn.classList.remove('border-white', 'text-white');
-            langEn.classList.add('border-black', 'text-black');
-            mobileToggle.classList.add('text-black');
+            header.style.background = 'linear-gradient(to right, #0CA1AF, #087F8A, #014D54)';
+            header.classList.add('shadow-xl', 'border-b', 'border-white/20');
         } else {
-            header.classList.add('bg-transparent', 'text-white');
-            header.classList.remove('bg-white', 'text-black', 'shadow-md', 'py-3');
-            
-            brandTitle.classList.add('text-white', 'hero-desc-shadow');
-            brandTitle.classList.remove('text-[#0D1C42]');
-            
-            brandSubtitle.classList.add('text-teal-200', 'hero-desc-shadow');
-            brandSubtitle.classList.remove('text-[#087F8A]');
-
-            navItems.forEach(el => {
-                el.classList.add('link-underline-white', 'hero-desc-shadow');
-                el.classList.remove('link-underline-black');
-            });
-
-            langId.classList.add('border-white', 'bg-white', 'text-black');
-            langId.classList.remove('border-black', 'bg-black', 'text-white');
-            langEn.classList.add('border-white', 'text-white');
-            langEn.classList.remove('border-black', 'text-black');
-            mobileToggle.classList.remove('text-black');
+            header.style.background = 'linear-gradient(to bottom, rgba(0, 0, 0, 0.28) 0%, rgba(0, 0, 0, 0.06) 60%, transparent 100%)';
+            header.classList.remove('shadow-xl', 'border-b', 'border-white/20');
         }
     }
 

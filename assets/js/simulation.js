@@ -1,5 +1,5 @@
 // assets/js/simulation.js
-// Logika Eksekusi Laboratorium Simulasi 7 Tahapan Kargo Udara
+// Logika Eksekusi Laboratorium Simulasi 7 Tahapan Kargo Udara (InJourney Airports Design System)
 
 let currentCargoData = null;
 let currentStageView = 1;
@@ -80,7 +80,15 @@ function initSimulation(cargoId) {
                 updateStepperState(currentCargoData.current_stage, currentCargoData.status);
                 selectStageView(currentCargoData.current_stage || 1);
             } else {
-                Swal.fire('Error', res.message, 'error');
+                Swal.fire({
+                    title: 'Error',
+                    text: res.message,
+                    icon: 'error',
+                    background: '#ffffff',
+                    color: '#0D1C42',
+                    confirmButtonColor: '#087F8A',
+                    customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
+                });
             }
         })
         .catch(err => console.error('Fetch error:', err));
@@ -89,22 +97,22 @@ function initSimulation(cargoId) {
 function renderCargoHeader(c) {
     document.getElementById('card-awb').textContent = c.awb_number;
     document.getElementById('card-sscc').textContent = c.sscc;
-    document.getElementById('card-shipper').innerHTML = `<span class="text-white">${c.shipper}</span> &rarr; ${c.consignee}`;
+    document.getElementById('card-shipper').innerHTML = `<strong class="text-[#0D1C42]">${c.shipper}</strong> &rarr; <span class="text-slate-600">${c.consignee}</span>`;
     document.getElementById('card-commodity').textContent = `${c.commodity_type} (${c.quantity} koli)`;
     
     const actWt = c.actual_weight_kg ? `${parseFloat(c.actual_weight_kg).toFixed(1)} kg` : 'Belum Ditimbang';
     document.getElementById('card-weight').textContent = `${parseFloat(c.declared_weight_kg).toFixed(1)} kg / ${actWt}`;
 
-    // Badge status
+    // Badge status (InJourney Clean Theme)
     const badge = document.getElementById('card-status-badge');
     badge.textContent = c.status;
-    badge.className = 'inline-block px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide ';
+    badge.className = 'inline-block px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide ';
     if (c.status === 'CLEARED' || c.status === 'LOADED') {
-        badge.className += 'bg-emerald-950 text-emerald-300 border border-emerald-700';
+        badge.className += 'bg-emerald-50 text-emerald-700 border border-emerald-200';
     } else if (c.status === 'SUSPECT') {
-        badge.className += 'bg-rose-950 text-rose-300 border border-rose-700 animate-pulse';
+        badge.className += 'bg-rose-50 text-rose-700 border border-rose-300 animate-pulse';
     } else {
-        badge.className += 'bg-[#087F8A]/20 text-[#0CA1AF] border border-[#087F8A]/50';
+        badge.className += 'bg-teal-50 text-[#087F8A] border border-teal-200';
     }
 
     // e-Label info
@@ -127,36 +135,37 @@ function updateStepperState(completedStage, status) {
         const icon = document.getElementById(`step-icon-${s}`);
         const title = document.getElementById(`step-title-${s}`);
 
-        btn.classList.remove('border-[#0CA1AF]', 'bg-[#087F8A]/20', 'border-sky-500', 'bg-sky-950/40', 'border-emerald-500', 'bg-emerald-950/30', 'border-rose-500', 'bg-rose-950/30');
+        btn.className = 'stage-step-card text-left p-3.5 rounded-xl border transition-all flex flex-col justify-between ';
 
         if (s < completedStage) {
             // Sudah lewat (Selesai)
-            circle.className = 'w-6 h-6 rounded-full bg-emerald-600 text-white text-xs font-bold flex items-center justify-center font-mono';
+            circle.className = 'w-6 h-6 rounded-full bg-emerald-500 text-white text-xs font-bold flex items-center justify-center font-mono shadow-sm';
             circle.innerHTML = '<i class="fa-solid fa-check text-[10px]"></i>';
-            icon.className = `fa-solid ${STAGE_METADATA[s].icon} text-emerald-400 text-xs`;
-            title.className = 'text-[11px] font-bold text-emerald-300';
-            btn.classList.add('border-emerald-700/60');
+            icon.className = `fa-solid ${STAGE_METADATA[s].icon} text-emerald-600 text-xs`;
+            title.className = 'text-[11px] font-bold text-emerald-700 leading-snug';
+            btn.className += 'border-emerald-200 bg-emerald-50/40 hover:bg-emerald-50/70';
         } else if (s === completedStage) {
             // Tahap saat ini
             if (status === 'SUSPECT' && s === 4) {
-                circle.className = 'w-6 h-6 rounded-full bg-rose-600 text-white text-xs font-bold flex items-center justify-center font-mono animate-pulse';
+                circle.className = 'w-6 h-6 rounded-full bg-rose-600 text-white text-xs font-bold flex items-center justify-center font-mono animate-pulse ring-4 ring-rose-100';
                 circle.textContent = '!';
-                icon.className = `fa-solid ${STAGE_METADATA[s].icon} text-rose-400 text-xs`;
-                title.className = 'text-[11px] font-bold text-rose-300';
-                btn.classList.add('border-rose-500', 'bg-rose-950/40');
+                icon.className = `fa-solid ${STAGE_METADATA[s].icon} text-rose-600 text-xs`;
+                title.className = 'text-[11px] font-bold text-rose-700 leading-snug';
+                btn.className += 'border-rose-300 bg-rose-50 shadow-sm';
             } else {
-                circle.className = 'w-6 h-6 rounded-full bg-[#087F8A] text-white text-xs font-bold flex items-center justify-center font-mono ring-4 ring-[#0CA1AF]/30';
+                circle.className = 'w-6 h-6 rounded-full bg-gradient-to-tr from-[#0CA1AF] to-[#087F8A] text-white text-xs font-bold flex items-center justify-center font-mono ring-4 ring-teal-100 shadow-sm';
                 circle.textContent = s;
-                icon.className = `fa-solid ${STAGE_METADATA[s].icon} text-[#0CA1AF] text-xs`;
-                title.className = 'text-[11px] font-bold text-white';
-                btn.classList.add('border-[#0CA1AF]', 'bg-[#087F8A]/20');
+                icon.className = `fa-solid ${STAGE_METADATA[s].icon} text-[#087F8A] text-xs`;
+                title.className = 'text-[11px] font-extrabold text-[#0D1C42] leading-snug';
+                btn.className += 'border-[#0CA1AF] bg-teal-50/40 shadow-sm';
             }
         } else {
             // Belum dicapai
-            circle.className = 'w-6 h-6 rounded-full bg-slate-800 text-slate-500 text-xs font-bold flex items-center justify-center font-mono';
+            circle.className = 'w-6 h-6 rounded-full bg-slate-200 text-slate-500 text-xs font-bold flex items-center justify-center font-mono';
             circle.textContent = s;
-            icon.className = `fa-solid ${STAGE_METADATA[s].icon} text-slate-600 text-xs`;
-            title.className = 'text-[11px] font-bold text-slate-500';
+            icon.className = `fa-solid ${STAGE_METADATA[s].icon} text-slate-400 text-xs`;
+            title.className = 'text-[11px] font-bold text-slate-600 leading-snug';
+            btn.className += 'border-gray-200 bg-slate-50/70 hover:border-gray-300 hover:bg-slate-100/50';
         }
     }
 }
@@ -169,9 +178,9 @@ function selectStageView(stage) {
     for (let s = 1; s <= 7; s++) {
         const btn = document.getElementById(`step-btn-${s}`);
         if (s === stage) {
-            btn.classList.add('ring-2', 'ring-[#0CA1AF]/60');
+            btn.classList.add('ring-2', 'ring-[#087F8A]');
         } else {
-            btn.classList.remove('ring-2', 'ring-[#0CA1AF]/60');
+            btn.classList.remove('ring-2', 'ring-[#087F8A]');
         }
     }
 
@@ -184,21 +193,21 @@ function selectStageView(stage) {
     document.getElementById('payloadStandardBadge').textContent = meta.standard;
     document.getElementById('activeStageIcon').className = `fa-solid ${meta.icon}`;
 
-    // Status badge
+    // Status badge (InJourney Clean Theme)
     const badge = document.getElementById('stageCompleteBadge');
     const currentCargoStage = currentCargoData ? currentCargoData.current_stage : 1;
 
     if (stage < currentCargoStage) {
         badge.textContent = 'Status: Selesai Dilalui';
-        badge.className = 'text-xs px-2.5 py-1 rounded-full font-bold bg-emerald-950 text-emerald-300 border border-emerald-700';
+        badge.className = 'text-xs px-3 py-1 rounded-full font-bold bg-emerald-50 text-emerald-700 border border-emerald-200';
     } else if (stage === currentCargoStage) {
         badge.textContent = (currentCargoData && currentCargoData.status === 'SUSPECT') ? 'Status: Kargo Diblokir' : 'Status: Tahap Aktif';
         badge.className = (currentCargoData && currentCargoData.status === 'SUSPECT') 
-            ? 'text-xs px-2.5 py-1 rounded-full font-bold bg-rose-950 text-rose-300 border border-rose-700 animate-pulse'
-            : 'text-xs px-2.5 py-1 rounded-full font-bold bg-[#087F8A]/20 text-[#0CA1AF] border border-[#087F8A]/50';
+            ? 'text-xs px-3 py-1 rounded-full font-bold bg-rose-50 text-rose-700 border border-rose-300 animate-pulse'
+            : 'text-xs px-3 py-1 rounded-full font-bold bg-teal-50 text-[#087F8A] border border-teal-200';
     } else {
         badge.textContent = 'Status: Menunggu Tahap Sebelumnya';
-        badge.className = 'text-xs px-2.5 py-1 rounded-full font-bold bg-slate-800 text-slate-500 border border-slate-700';
+        badge.className = 'text-xs px-3 py-1 rounded-full font-bold bg-slate-100 text-slate-500 border border-slate-200';
     }
 
     // Render Stage Visual Graphic & Action Buttons
@@ -216,40 +225,40 @@ function renderStageGraphic(stage) {
         wrap.innerHTML = `
             <div class="flex items-center justify-center space-x-6">
                 <div class="text-center">
-                    <div class="w-16 h-16 rounded-2xl bg-[#087F8A]/20 border border-[#0CA1AF]/30 flex items-center justify-center text-3xl text-[#0CA1AF] mb-2 shadow-lg">
+                    <div class="w-16 h-16 rounded-2xl bg-white border border-teal-200 flex items-center justify-center text-3xl text-[#087F8A] mb-2 shadow-md">
                         <i class="fa-solid fa-truck"></i>
                     </div>
-                    <span class="text-xs font-mono font-bold text-white">${c.truck_plate || 'B 9482 KXT'}</span>
-                    <span class="text-[10px] text-slate-400 block">${c.driver_name || 'Supir Terdaftar'}</span>
+                    <span class="text-xs font-mono font-bold text-[#0D1C42]">${c.truck_plate || 'B 9482 KXT'}</span>
+                    <span class="text-[10px] text-slate-500 block font-medium">${c.driver_name || 'Supir Terdaftar'}</span>
                 </div>
                 <div class="flex flex-col items-center">
-                    <span class="text-[10px] text-emerald-400 font-mono font-bold mb-1">Time-Slot Booked</span>
-                    <i class="fa-solid fa-arrow-right-long text-[#0CA1AF] text-xl animate-pulse"></i>
-                    <span class="text-[9px] text-slate-500">TAS Auto Gate</span>
+                    <span class="text-[10px] text-emerald-600 font-mono font-bold mb-1">Time-Slot Booked</span>
+                    <i class="fa-solid fa-arrow-right-long text-[#087F8A] text-xl animate-pulse"></i>
+                    <span class="text-[9px] text-slate-500 font-medium">TAS Auto Gate</span>
                 </div>
                 <div class="text-center">
-                    <div class="w-16 h-16 rounded-2xl bg-[#014D54]/50 border border-[#0CA1AF]/30 flex items-center justify-center text-3xl text-teal-300 mb-2 shadow-lg">
+                    <div class="w-16 h-16 rounded-2xl bg-white border border-teal-200 flex items-center justify-center text-3xl text-[#087F8A] mb-2 shadow-md">
                         <i class="fa-solid fa-warehouse"></i>
                     </div>
-                    <span class="text-xs font-mono font-bold text-emerald-400">${c.dock_slot || 'DOCK-04'}</span>
-                    <span class="text-[10px] text-slate-400 block">Dock Alokasi Truk</span>
+                    <span class="text-xs font-mono font-bold text-emerald-700">${c.dock_slot || 'DOCK-04'}</span>
+                    <span class="text-[10px] text-slate-500 block font-medium">Dock Alokasi Truk</span>
                 </div>
             </div>
         `;
     } else if (stage === 2) {
         wrap.innerHTML = `
             <div class="flex flex-col items-center justify-center">
-                <div class="relative w-72 h-16 rounded-xl bg-slate-900 border border-[#0CA1AF]/50 flex items-center justify-between px-4 overflow-hidden mb-3">
-                    <div class="absolute inset-x-0 h-0.5 bg-[#0CA1AF] shadow-[0_0_12px_#0CA1AF] animate-pulse"></div>
-                    <div class="flex items-center space-x-2 text-[#0CA1AF] text-xs font-bold">
+                <div class="relative w-80 h-16 rounded-xl bg-white border-2 border-[#0CA1AF] flex items-center justify-between px-4 overflow-hidden mb-3 shadow-md">
+                    <div class="absolute inset-x-0 h-0.5 bg-[#0CA1AF] shadow-[0_0_10px_#0CA1AF] animate-pulse"></div>
+                    <div class="flex items-center space-x-2 text-[#087F8A] text-xs font-bold">
                         <i class="fa-solid fa-barcode text-lg"></i>
                         <span>RFID UHF Antenna (865MHz)</span>
                     </div>
-                    <span class="text-[10px] font-mono text-emerald-400 font-bold">2.5 m/s TUNNEL</span>
+                    <span class="text-[10px] font-mono text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">2.5 m/s TUNNEL</span>
                 </div>
-                <div class="flex items-center space-x-3 text-xs font-mono text-slate-300">
-                    <span class="text-slate-400">Captured SSCC:</span>
-                    <span class="text-[#0CA1AF] font-bold bg-slate-900 px-2 py-0.5 rounded border border-slate-700">${c.sscc}</span>
+                <div class="flex items-center space-x-3 text-xs font-mono">
+                    <span class="text-slate-500 font-medium">Captured SSCC:</span>
+                    <span class="text-[#087F8A] font-bold bg-white px-2.5 py-1 rounded-lg border border-teal-200 shadow-sm">${c.sscc}</span>
                 </div>
             </div>
         `;
@@ -257,19 +266,19 @@ function renderStageGraphic(stage) {
         wrap.innerHTML = `
             <div class="flex items-center justify-center space-x-6">
                 <div class="text-center">
-                    <div class="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-700 flex items-center justify-center text-2xl text-slate-300 mb-1">
+                    <div class="w-14 h-14 rounded-2xl bg-white border border-gray-200 flex items-center justify-center text-2xl text-slate-700 mb-1 shadow-sm">
                         <i class="fa-solid fa-file-invoice"></i>
                     </div>
-                    <span class="text-[11px] font-mono text-[#0CA1AF] font-bold">${c.awb_number}</span>
-                    <span class="text-[10px] text-slate-400 block">Digital e-AWB</span>
+                    <span class="text-[11px] font-mono text-[#087F8A] font-bold">${c.awb_number}</span>
+                    <span class="text-[10px] text-slate-500 block font-medium">Digital e-AWB</span>
                 </div>
-                <i class="fa-solid fa-arrows-rotate text-[#0CA1AF] text-xl animate-spin" style="animation-duration: 6s;"></i>
+                <i class="fa-solid fa-arrows-rotate text-[#087F8A] text-xl animate-spin" style="animation-duration: 6s;"></i>
                 <div class="text-center">
-                    <div class="w-14 h-14 rounded-2xl bg-[#014D54]/50 border border-[#0CA1AF]/30 flex items-center justify-center text-2xl text-teal-300 mb-1">
+                    <div class="w-14 h-14 rounded-2xl bg-white border border-teal-200 flex items-center justify-center text-2xl text-[#087F8A] mb-1 shadow-sm">
                         <i class="fa-solid fa-server"></i>
                     </div>
-                    <span class="text-[11px] font-bold text-white">CMS Central</span>
-                    <span class="text-[10px] text-emerald-400 block">AWB MATCHED</span>
+                    <span class="text-[11px] font-bold text-[#0D1C42]">CMS Central</span>
+                    <span class="text-[10px] text-emerald-700 font-semibold block">AWB MATCHED</span>
                 </div>
             </div>
         `;
@@ -277,19 +286,19 @@ function renderStageGraphic(stage) {
         const isSuspect = c.status === 'SUSPECT';
         wrap.innerHTML = `
             <div class="flex flex-col items-center justify-center">
-                <div class="w-80 p-4 rounded-xl border ${isSuspect ? 'border-rose-500 bg-rose-950/40' : 'border-emerald-500 bg-emerald-950/30'} flex items-center justify-between">
+                <div class="w-80 p-4 rounded-xl border ${isSuspect ? 'border-rose-300 bg-rose-50 shadow-md' : 'border-emerald-200 bg-emerald-50/80 shadow-md'} flex items-center justify-between">
                     <div class="flex items-center space-x-3">
-                        <div class="w-12 h-12 rounded-lg ${isSuspect ? 'bg-rose-900 text-rose-300' : 'bg-emerald-900 text-emerald-300'} flex items-center justify-center text-2xl">
+                        <div class="w-12 h-12 rounded-lg ${isSuspect ? 'bg-rose-100 text-rose-600' : 'bg-emerald-100 text-emerald-600'} flex items-center justify-center text-2xl">
                             <i class="fa-solid ${isSuspect ? 'fa-triangle-exclamation animate-bounce' : 'fa-check-double'}"></i>
                         </div>
                         <div class="text-left">
-                            <div class="text-xs font-bold text-white">Dual-View 320kV Sinar-X</div>
-                            <div class="text-[10px] ${isSuspect ? 'text-rose-400 font-bold' : 'text-emerald-400'}">
+                            <div class="text-xs font-bold text-[#0D1C42]">Dual-View 320kV Sinar-X</div>
+                            <div class="text-[10px] ${isSuspect ? 'text-rose-700 font-extrabold' : 'text-emerald-700 font-bold'}">
                                 ${isSuspect ? 'SUSPECT: DETEKSI DANGEROUS GOODS' : 'CLEARED: AMAN & LOLOS (CSD ISSUED)'}
                             </div>
                         </div>
                     </div>
-                    <span class="text-[10px] font-mono px-2 py-1 rounded bg-black/60 text-slate-300">
+                    <span class="text-[10px] font-mono px-2 py-1 rounded ${isSuspect ? 'bg-rose-200 text-rose-800 font-bold' : 'bg-emerald-200 text-emerald-800 font-bold'}">
                         ${isSuspect ? 'BLOCKED' : 'AVSEC PASS'}
                     </span>
                 </div>
@@ -299,17 +308,17 @@ function renderStageGraphic(stage) {
         const wt = c.actual_weight_kg ? parseFloat(c.actual_weight_kg).toFixed(1) : parseFloat(c.declared_weight_kg).toFixed(1);
         wrap.innerHTML = `
             <div class="flex flex-col items-center justify-center">
-                <div class="p-4 rounded-2xl bg-black border border-slate-700 flex items-center space-x-6 shadow-2xl">
+                <div class="p-4 rounded-2xl bg-[#0D1C42] border border-slate-700 flex items-center space-x-6 shadow-xl">
                     <div class="text-center">
-                        <span class="text-[9px] text-slate-400 uppercase tracking-widest block font-bold">Smart Floor Scale</span>
+                        <span class="text-[9px] text-teal-300 uppercase tracking-widest block font-bold">Smart Floor Scale</span>
                         <div class="text-3xl font-black text-amber-400 font-mono tracking-wider mt-0.5">
-                            ${wt} <span class="text-sm text-slate-400">KG</span>
+                            ${wt} <span class="text-sm text-slate-300">KG</span>
                         </div>
                         <span class="text-[9px] text-emerald-400 font-mono">Load Cell IP68 &bull; ±1kg</span>
                     </div>
-                    <div class="border-l border-slate-800 pl-4 text-left text-[10px] space-y-1">
-                        <div>Deklarasi AWB: <strong class="text-white">${parseFloat(c.declared_weight_kg).toFixed(1)} kg</strong></div>
-                        <div>Toleransi: <span class="text-emerald-400 font-bold">VALID (Within Limit)</span></div>
+                    <div class="border-l border-slate-700 pl-4 text-left text-[10px] space-y-1">
+                        <div class="text-slate-300">Deklarasi AWB: <strong class="text-white">${parseFloat(c.declared_weight_kg).toFixed(1)} kg</strong></div>
+                        <div class="text-slate-300">Toleransi: <span class="text-emerald-400 font-bold">VALID (Within Limit)</span></div>
                     </div>
                 </div>
             </div>
@@ -317,13 +326,13 @@ function renderStageGraphic(stage) {
     } else if (stage === 6) {
         wrap.innerHTML = `
             <div class="flex items-center justify-center space-x-6">
-                <div class="w-16 h-16 rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-center text-3xl text-[#0CA1AF]">
-                    <i class="fa-solid fa-box-archive"></i>
+                <div class="w-16 h-16 rounded-xl bg-white border border-teal-200 flex items-center justify-center text-3xl text-[#087F8A] shadow-md">
+                    <i class="fa-solid fa-boxes-packing"></i>
                 </div>
                 <div class="text-left text-xs">
-                    <div class="font-bold text-white font-mono">${c.uld_code || 'AKE-12345-GA'} (Tipe ${c.uld_type || 'AKE'})</div>
-                    <div class="text-[11px] text-teal-300 font-medium mt-0.5">Posisi: ${c.compartment || 'AFT-LOWER-1'}</div>
-                    <div class="text-[10px] text-slate-400 mt-1">Weight &amp; Balance: Center of Gravity (CoG) 28.4% (Optimal)</div>
+                    <div class="font-black text-[#0D1C42] font-mono text-sm">${c.uld_code || 'AKE-12345-GA'} (Tipe ${c.uld_type || 'AKE'})</div>
+                    <div class="text-[11px] text-[#087F8A] font-bold mt-0.5">Posisi: ${c.compartment || 'AFT-LOWER-1'}</div>
+                    <div class="text-[10px] text-slate-500 mt-1">Weight &amp; Balance: Center of Gravity (CoG) 28.4% (Optimal)</div>
                 </div>
             </div>
         `;
@@ -333,8 +342,8 @@ function renderStageGraphic(stage) {
                 <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#04AFBF] to-[#087F8A] flex items-center justify-center text-3xl text-white mb-2 shadow-lg shadow-teal-500/25">
                     <i class="fa-solid fa-plane-departure"></i>
                 </div>
-                <span class="text-sm font-bold text-white">${c.flight_number || 'GA-707'} (Garuda Indonesia Cargo)</span>
-                <span class="text-xs text-[#0CA1AF] font-mono mt-0.5">Loadsheet Diterbitkan &amp; Ramp Pushback Ready</span>
+                <span class="text-sm font-extrabold text-[#0D1C42]">${c.flight_number || 'GA-707'} (Garuda Indonesia Cargo)</span>
+                <span class="text-xs text-[#087F8A] font-mono mt-0.5 font-bold">Loadsheet Diterbitkan &amp; Ramp Pushback Ready</span>
             </div>
         `;
     }
@@ -351,11 +360,11 @@ function renderStageActionButtons(stage) {
     // If stage 4 (AVSEC), provide 2 choices: Pass or Fail
     if (stage === 4) {
         container.innerHTML = `
-            <button onclick="executeStageAction(4, 'CLEARED')" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-lg shadow-emerald-500/20 transition-all flex items-center">
+            <button onclick="executeStageAction(4, 'CLEARED')" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-500/20 transition-all flex items-center transform hover:-translate-y-0.5">
                 <i class="fa-solid fa-shield-halved mr-1.5"></i>
                 <span>Simulasi Loloskan X-Ray (CLEARED)</span>
             </button>
-            <button onclick="executeStageAction(4, 'SUSPECT')" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-700 to-red-600 hover:from-rose-600 hover:to-red-500 text-white font-bold text-xs shadow-lg shadow-rose-500/20 transition-all flex items-center">
+            <button onclick="executeStageAction(4, 'SUSPECT')" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-bold text-xs shadow-md shadow-rose-500/20 transition-all flex items-center transform hover:-translate-y-0.5">
                 <i class="fa-solid fa-triangle-exclamation mr-1.5"></i>
                 <span>Simulasi Temuan Bahaya (SUSPECT)</span>
             </button>
@@ -377,12 +386,12 @@ function renderStageActionButtons(stage) {
     const disabledAttr = (stage > currentCargoStage + 1 && c.status !== 'SUSPECT') ? 'disabled opacity-50 cursor-not-allowed' : '';
 
     container.innerHTML = `
-        <button onclick="executeStageAction(${stage}, 'CLEARED')" ${disabledAttr} class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-bold text-xs shadow-lg shadow-teal-500/20 transition-all flex items-center">
+        <button onclick="executeStageAction(${stage}, 'CLEARED')" ${disabledAttr} class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-bold text-xs shadow-md shadow-teal-500/25 transition-all flex items-center transform hover:-translate-y-0.5">
             <i class="fa-solid ${btnIcon} mr-2"></i>
             <span>${btnText}</span>
         </button>
         ${stage < 7 ? `
-            <button onclick="selectStageView(${stage + 1})" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-[#087F8A]/30 text-slate-300 hover:text-white text-xs font-semibold border border-slate-700 hover:border-[#087F8A]/50 transition-colors">
+            <button onclick="selectStageView(${stage + 1})" class="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-[#0D1C42] hover:text-[#087F8A] text-xs font-bold border border-gray-300 shadow-sm transition-colors flex items-center">
                 <span>Lihat Tahap ${stage + 1}</span>
                 <i class="fa-solid fa-arrow-right ml-1.5 text-xs"></i>
             </button>
@@ -398,9 +407,9 @@ function executeStageAction(stage, avsecDecision) {
         text: 'Mengirim JSON payload ke sistem...',
         allowOutsideClick: false,
         didOpen: () => { Swal.showLoading(); },
-        background: '#0D1C42',
-        color: '#fff',
-        customClass: { popup: 'border border-teal-500/30 shadow-2xl' }
+        background: '#ffffff',
+        color: '#0D1C42',
+        customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
     });
 
     fetch('api/simulate.php', {
@@ -420,10 +429,10 @@ function executeStageAction(stage, avsecDecision) {
                 title: 'Tahap Berhasil Diproses!',
                 text: res.message,
                 icon: (avsecDecision === 'SUSPECT') ? 'warning' : 'success',
-                background: '#0D1C42',
-                color: '#fff',
+                background: '#ffffff',
+                color: '#0D1C42',
                 confirmButtonColor: (avsecDecision === 'SUSPECT') ? '#e11d48' : '#087F8A',
-                customClass: { popup: 'border border-teal-500/30 shadow-2xl' }
+                customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
             }).then(() => {
                 initSimulation(currentCargoData.id);
             });
@@ -432,14 +441,22 @@ function executeStageAction(stage, avsecDecision) {
                 title: 'Peringatan Operasional!',
                 text: res.message,
                 icon: 'error',
-                background: '#0D1C42',
-                color: '#fff',
+                background: '#ffffff',
+                color: '#0D1C42',
                 confirmButtonColor: '#087F8A',
-                customClass: { popup: 'border border-teal-500/30 shadow-2xl' }
+                customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
             });
         }
     })
-    .catch(err => Swal.fire('Error', 'Gagal memproses tahap: ' + err, 'error'));
+    .catch(err => Swal.fire({
+        title: 'Error',
+        text: 'Gagal memproses tahap: ' + err,
+        icon: 'error',
+        background: '#ffffff',
+        color: '#0D1C42',
+        confirmButtonColor: '#087F8A',
+        customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
+    }));
 }
 
 function triggerAutoRun() {
@@ -451,12 +468,12 @@ function triggerAutoRun() {
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#087F8A',
-        cancelButtonColor: '#475569',
+        cancelButtonColor: '#94a3b8',
         confirmButtonText: 'Ya, Jalankan Demo!',
         cancelButtonText: 'Batal',
-        background: '#0D1C42',
-        color: '#fff',
-        customClass: { popup: 'border border-teal-500/30 shadow-2xl' }
+        background: '#ffffff',
+        color: '#0D1C42',
+        customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
     }).then(result => {
         if (result.isConfirmed) {
             Swal.fire({
@@ -464,9 +481,9 @@ function triggerAutoRun() {
                 text: 'Memindahkan data melalui 7 tahapan...',
                 allowOutsideClick: false,
                 didOpen: () => { Swal.showLoading(); },
-                background: '#0D1C42',
-                color: '#fff',
-                customClass: { popup: 'border border-teal-500/30 shadow-2xl' }
+                background: '#ffffff',
+                color: '#0D1C42',
+                customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
             });
 
             fetch('api/simulate.php', {
@@ -484,18 +501,34 @@ function triggerAutoRun() {
                         title: 'Simulasi Lengkap Berhasil!',
                         text: 'Semua 7 tahapan kargo telah disimulasikan hingga status LOADED dan manifes penerbangan GA-707 ditutup.',
                         icon: 'success',
-                        background: '#0D1C42',
-                        color: '#fff',
+                        background: '#ffffff',
+                        color: '#0D1C42',
                         confirmButtonColor: '#087F8A',
-                        customClass: { popup: 'border border-teal-500/30 shadow-2xl' }
+                        customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
                     }).then(() => {
                         initSimulation(currentCargoData.id);
                     });
                 } else {
-                    Swal.fire('Peringatan', res.message, 'warning');
+                    Swal.fire({
+                        title: 'Peringatan',
+                        text: res.message,
+                        icon: 'warning',
+                        background: '#ffffff',
+                        color: '#0D1C42',
+                        confirmButtonColor: '#087F8A',
+                        customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
+                    });
                 }
             })
-            .catch(err => Swal.fire('Error', 'Auto-run error: ' + err, 'error'));
+            .catch(err => Swal.fire({
+                title: 'Error',
+                text: 'Auto-run error: ' + err,
+                icon: 'error',
+                background: '#ffffff',
+                color: '#0D1C42',
+                confirmButtonColor: '#087F8A',
+                customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
+            }));
         }
     });
 }
@@ -681,11 +714,11 @@ function switchPayloadTab(tab) {
     const resBtn = document.getElementById('tabBtnResponse');
 
     if (tab === 'request') {
-        reqBtn.className = 'flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold bg-[#087F8A]/30 text-[#0CA1AF] border border-[#087F8A]/50 transition-all';
-        resBtn.className = 'flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800 transition-all';
+        reqBtn.className = 'flex-1 py-1.5 px-3 rounded-lg text-xs font-bold bg-[#087F8A] text-white shadow-sm transition-all flex items-center justify-center';
+        resBtn.className = 'flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold bg-slate-100 text-slate-600 hover:text-slate-800 border border-gray-200 transition-all flex items-center justify-center';
     } else {
-        resBtn.className = 'flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold bg-[#087F8A]/30 text-[#0CA1AF] border border-[#087F8A]/50 transition-all';
-        reqBtn.className = 'flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800 transition-all';
+        resBtn.className = 'flex-1 py-1.5 px-3 rounded-lg text-xs font-bold bg-[#087F8A] text-white shadow-sm transition-all flex items-center justify-center';
+        reqBtn.className = 'flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold bg-slate-100 text-slate-600 hover:text-slate-800 border border-gray-200 transition-all flex items-center justify-center';
     }
 
     displayActivePayload();
@@ -707,9 +740,9 @@ function copyPayloadToClipboard() {
             icon: 'success',
             showConfirmButton: false,
             timer: 2000,
-            background: '#0D1C42',
-            color: '#fff',
-            customClass: { popup: 'border border-teal-500/30' }
+            background: '#ffffff',
+            color: '#0D1C42',
+            customClass: { popup: 'rounded-xl shadow-lg border border-gray-200' }
         });
     });
 }
@@ -719,7 +752,7 @@ function renderAuditTimeline(logs) {
     document.getElementById('logCountBadge').textContent = `${logs ? logs.length : 0} Record`;
 
     if (!logs || logs.length === 0) {
-        container.innerHTML = '<p class="text-slate-500 text-xs text-center py-4">Belum ada log transaksi.</p>';
+        container.innerHTML = '<p class="text-slate-400 text-xs text-center py-4">Belum ada log transaksi.</p>';
         return;
     }
 
@@ -727,18 +760,18 @@ function renderAuditTimeline(logs) {
     logs.forEach(log => {
         const timeStr = new Date(log.timestamp).toLocaleTimeString();
         html += `
-            <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 text-xs">
+            <div class="p-3 rounded-xl bg-slate-50 border border-gray-200 text-xs hover:border-[#0CA1AF] transition-colors">
                 <div class="flex items-center justify-between mb-1">
-                    <span class="font-bold text-[#0CA1AF] flex items-center">
-                        <span class="w-1.5 h-1.5 rounded-full bg-[#0CA1AF] mr-1.5"></span>
+                    <span class="font-bold text-[#0D1C42] flex items-center">
+                        <span class="w-2 h-2 rounded-full bg-[#087F8A] mr-2"></span>
                         Tahap ${log.stage}: ${log.stage_name}
                     </span>
-                    <span class="text-[10px] font-mono text-slate-500">${timeStr}</span>
+                    <span class="text-[10px] font-mono text-slate-400 font-semibold">${timeStr}</span>
                 </div>
-                <p class="text-[11px] text-slate-300">${log.action}</p>
-                <div class="mt-1.5 flex items-center justify-between text-[10px] text-slate-500">
-                    <span>HW: ${log.hardware_device}</span>
-                    <span class="font-mono text-emerald-400">HTTP ${log.http_status}</span>
+                <p class="text-[11.5px] text-slate-600 pl-4">${log.action}</p>
+                <div class="mt-1.5 flex items-center justify-between text-[10px] text-slate-500 pl-4">
+                    <span>HW: <strong class="text-slate-700 font-semibold">${log.hardware_device}</strong></span>
+                    <span class="font-mono text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">HTTP ${log.http_status}</span>
                 </div>
             </div>
         `;
