@@ -11,9 +11,9 @@ if (isset($_GET['quick'])) {
     if ($role === 'consultant') {
         $_SESSION['user_id'] = 1;
         $_SESSION['username'] = 'consultant';
-        $_SESSION['full_name'] = 'Tim Konsultan Kelompok 1';
+        $_SESSION['full_name'] = 'PT Aerospace Consultant';
         $_SESSION['role'] = 'consultant';
-        $_SESSION['organization'] = 'ITL Trisakti - Advisory Group';
+        $_SESSION['organization'] = 'PT Aerospace Consultant Advisory';
         header("Location: dashboard.php");
         exit;
     } elseif ($role === 'client') {

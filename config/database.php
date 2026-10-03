@@ -53,12 +53,16 @@ function getCurrentUser() {
     if (!isLoggedIn()) {
         return null;
     }
+    if (isset($_SESSION['full_name']) && in_array($_SESSION['full_name'], ['Tim Konsultan Kelompok 1', 'CargoPinnacle Consulting'])) {
+        $_SESSION['full_name'] = 'PT Aerospace Consultant';
+        $_SESSION['organization'] = 'PT Aerospace Consultant Advisory';
+    }
     return [
         'id' => $_SESSION['user_id'] ?? null,
         'username' => $_SESSION['username'] ?? 'guest',
-        'full_name' => $_SESSION['full_name'] ?? 'Guest User',
+        'full_name' => $_SESSION['full_name'] ?? 'PT Aerospace Consultant',
         'role' => $_SESSION['role'] ?? 'consultant',
-        'organization' => $_SESSION['organization'] ?? 'ITL Trisakti'
+        'organization' => $_SESSION['organization'] ?? 'PT Aerospace Consultant Advisory'
     ];
 }
 

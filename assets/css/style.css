@@ -1,50 +1,52 @@
-/* Custom Styling for Air Cargo & Intermodal Terminal Advisory Platform */
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+/* assets/css/style.css — InJourney Airports Design System (Teal & Navy Concept) */
+@import url('https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
 :root {
-    --primary: #0284c7;
-    --primary-dark: #0369a1;
-    --accent: #38bdf8;
-    --bg-dark: #0b1329;
-    --card-bg: #111e38;
+    --primary: #087F8A;        /* InJourney Dark Teal */
+    --primary-light: #0CA1AF;  /* InJourney Brand Teal */
+    --accent: #04AFBF;         /* InJourney Cyan Button */
+    --primary-dark: #014D54;   /* InJourney Deep Sea Cyan */
+    --navy: #0D1C42;           /* InJourney Deep Navy */
+    --navy-dark: #081126;      /* InJourney Canvas Dark */
+    --card-bg: #0D1C42;
 }
 
 body {
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-family: 'Barlow', sans-serif;
 }
 
 .font-mono {
     font-family: 'JetBrains Mono', monospace;
 }
 
-/* Glassmorphism effects */
+/* Glassmorphism effects tuned to InJourney Navy & Teal */
 .glass-panel {
-    background: rgba(17, 30, 56, 0.75);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(13, 28, 66, 0.88);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(12, 161, 175, 0.22);
 }
 
 .glass-panel-light {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(226, 232, 240, 0.8);
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(226, 232, 240, 0.9);
 }
 
 .glass-card {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
+    background: linear-gradient(135deg, rgba(12, 161, 175, 0.08) 0%, rgba(13, 28, 66, 0.6) 100%);
+    border: 1px solid rgba(12, 161, 175, 0.18);
+    box-shadow: 0 8px 32px 0 rgba(8, 17, 38, 0.35);
 }
 
-/* Glowing animations */
+/* InJourney Glowing Animations */
 @keyframes pulse-glow {
     0%, 100% {
-        box-shadow: 0 0 15px rgba(56, 189, 248, 0.35);
+        box-shadow: 0 0 15px rgba(4, 175, 191, 0.4);
     }
     50% {
-        box-shadow: 0 0 30px rgba(56, 189, 248, 0.7);
+        box-shadow: 0 0 30px rgba(4, 175, 191, 0.8);
     }
 }
 
@@ -52,23 +54,81 @@ body {
     animation: pulse-glow 2s infinite ease-in-out;
 }
 
-/* Custom Scrollbar */
+/* InJourney Link Underline */
+.link-underline {
+    border-bottom-width: 0;
+    background-image: linear-gradient(transparent, transparent), linear-gradient(#04AFBF, #04AFBF);
+    background-size: 0 2px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    transition: background-size .35s ease-in-out;
+}
+.link-underline-black {
+    background-image: linear-gradient(transparent, transparent), linear-gradient(#000, #000);
+}
+.link-underline-teal {
+    background-image: linear-gradient(transparent, transparent), linear-gradient(#087f8a, #087f8a);
+}
+.link-underline-white {
+    background-image: linear-gradient(transparent, transparent), linear-gradient(#fff, #fff);
+}
+.link-underline:hover {
+    background-size: 100% 2px;
+    background-position: 0 100%;
+}
+
+/* InJourney Gradients */
+.bg-injourney-gradient {
+    background: linear-gradient(96.84deg, #0ca1af 17.89%, #087f8a 44.05%, #014d54 91.57%);
+}
+.bg-footer-gradient {
+    background: linear-gradient(to right, #0CA1AF, #087F8A, #014D54);
+}
+.bg-teal-gradient {
+    background: linear-gradient(135deg, #04AFBF 0%, #087F8A 100%);
+}
+.bg-navy-gradient {
+    background: linear-gradient(135deg, #0D1C42 0%, #081126 100%);
+}
+
+/* InJourney Buttons */
+.btn-injourney {
+    background: linear-gradient(135deg, #04AFBF 0%, #087F8A 100%);
+    color: #ffffff;
+    font-weight: 700;
+    box-shadow: 0 4px 14px 0 rgba(8, 127, 138, 0.35);
+    transition: all 0.2s ease-in-out;
+}
+.btn-injourney:hover {
+    background: linear-gradient(135deg, #0CA1AF 0%, #04AFBF 100%);
+    box-shadow: 0 6px 20px 0 rgba(12, 161, 175, 0.45);
+    transform: translateY(-1px);
+}
+
+.hero-title-shadow {
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.75), 0 1px 3px rgba(0, 0, 0, 0.85);
+}
+.hero-desc-shadow {
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.75), 0 1px 2px rgba(0, 0, 0, 0.85);
+}
+
+/* Custom Scrollbar in InJourney Teal */
 ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-    background: #0f172a;
+    background: #081126;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #334155;
+    background: #087F8A;
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #475569;
+    background: #0CA1AF;
 }
 
 /* Barcode visualization stripe */
@@ -88,8 +148,8 @@ body {
 
 /* JSON Code syntax coloring simulation */
 .code-container {
-    background: #090d16;
-    border: 1px solid #1e293b;
+    background: #060d1d;
+    border: 1px solid #162a52;
     border-radius: 0.5rem;
     padding: 1rem;
     color: #e2e8f0;
@@ -99,18 +159,21 @@ body {
 /* Print styles for blueprint report */
 @media print {
     body {
-        background: #ffffff !important;
-        color: #000000 !important;
+        background: #fff !important;
+        color: #000 !important;
     }
-    .no-print {
+    header, footer, .no-print, button, .actions-bar {
         display: none !important;
     }
     .print-only {
         display: block !important;
     }
     .glass-panel, .glass-card {
-        background: transparent !important;
+        background: none !important;
         border: 1px solid #ccc !important;
         box-shadow: none !important;
+    }
+    .text-slate-100, .text-slate-200, .text-slate-300, .text-slate-400 {
+        color: #111 !important;
     }
 }

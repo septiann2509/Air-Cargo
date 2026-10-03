@@ -104,7 +104,7 @@ function renderCargoHeader(c) {
     } else if (c.status === 'SUSPECT') {
         badge.className += 'bg-rose-950 text-rose-300 border border-rose-700 animate-pulse';
     } else {
-        badge.className += 'bg-sky-950 text-sky-300 border border-sky-700';
+        badge.className += 'bg-[#087F8A]/20 text-[#0CA1AF] border border-[#087F8A]/50';
     }
 
     // e-Label info
@@ -127,7 +127,7 @@ function updateStepperState(completedStage, status) {
         const icon = document.getElementById(`step-icon-${s}`);
         const title = document.getElementById(`step-title-${s}`);
 
-        btn.classList.remove('border-sky-500', 'bg-sky-950/40', 'border-emerald-500', 'bg-emerald-950/30', 'border-rose-500', 'bg-rose-950/30');
+        btn.classList.remove('border-[#0CA1AF]', 'bg-[#087F8A]/20', 'border-sky-500', 'bg-sky-950/40', 'border-emerald-500', 'bg-emerald-950/30', 'border-rose-500', 'bg-rose-950/30');
 
         if (s < completedStage) {
             // Sudah lewat (Selesai)
@@ -145,11 +145,11 @@ function updateStepperState(completedStage, status) {
                 title.className = 'text-[11px] font-bold text-rose-300';
                 btn.classList.add('border-rose-500', 'bg-rose-950/40');
             } else {
-                circle.className = 'w-6 h-6 rounded-full bg-sky-500 text-white text-xs font-bold flex items-center justify-center font-mono ring-4 ring-sky-500/20';
+                circle.className = 'w-6 h-6 rounded-full bg-[#087F8A] text-white text-xs font-bold flex items-center justify-center font-mono ring-4 ring-[#0CA1AF]/30';
                 circle.textContent = s;
-                icon.className = `fa-solid ${STAGE_METADATA[s].icon} text-sky-400 text-xs`;
+                icon.className = `fa-solid ${STAGE_METADATA[s].icon} text-[#0CA1AF] text-xs`;
                 title.className = 'text-[11px] font-bold text-white';
-                btn.classList.add('border-sky-500', 'bg-sky-950/40');
+                btn.classList.add('border-[#0CA1AF]', 'bg-[#087F8A]/20');
             }
         } else {
             // Belum dicapai
@@ -169,9 +169,9 @@ function selectStageView(stage) {
     for (let s = 1; s <= 7; s++) {
         const btn = document.getElementById(`step-btn-${s}`);
         if (s === stage) {
-            btn.classList.add('ring-2', 'ring-indigo-400/50');
+            btn.classList.add('ring-2', 'ring-[#0CA1AF]/60');
         } else {
-            btn.classList.remove('ring-2', 'ring-indigo-400/50');
+            btn.classList.remove('ring-2', 'ring-[#0CA1AF]/60');
         }
     }
 
@@ -195,7 +195,7 @@ function selectStageView(stage) {
         badge.textContent = (currentCargoData && currentCargoData.status === 'SUSPECT') ? 'Status: Kargo Diblokir' : 'Status: Tahap Aktif';
         badge.className = (currentCargoData && currentCargoData.status === 'SUSPECT') 
             ? 'text-xs px-2.5 py-1 rounded-full font-bold bg-rose-950 text-rose-300 border border-rose-700 animate-pulse'
-            : 'text-xs px-2.5 py-1 rounded-full font-bold bg-sky-950 text-sky-300 border border-sky-700';
+            : 'text-xs px-2.5 py-1 rounded-full font-bold bg-[#087F8A]/20 text-[#0CA1AF] border border-[#087F8A]/50';
     } else {
         badge.textContent = 'Status: Menunggu Tahap Sebelumnya';
         badge.className = 'text-xs px-2.5 py-1 rounded-full font-bold bg-slate-800 text-slate-500 border border-slate-700';
@@ -216,7 +216,7 @@ function renderStageGraphic(stage) {
         wrap.innerHTML = `
             <div class="flex items-center justify-center space-x-6">
                 <div class="text-center">
-                    <div class="w-16 h-16 rounded-2xl bg-sky-950 border border-sky-500/40 flex items-center justify-center text-3xl text-sky-400 mb-2 shadow-lg">
+                    <div class="w-16 h-16 rounded-2xl bg-[#087F8A]/20 border border-[#0CA1AF]/30 flex items-center justify-center text-3xl text-[#0CA1AF] mb-2 shadow-lg">
                         <i class="fa-solid fa-truck"></i>
                     </div>
                     <span class="text-xs font-mono font-bold text-white">${c.truck_plate || 'B 9482 KXT'}</span>
@@ -224,11 +224,11 @@ function renderStageGraphic(stage) {
                 </div>
                 <div class="flex flex-col items-center">
                     <span class="text-[10px] text-emerald-400 font-mono font-bold mb-1">Time-Slot Booked</span>
-                    <i class="fa-solid fa-arrow-right-long text-sky-400 text-xl animate-pulse"></i>
+                    <i class="fa-solid fa-arrow-right-long text-[#0CA1AF] text-xl animate-pulse"></i>
                     <span class="text-[9px] text-slate-500">TAS Auto Gate</span>
                 </div>
                 <div class="text-center">
-                    <div class="w-16 h-16 rounded-2xl bg-indigo-950 border border-indigo-500/40 flex items-center justify-center text-3xl text-indigo-400 mb-2 shadow-lg">
+                    <div class="w-16 h-16 rounded-2xl bg-[#014D54]/50 border border-[#0CA1AF]/30 flex items-center justify-center text-3xl text-teal-300 mb-2 shadow-lg">
                         <i class="fa-solid fa-warehouse"></i>
                     </div>
                     <span class="text-xs font-mono font-bold text-emerald-400">${c.dock_slot || 'DOCK-04'}</span>
@@ -239,9 +239,9 @@ function renderStageGraphic(stage) {
     } else if (stage === 2) {
         wrap.innerHTML = `
             <div class="flex flex-col items-center justify-center">
-                <div class="relative w-72 h-16 rounded-xl bg-slate-900 border border-sky-500/50 flex items-center justify-between px-4 overflow-hidden mb-3">
-                    <div class="absolute inset-x-0 h-0.5 bg-sky-400 shadow-[0_0_12px_#38bdf8] animate-pulse"></div>
-                    <div class="flex items-center space-x-2 text-sky-400 text-xs font-bold">
+                <div class="relative w-72 h-16 rounded-xl bg-slate-900 border border-[#0CA1AF]/50 flex items-center justify-between px-4 overflow-hidden mb-3">
+                    <div class="absolute inset-x-0 h-0.5 bg-[#0CA1AF] shadow-[0_0_12px_#0CA1AF] animate-pulse"></div>
+                    <div class="flex items-center space-x-2 text-[#0CA1AF] text-xs font-bold">
                         <i class="fa-solid fa-barcode text-lg"></i>
                         <span>RFID UHF Antenna (865MHz)</span>
                     </div>
@@ -249,7 +249,7 @@ function renderStageGraphic(stage) {
                 </div>
                 <div class="flex items-center space-x-3 text-xs font-mono text-slate-300">
                     <span class="text-slate-400">Captured SSCC:</span>
-                    <span class="text-sky-300 font-bold bg-slate-900 px-2 py-0.5 rounded border border-slate-700">${c.sscc}</span>
+                    <span class="text-[#0CA1AF] font-bold bg-slate-900 px-2 py-0.5 rounded border border-slate-700">${c.sscc}</span>
                 </div>
             </div>
         `;
@@ -260,12 +260,12 @@ function renderStageGraphic(stage) {
                     <div class="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-700 flex items-center justify-center text-2xl text-slate-300 mb-1">
                         <i class="fa-solid fa-file-invoice"></i>
                     </div>
-                    <span class="text-[11px] font-mono text-sky-400 font-bold">${c.awb_number}</span>
+                    <span class="text-[11px] font-mono text-[#0CA1AF] font-bold">${c.awb_number}</span>
                     <span class="text-[10px] text-slate-400 block">Digital e-AWB</span>
                 </div>
-                <i class="fa-solid fa-arrows-rotate text-sky-400 text-xl animate-spin" style="animation-duration: 6s;"></i>
+                <i class="fa-solid fa-arrows-rotate text-[#0CA1AF] text-xl animate-spin" style="animation-duration: 6s;"></i>
                 <div class="text-center">
-                    <div class="w-14 h-14 rounded-2xl bg-indigo-950 border border-indigo-500/40 flex items-center justify-center text-2xl text-indigo-400 mb-1">
+                    <div class="w-14 h-14 rounded-2xl bg-[#014D54]/50 border border-[#0CA1AF]/30 flex items-center justify-center text-2xl text-teal-300 mb-1">
                         <i class="fa-solid fa-server"></i>
                     </div>
                     <span class="text-[11px] font-bold text-white">CMS Central</span>
@@ -317,24 +317,24 @@ function renderStageGraphic(stage) {
     } else if (stage === 6) {
         wrap.innerHTML = `
             <div class="flex items-center justify-center space-x-6">
-                <div class="w-16 h-16 rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-center text-3xl text-sky-400">
+                <div class="w-16 h-16 rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-center text-3xl text-[#0CA1AF]">
                     <i class="fa-solid fa-box-archive"></i>
                 </div>
                 <div class="text-left text-xs">
                     <div class="font-bold text-white font-mono">${c.uld_code || 'AKE-12345-GA'} (Tipe ${c.uld_type || 'AKE'})</div>
-                    <div class="text-[11px] text-indigo-400 font-medium mt-0.5">Posisi: ${c.compartment || 'AFT-LOWER-1'}</div>
-                    <div class="text-[10px] text-slate-400 mt-1">Weight & Balance: Center of Gravity (CoG) 28.4% (Optimal)</div>
+                    <div class="text-[11px] text-teal-300 font-medium mt-0.5">Posisi: ${c.compartment || 'AFT-LOWER-1'}</div>
+                    <div class="text-[10px] text-slate-400 mt-1">Weight &amp; Balance: Center of Gravity (CoG) 28.4% (Optimal)</div>
                 </div>
             </div>
         `;
     } else if (stage === 7) {
         wrap.innerHTML = `
             <div class="flex flex-col items-center justify-center text-center">
-                <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-sky-600 to-indigo-600 flex items-center justify-center text-3xl text-white mb-2 shadow-lg shadow-sky-500/25">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#04AFBF] to-[#087F8A] flex items-center justify-center text-3xl text-white mb-2 shadow-lg shadow-teal-500/25">
                     <i class="fa-solid fa-plane-departure"></i>
                 </div>
                 <span class="text-sm font-bold text-white">${c.flight_number || 'GA-707'} (Garuda Indonesia Cargo)</span>
-                <span class="text-xs text-sky-400 font-mono mt-0.5">Loadsheet Diterbitkan & Ramp Pushback Ready</span>
+                <span class="text-xs text-[#0CA1AF] font-mono mt-0.5">Loadsheet Diterbitkan &amp; Ramp Pushback Ready</span>
             </div>
         `;
     }
@@ -377,12 +377,12 @@ function renderStageActionButtons(stage) {
     const disabledAttr = (stage > currentCargoStage + 1 && c.status !== 'SUSPECT') ? 'disabled opacity-50 cursor-not-allowed' : '';
 
     container.innerHTML = `
-        <button onclick="executeStageAction(${stage}, 'CLEARED')" ${disabledAttr} class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-bold text-xs shadow-lg shadow-sky-500/20 transition-all flex items-center">
+        <button onclick="executeStageAction(${stage}, 'CLEARED')" ${disabledAttr} class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-bold text-xs shadow-lg shadow-teal-500/20 transition-all flex items-center">
             <i class="fa-solid ${btnIcon} mr-2"></i>
             <span>${btnText}</span>
         </button>
         ${stage < 7 ? `
-            <button onclick="selectStageView(${stage + 1})" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 transition-colors">
+            <button onclick="selectStageView(${stage + 1})" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-[#087F8A]/30 text-slate-300 hover:text-white text-xs font-semibold border border-slate-700 hover:border-[#087F8A]/50 transition-colors">
                 <span>Lihat Tahap ${stage + 1}</span>
                 <i class="fa-solid fa-arrow-right ml-1.5 text-xs"></i>
             </button>
@@ -398,8 +398,9 @@ function executeStageAction(stage, avsecDecision) {
         text: 'Mengirim JSON payload ke sistem...',
         allowOutsideClick: false,
         didOpen: () => { Swal.showLoading(); },
-        background: '#111e38',
-        color: '#fff'
+        background: '#0D1C42',
+        color: '#fff',
+        customClass: { popup: 'border border-teal-500/30 shadow-2xl' }
     });
 
     fetch('api/simulate.php', {
@@ -419,9 +420,10 @@ function executeStageAction(stage, avsecDecision) {
                 title: 'Tahap Berhasil Diproses!',
                 text: res.message,
                 icon: (avsecDecision === 'SUSPECT') ? 'warning' : 'success',
-                background: '#111e38',
+                background: '#0D1C42',
                 color: '#fff',
-                confirmButtonColor: (avsecDecision === 'SUSPECT') ? '#e11d48' : '#0284c7'
+                confirmButtonColor: (avsecDecision === 'SUSPECT') ? '#e11d48' : '#087F8A',
+                customClass: { popup: 'border border-teal-500/30 shadow-2xl' }
             }).then(() => {
                 initSimulation(currentCargoData.id);
             });
@@ -430,9 +432,10 @@ function executeStageAction(stage, avsecDecision) {
                 title: 'Peringatan Operasional!',
                 text: res.message,
                 icon: 'error',
-                background: '#111e38',
+                background: '#0D1C42',
                 color: '#fff',
-                confirmButtonColor: '#0284c7'
+                confirmButtonColor: '#087F8A',
+                customClass: { popup: 'border border-teal-500/30 shadow-2xl' }
             });
         }
     })
@@ -447,12 +450,13 @@ function triggerAutoRun() {
         text: 'Sistem akan mengeksekusi Tahap 1 hingga Tahap 7 secara berurutan secara otomatis untuk demonstrasi kepada klien.',
         icon: 'question',
         showCancelButton: true,
-        confirmButtonColor: '#10b981',
+        confirmButtonColor: '#087F8A',
         cancelButtonColor: '#475569',
         confirmButtonText: 'Ya, Jalankan Demo!',
         cancelButtonText: 'Batal',
-        background: '#111e38',
-        color: '#fff'
+        background: '#0D1C42',
+        color: '#fff',
+        customClass: { popup: 'border border-teal-500/30 shadow-2xl' }
     }).then(result => {
         if (result.isConfirmed) {
             Swal.fire({
@@ -460,8 +464,9 @@ function triggerAutoRun() {
                 text: 'Memindahkan data melalui 7 tahapan...',
                 allowOutsideClick: false,
                 didOpen: () => { Swal.showLoading(); },
-                background: '#111e38',
-                color: '#fff'
+                background: '#0D1C42',
+                color: '#fff',
+                customClass: { popup: 'border border-teal-500/30 shadow-2xl' }
             });
 
             fetch('api/simulate.php', {
@@ -479,9 +484,10 @@ function triggerAutoRun() {
                         title: 'Simulasi Lengkap Berhasil!',
                         text: 'Semua 7 tahapan kargo telah disimulasikan hingga status LOADED dan manifes penerbangan GA-707 ditutup.',
                         icon: 'success',
-                        background: '#111e38',
+                        background: '#0D1C42',
                         color: '#fff',
-                        confirmButtonColor: '#0284c7'
+                        confirmButtonColor: '#087F8A',
+                        customClass: { popup: 'border border-teal-500/30 shadow-2xl' }
                     }).then(() => {
                         initSimulation(currentCargoData.id);
                     });
@@ -675,10 +681,10 @@ function switchPayloadTab(tab) {
     const resBtn = document.getElementById('tabBtnResponse');
 
     if (tab === 'request') {
-        reqBtn.className = 'flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold bg-sky-600/30 text-sky-300 border border-sky-500/40 transition-all';
+        reqBtn.className = 'flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold bg-[#087F8A]/30 text-[#0CA1AF] border border-[#087F8A]/50 transition-all';
         resBtn.className = 'flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800 transition-all';
     } else {
-        resBtn.className = 'flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold bg-sky-600/30 text-sky-300 border border-sky-500/40 transition-all';
+        resBtn.className = 'flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold bg-[#087F8A]/30 text-[#0CA1AF] border border-[#087F8A]/50 transition-all';
         reqBtn.className = 'flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800 transition-all';
     }
 
@@ -701,8 +707,9 @@ function copyPayloadToClipboard() {
             icon: 'success',
             showConfirmButton: false,
             timer: 2000,
-            background: '#111e38',
-            color: '#fff'
+            background: '#0D1C42',
+            color: '#fff',
+            customClass: { popup: 'border border-teal-500/30' }
         });
     });
 }
@@ -722,8 +729,8 @@ function renderAuditTimeline(logs) {
         html += `
             <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 text-xs">
                 <div class="flex items-center justify-between mb-1">
-                    <span class="font-bold text-sky-300 flex items-center">
-                        <span class="w-1.5 h-1.5 rounded-full bg-sky-400 mr-1.5"></span>
+                    <span class="font-bold text-[#0CA1AF] flex items-center">
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#0CA1AF] mr-1.5"></span>
                         Tahap ${log.stage}: ${log.stage_name}
                     </span>
                     <span class="text-[10px] font-mono text-slate-500">${timeStr}</span>

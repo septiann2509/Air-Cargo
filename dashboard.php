@@ -36,7 +36,7 @@ include __DIR__ . '/includes/header.php';
         <div>
             <div class="flex items-center space-x-2">
                 <h1 class="text-2xl font-black text-white tracking-tight">Executive Dashboard Konsultan</h1>
-                <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-sky-900/80 text-sky-300 border border-sky-700/60 uppercase">
+                <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-[#087F8A]/20 text-[#0CA1AF] border border-[#087F8A]/50 uppercase">
                     Live Operations
                 </span>
             </div>
@@ -46,12 +46,12 @@ include __DIR__ . '/includes/header.php';
         </div>
 
         <div class="flex items-center space-x-2">
-            <button onclick="openNewCargoModal()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-semibold text-xs shadow-lg shadow-sky-500/20 transition-all flex items-center">
+            <button onclick="openNewCargoModal()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-semibold text-xs shadow-lg shadow-teal-500/20 transition-all flex items-center">
                 <i class="fa-solid fa-plus mr-1.5"></i>
                 <span>Input Kargo Baru</span>
             </button>
             <a href="simulation.php" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs border border-slate-700 transition-all flex items-center">
-                <i class="fa-solid fa-play mr-1.5 text-sky-400"></i>
+                <i class="fa-solid fa-play mr-1.5 text-[#0CA1AF]"></i>
                 <span>Buka Lab Simulasi</span>
             </a>
             <button onclick="refreshDashboardData()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white border border-slate-700 text-xs transition-colors" title="Perbarui Data">
@@ -64,16 +64,16 @@ include __DIR__ . '/includes/header.php';
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
         
         <!-- Metric 1: Total Inbound -->
-        <div class="glass-panel p-5 rounded-2xl border border-slate-800 relative overflow-hidden group hover:border-sky-500/50 transition-all">
+        <div class="glass-panel p-5 rounded-2xl border border-slate-800 relative overflow-hidden group hover:border-[#0CA1AF]/50 transition-all">
             <div class="flex items-center justify-between">
                 <div>
                     <span class="text-xs text-slate-400 font-medium">Total Inbound Kargo</span>
                     <h3 id="stat-total-cargos" class="text-2xl font-black text-white mt-1 font-mono"><?= count($cargos) ?></h3>
-                    <p class="text-[11px] text-sky-400 mt-1 flex items-center">
+                    <p class="text-[11px] text-[#0CA1AF] mt-1 flex items-center">
                         <i class="fa-solid fa-barcode mr-1"></i> Standar GS1 SSCC
                     </p>
                 </div>
-                <div class="w-12 h-12 rounded-xl bg-sky-950/70 border border-sky-500/30 text-sky-400 flex items-center justify-center text-xl">
+                <div class="w-12 h-12 rounded-xl bg-[#087F8A]/20 border border-[#0CA1AF]/30 text-[#0CA1AF] flex items-center justify-center text-xl">
                     <i class="fa-solid fa-boxes-stacked"></i>
                 </div>
             </div>
@@ -101,16 +101,16 @@ include __DIR__ . '/includes/header.php';
         </div>
 
         <!-- Metric 3: ULD Build-Up Status -->
-        <div class="glass-panel p-5 rounded-2xl border border-slate-800 relative overflow-hidden group hover:border-indigo-500/50 transition-all">
+        <div class="glass-panel p-5 rounded-2xl border border-slate-800 relative overflow-hidden group hover:border-[#0CA1AF]/50 transition-all">
             <div class="flex items-center justify-between">
                 <div>
                     <span class="text-xs text-slate-400 font-medium">Kontainer ULD Aktif</span>
                     <h3 class="text-2xl font-black text-white mt-1 font-mono"><?= count($ulds) ?></h3>
-                    <p class="text-[11px] text-indigo-400 mt-1 flex items-center">
-                        <i class="fa-solid fa-weight-hanging mr-1"></i> Weight & Balance Safe
+                    <p class="text-[11px] text-teal-300 mt-1 flex items-center">
+                        <i class="fa-solid fa-weight-hanging mr-1"></i> Weight &amp; Balance Safe
                     </p>
                 </div>
-                <div class="w-12 h-12 rounded-xl bg-indigo-950/70 border border-indigo-500/30 text-indigo-400 flex items-center justify-center text-xl">
+                <div class="w-12 h-12 rounded-xl bg-[#014D54]/50 border border-[#0CA1AF]/30 text-teal-300 flex items-center justify-center text-xl">
                     <i class="fa-solid fa-box-open"></i>
                 </div>
             </div>
@@ -123,7 +123,7 @@ include __DIR__ . '/includes/header.php';
                     <span class="text-xs text-slate-400 font-medium">Penerbangan Kargo</span>
                     <h3 class="text-2xl font-black text-white mt-1 font-mono"><?= count($flights) ?></h3>
                     <p class="text-[11px] text-amber-400 mt-1 flex items-center">
-                        <i class="fa-solid fa-plane-up mr-1"></i> GA-707 & SQ-801
+                        <i class="fa-solid fa-plane-up mr-1"></i> GA-707 &amp; SQ-801
                     </p>
                 </div>
                 <div class="w-12 h-12 rounded-xl bg-amber-950/70 border border-amber-500/30 text-amber-400 flex items-center justify-center text-xl">
@@ -139,7 +139,7 @@ include __DIR__ . '/includes/header.php';
         <div class="flex items-center justify-between mb-4">
             <div>
                 <h3 class="text-sm font-bold text-white flex items-center">
-                    <i class="fa-solid fa-network-wired text-sky-400 mr-2"></i>
+                    <i class="fa-solid fa-network-wired text-[#0CA1AF] mr-2"></i>
                     Status Pipeline Kargo di 7 Tahapan Rekomendasi
                 </h3>
                 <p class="text-[11px] text-slate-400">Monitoring jumlah kargo yang sedang berada di setiap workstation</p>
@@ -151,38 +151,38 @@ include __DIR__ . '/includes/header.php';
             <!-- Stage 1 -->
             <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 text-center">
                 <span class="text-[10px] text-slate-400 font-semibold block uppercase">1. Truk Tiba</span>
-                <span id="stage-count-1" class="text-xl font-bold text-sky-400 font-mono my-1 block">0</span>
+                <span id="stage-count-1" class="text-xl font-bold text-[#0CA1AF] font-mono my-1 block">0</span>
                 <span class="text-[10px] text-slate-400">TMS/TAS</span>
             </div>
             <!-- Stage 2 -->
             <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 text-center">
                 <span class="text-[10px] text-slate-400 font-semibold block uppercase">2. Scan RFID</span>
-                <span id="stage-count-2" class="text-xl font-bold text-sky-400 font-mono my-1 block">0</span>
+                <span id="stage-count-2" class="text-xl font-bold text-[#0CA1AF] font-mono my-1 block">0</span>
                 <span class="text-[10px] text-slate-400">Gate AIDC</span>
             </div>
             <!-- Stage 3 -->
             <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 text-center">
                 <span class="text-[10px] text-slate-400 font-semibold block uppercase">3. CMS e-AWB</span>
-                <span id="stage-count-3" class="text-xl font-bold text-sky-400 font-mono my-1 block">0</span>
+                <span id="stage-count-3" class="text-xl font-bold text-[#0CA1AF] font-mono my-1 block">0</span>
                 <span class="text-[10px] text-slate-400">Registrasi</span>
             </div>
             <!-- Stage 4 -->
             <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 text-center">
                 <span class="text-[10px] text-slate-400 font-semibold block uppercase">4. AVSEC X-Ray</span>
-                <span id="stage-count-4" class="text-xl font-bold text-sky-400 font-mono my-1 block">0</span>
+                <span id="stage-count-4" class="text-xl font-bold text-[#0CA1AF] font-mono my-1 block">0</span>
                 <span class="text-[10px] text-slate-400">Dual-View</span>
             </div>
             <!-- Stage 5 -->
             <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 text-center">
                 <span class="text-[10px] text-slate-400 font-semibold block uppercase">5. Penimbangan</span>
-                <span id="stage-count-5" class="text-xl font-bold text-sky-400 font-mono my-1 block">0</span>
+                <span id="stage-count-5" class="text-xl font-bold text-[#0CA1AF] font-mono my-1 block">0</span>
                 <span class="text-[10px] text-slate-400">Scale 15T</span>
             </div>
             <!-- Stage 6 -->
             <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 text-center">
                 <span class="text-[10px] text-slate-400 font-semibold block uppercase">6. Build ULD</span>
-                <span id="stage-count-6" class="text-xl font-bold text-sky-400 font-mono my-1 block">0</span>
-                <span class="text-[10px] text-slate-400">Weight & Bal</span>
+                <span id="stage-count-6" class="text-xl font-bold text-[#0CA1AF] font-mono my-1 block">0</span>
+                <span class="text-[10px] text-slate-400">Weight &amp; Bal</span>
             </div>
             <!-- Stage 7 -->
             <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 text-center">
@@ -199,7 +199,7 @@ include __DIR__ . '/includes/header.php';
         <!-- Chart 1: Commodity Types -->
         <div class="glass-panel p-5 rounded-2xl border border-slate-800">
             <h3 class="text-xs font-bold text-white mb-3 flex items-center">
-                <i class="fa-solid fa-chart-pie text-sky-400 mr-2"></i>
+                <i class="fa-solid fa-chart-pie text-[#0CA1AF] mr-2"></i>
                 Komposisi Kargo Berdasarkan Komoditas
             </h3>
             <div class="h-52 relative flex items-center justify-center">
@@ -210,7 +210,7 @@ include __DIR__ . '/includes/header.php';
         <!-- Chart 2: ULD Capacities -->
         <div class="glass-panel p-5 rounded-2xl border border-slate-800">
             <h3 class="text-xs font-bold text-white mb-3 flex items-center">
-                <i class="fa-solid fa-chart-bar text-indigo-400 mr-2"></i>
+                <i class="fa-solid fa-chart-bar text-teal-300 mr-2"></i>
                 Utilisasi Beban Kontainer ULD (kg)
             </h3>
             <div class="h-52 relative">
@@ -239,20 +239,20 @@ include __DIR__ . '/includes/header.php';
                             </p>
                             <div class="mt-2 flex items-center justify-between text-[11px] text-slate-400">
                                 <span>Pesawat: <?= htmlspecialchars($f['aircraft_type']) ?></span>
-                                <span class="font-mono text-sky-400"><?= number_format($f['current_total_weight_kg']) ?> / <?= number_format($f['max_cargo_weight_kg']) ?> kg</span>
+                                <span class="font-mono text-[#0CA1AF]"><?= number_format($f['current_total_weight_kg']) ?> / <?= number_format($f['max_cargo_weight_kg']) ?> kg</span>
                             </div>
                             <div class="w-full bg-slate-800 h-1.5 rounded-full mt-1.5 overflow-hidden">
                                 <?php 
                                     $pct = $f['max_cargo_weight_kg'] > 0 ? min(100, round(($f['current_total_weight_kg'] / $f['max_cargo_weight_kg']) * 100)) : 0;
                                 ?>
-                                <div class="bg-sky-500 h-full rounded-full" style="width: <?= $pct ?>%"></div>
+                                <div class="bg-gradient-to-r from-[#04AFBF] to-[#087F8A] h-full rounded-full" style="width: <?= $pct ?>%"></div>
                             </div>
                         </div>
                     <?php endforeach; ?>
                 </div>
             </div>
 
-            <a href="simulation.php" class="mt-4 block text-center py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-sky-300 text-xs font-semibold border border-slate-700 transition-colors">
+            <a href="simulation.php" class="mt-4 block text-center py-2 px-3 rounded-xl bg-slate-800 hover:bg-[#087F8A]/30 text-[#0CA1AF] text-xs font-semibold border border-slate-700 hover:border-[#087F8A]/50 transition-colors">
                 <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i> Buka Simulasi Pemuatan ULD
             </a>
         </div>
@@ -264,12 +264,12 @@ include __DIR__ . '/includes/header.php';
         <div class="p-5 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
                 <h3 class="text-sm font-bold text-white flex items-center">
-                    <i class="fa-solid fa-list-check text-sky-400 mr-2"></i>
+                    <i class="fa-solid fa-list-check text-[#0CA1AF] mr-2"></i>
                     Daftar Kargo Masuk & Status Tahapan Terkini
                 </h3>
                 <p class="text-[11px] text-slate-400">Pilih kargo untuk melanjutkan atau menguji simulasinya di laboratorium sistem</p>
             </div>
-            <a href="database_viewer.php?table=cargo_shipments" class="text-xs text-sky-400 hover:text-sky-300 font-semibold flex items-center">
+            <a href="database_viewer.php?table=cargo_shipments" class="text-xs text-[#0CA1AF] hover:text-teal-200 font-semibold flex items-center">
                 <span>Buka di Database Explorer</span>
                 <i class="fa-solid fa-chevron-right ml-1 text-[10px]"></i>
             </a>
@@ -303,7 +303,7 @@ include __DIR__ . '/includes/header.php';
                                     <span class="text-[10px] text-slate-500"><?= htmlspecialchars($c['id']) ?></span>
                                 </td>
                                 <td class="py-3 px-4">
-                                    <span class="text-sky-400 font-bold"><?= htmlspecialchars($c['sscc']) ?></span>
+                                    <span class="text-[#0CA1AF] font-bold"><?= htmlspecialchars($c['sscc']) ?></span>
                                     <span class="text-[10px] text-slate-500 block">GTIN: <?= htmlspecialchars($c['gtin']) ?></span>
                                 </td>
                                 <td class="py-3 px-4 font-sans">
@@ -316,15 +316,15 @@ include __DIR__ . '/includes/header.php';
                                 </td>
                                 <td class="py-3 px-4 font-sans">
                                     <div class="flex items-center space-x-1.5">
-                                        <span class="w-5 h-5 rounded-full bg-sky-950 text-sky-400 border border-sky-800 text-[10px] font-bold flex items-center justify-center">
+                                        <span class="w-5 h-5 rounded-full bg-[#087F8A]/20 text-[#0CA1AF] border border-[#087F8A]/50 text-[10px] font-bold flex items-center justify-center">
                                             <?= $c['current_stage'] ?>
                                         </span>
                                         <?php
                                             $badgeClass = 'bg-slate-800 text-slate-300';
                                             if ($c['status'] === 'CLEARED') $badgeClass = 'bg-emerald-950/80 text-emerald-300 border border-emerald-700/60';
                                             elseif ($c['status'] === 'SUSPECT') $badgeClass = 'bg-rose-950/80 text-rose-300 border border-rose-700/60';
-                                            elseif ($c['status'] === 'LOADED') $badgeClass = 'bg-indigo-950/80 text-indigo-300 border border-indigo-700/60';
-                                            elseif ($c['status'] === 'ALLOCATED') $badgeClass = 'bg-sky-950/80 text-sky-300 border border-sky-700/60';
+                                            elseif ($c['status'] === 'LOADED') $badgeClass = 'bg-[#014D54] text-teal-200 border border-teal-600/60';
+                                            elseif ($c['status'] === 'ALLOCATED') $badgeClass = 'bg-[#087F8A]/20 text-[#0CA1AF] border border-[#087F8A]/50';
                                         ?>
                                         <span class="px-2 py-0.5 rounded text-[10px] font-bold <?= $badgeClass ?>">
                                             <?= htmlspecialchars($c['status']) ?>
@@ -332,11 +332,11 @@ include __DIR__ . '/includes/header.php';
                                     </div>
                                 </td>
                                 <td class="py-3 px-4">
-                                    <div class="text-slate-300">Dock: <span class="text-sky-400"><?= htmlspecialchars($c['dock_slot'] ?? '-') ?></span></div>
+                                    <div class="text-slate-300">Dock: <span class="text-[#0CA1AF]"><?= htmlspecialchars($c['dock_slot'] ?? '-') ?></span></div>
                                     <div class="text-[10px] text-slate-500">ULD: <?= htmlspecialchars($c['uld_code'] ?? 'Belum Di-build') ?></div>
                                 </td>
                                 <td class="py-3 px-4 text-center font-sans">
-                                    <a href="simulation.php?cargo_id=<?= urlencode($c['id']) ?>" class="inline-flex items-center px-2.5 py-1 rounded-lg bg-sky-600/30 hover:bg-sky-600 text-sky-300 hover:text-white border border-sky-500/40 text-[11px] font-semibold transition-all">
+                                    <a href="simulation.php?cargo_id=<?= urlencode($c['id']) ?>" class="inline-flex items-center px-2.5 py-1 rounded-lg bg-[#087F8A]/20 hover:bg-[#087F8A] text-[#0CA1AF] hover:text-white border border-[#087F8A]/40 text-[11px] font-semibold transition-all">
                                         <i class="fa-solid fa-play mr-1 text-[10px]"></i> Simulasi
                                     </a>
                                 </td>
@@ -358,7 +358,7 @@ include __DIR__ . '/includes/header.php';
         </button>
         
         <h3 class="text-base font-bold text-white mb-1 flex items-center">
-            <i class="fa-solid fa-truck-ramp-box text-sky-400 mr-2"></i>
+            <i class="fa-solid fa-truck-ramp-box text-[#0CA1AF] mr-2"></i>
             Input Kargo Inbound Baru (TMS Gate)
         </h3>
         <p class="text-xs text-slate-400 mb-5">Sistem akan secara otomatis men-generate nomor SSCC 18 digit standar GS1 dan kode booking slot dock.</p>
@@ -366,17 +366,17 @@ include __DIR__ . '/includes/header.php';
         <form id="newCargoForm" onsubmit="handleCreateCargo(event)" class="space-y-3.5 text-xs">
             <div>
                 <label class="block text-slate-300 font-medium mb-1">Nama Pengirim (Shipper)</label>
-                <input type="text" id="inp_shipper" required value="PT Indo Pharma Laboratories" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                <input type="text" id="inp_shipper" required value="PT Indo Pharma Laboratories" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:ring-2 focus:ring-[#0CA1AF] focus:border-[#0CA1AF] focus:outline-none">
             </div>
 
             <div class="grid grid-cols-2 gap-3">
                 <div>
                     <label class="block text-slate-300 font-medium mb-1">Penerima (Consignee)</label>
-                    <input type="text" id="inp_consignee" required value="Singapore General Hospital Logistics" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                    <input type="text" id="inp_consignee" required value="Singapore General Hospital Logistics" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:ring-2 focus:ring-[#0CA1AF] focus:border-[#0CA1AF] focus:outline-none">
                 </div>
                 <div>
                     <label class="block text-slate-300 font-medium mb-1">Tipe Komoditas</label>
-                    <select id="inp_commodity_type" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                    <select id="inp_commodity_type" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:ring-2 focus:ring-[#0CA1AF] focus:border-[#0CA1AF] focus:outline-none">
                         <option value="GENERAL_CARGO">General Cargo (Umum)</option>
                         <option value="PHARMA" selected>Pharma / Vaksin (Cold Chain)</option>
                         <option value="PERISHABLE">Perishable (Makanan/Ikan)</option>
@@ -387,21 +387,21 @@ include __DIR__ . '/includes/header.php';
 
             <div>
                 <label class="block text-slate-300 font-medium mb-1">Deskripsi Barang</label>
-                <input type="text" id="inp_description" required value="Vaksin Rantai Dingin & Suplemen Kesehatan" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                <input type="text" id="inp_description" required value="Vaksin Rantai Dingin & Suplemen Kesehatan" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:ring-2 focus:ring-[#0CA1AF] focus:border-[#0CA1AF] focus:outline-none">
             </div>
 
             <div class="grid grid-cols-3 gap-3">
                 <div>
                     <label class="block text-slate-300 font-medium mb-1">Jumlah Koli</label>
-                    <input type="number" id="inp_quantity" required value="60" min="1" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                    <input type="number" id="inp_quantity" required value="60" min="1" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:ring-2 focus:ring-[#0CA1AF] focus:border-[#0CA1AF] focus:outline-none">
                 </div>
                 <div>
                     <label class="block text-slate-300 font-medium mb-1">Berat Deklarasi (kg)</label>
-                    <input type="number" step="0.1" id="inp_weight" required value="420.0" min="1" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                    <input type="number" step="0.1" id="inp_weight" required value="420.0" min="1" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:ring-2 focus:ring-[#0CA1AF] focus:border-[#0CA1AF] focus:outline-none">
                 </div>
                 <div>
                     <label class="block text-slate-300 font-medium mb-1">Supir Truk</label>
-                    <input type="text" id="inp_driver" required value="Joko Susanto" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                    <input type="text" id="inp_driver" required value="Joko Susanto" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:ring-2 focus:ring-[#0CA1AF] focus:border-[#0CA1AF] focus:outline-none">
                 </div>
             </div>
 
@@ -409,8 +409,8 @@ include __DIR__ . '/includes/header.php';
                 <button type="button" onclick="closeNewCargoModal()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-400 hover:text-white text-xs font-semibold">
                     Batal
                 </button>
-                <button type="submit" class="px-5 py-2 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-semibold text-xs shadow-lg shadow-sky-500/20">
-                    Daftarkan Kargo & Truk
+                <button type="submit" class="px-5 py-2 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-semibold text-xs shadow-lg shadow-teal-500/20">
+                    Daftarkan Kargo &amp; Truk
                 </button>
             </div>
         </form>
@@ -461,7 +461,7 @@ include __DIR__ . '/includes/header.php';
                 labels: labels,
                 datasets: [{
                     data: dataValues,
-                    backgroundColor: ['#0284c7', '#6366f1', '#10b981', '#f59e0b', '#ec4899'],
+                    backgroundColor: ['#087F8A', '#0CA1AF', '#014D54', '#f59e0b', '#10b981'],
                     borderWidth: 0
                 }]
             },
@@ -488,7 +488,7 @@ include __DIR__ . '/includes/header.php';
                 datasets: [{
                     label: 'Jumlah ULD',
                     data: [uldStats.EMPTY || 0, uldStats.LOADING || 0, uldStats.FULL || 0, uldStats.LOADED || 0],
-                    backgroundColor: ['#64748b', '#0284c7', '#f59e0b', '#10b981'],
+                    backgroundColor: ['#64748b', '#087F8A', '#0CA1AF', '#10b981'],
                     borderRadius: 6
                 }]
             },
@@ -502,7 +502,7 @@ include __DIR__ . '/includes/header.php';
                     y: {
                         beginAtZero: true,
                         ticks: { stepSize: 1, color: '#94a3b8' },
-                        grid: { color: '#1e293b' }
+                        grid: { color: '#162a52' }
                     },
                     x: {
                         ticks: { color: '#94a3b8' },
@@ -546,9 +546,9 @@ include __DIR__ . '/includes/header.php';
                     title: 'Kargo Berhasil Didaftarkan!',
                     html: `AWB: <b>${res.awb_number}</b><br>GS1 SSCC: <b>${res.sscc}</b>`,
                     icon: 'success',
-                    background: '#111e38',
+                    background: '#0D1C42',
                     color: '#fff',
-                    confirmButtonColor: '#0284c7'
+                    confirmButtonColor: '#087F8A'
                 }).then(() => {
                     window.location.reload();
                 });

@@ -29,8 +29,8 @@ include __DIR__ . '/includes/header.php';
     <div class="flex flex-col md:flex-row md:items-center justify-between pb-6 mb-6 border-b border-slate-800 gap-4">
         <div>
             <div class="flex items-center space-x-2">
-                <h1 class="text-2xl font-black text-white tracking-tight">Database Viewer & Schema Explorer</h1>
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-sky-950 text-sky-300 border border-sky-700/60 uppercase">
+                <h1 class="text-2xl font-black text-white tracking-tight">Database Viewer &amp; Schema Explorer</h1>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#087F8A]/20 text-[#0CA1AF] border border-[#087F8A]/50 uppercase">
                     MySQL Relational
                 </span>
             </div>
@@ -53,7 +53,7 @@ include __DIR__ . '/includes/header.php';
     <!-- 7-Table Navigation Tabs -->
     <div class="flex overflow-x-auto space-x-2 pb-3 mb-6 scrollbar-thin">
         <?php foreach ($allowedTables as $tblKey => $tblMeta): ?>
-            <a href="database_viewer.php?table=<?= urlencode($tblKey) ?>" class="flex-shrink-0 px-3.5 py-2 rounded-xl text-xs font-semibold border transition-all flex items-center space-x-2 <?= ($activeTable === $tblKey) ? 'bg-sky-600/30 text-sky-300 border-sky-500/50 shadow-lg shadow-sky-500/10' : 'bg-slate-900/80 text-slate-400 border-slate-800 hover:text-white hover:border-slate-700' ?>">
+            <a href="database_viewer.php?table=<?= urlencode($tblKey) ?>" class="flex-shrink-0 px-3.5 py-2 rounded-xl text-xs font-semibold border transition-all flex items-center space-x-2 <?= ($activeTable === $tblKey) ? 'bg-[#087F8A]/30 text-[#0CA1AF] border-[#087F8A]/60 shadow-lg shadow-teal-500/10' : 'bg-slate-900/80 text-slate-400 border-slate-800 hover:text-white hover:border-slate-700' ?>">
                 <i class="fa-solid <?= $tblMeta['icon'] ?>"></i>
                 <span><?= $tblMeta['name'] ?></span>
             </a>
@@ -66,7 +66,7 @@ include __DIR__ . '/includes/header.php';
             <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500 text-xs">
                 <i class="fa-solid fa-magnifying-glass"></i>
             </span>
-            <input type="text" id="tableSearchInput" onkeyup="handleSearch(event)" placeholder="Cari dalam tabel `<?= htmlspecialchars($activeTable) ?>`..." class="w-full pl-9 pr-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500">
+            <input type="text" id="tableSearchInput" onkeyup="handleSearch(event)" placeholder="Cari dalam tabel `<?= htmlspecialchars($activeTable) ?>`..." class="w-full pl-9 pr-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#0CA1AF] focus:border-[#0CA1AF]">
         </div>
         <div class="flex items-center space-x-3 text-xs text-slate-400">
             <span id="rowCountLabel">Memuat baris...</span>
@@ -80,7 +80,7 @@ include __DIR__ . '/includes/header.php';
     <div class="glass-panel rounded-2xl border border-slate-800 overflow-hidden shadow-2xl">
         <div class="overflow-x-auto min-h-[300px]" id="tableDataWrapper">
             <div class="p-12 text-center text-slate-500 text-xs">
-                <i class="fa-solid fa-spinner fa-spin text-2xl mb-2 text-sky-400"></i>
+                <i class="fa-solid fa-spinner fa-spin text-2xl mb-2 text-[#0CA1AF]"></i>
                 <p>Memuat data tabel dari server MySQL...</p>
             </div>
         </div>
@@ -95,10 +95,10 @@ include __DIR__ . '/includes/header.php';
             <i class="fa-solid fa-xmark"></i>
         </button>
         <h3 id="cellModalTitle" class="text-sm font-bold text-white mb-2 flex items-center">
-            <i class="fa-solid fa-code text-sky-400 mr-2"></i>
+            <i class="fa-solid fa-code text-[#0CA1AF] mr-2"></i>
             Detail Konten Kolom
         </h3>
-        <div class="flex-grow overflow-auto code-container rounded-xl text-xs font-mono p-4 my-3 text-sky-300">
+        <div class="flex-grow overflow-auto code-container rounded-xl text-xs font-mono p-4 my-3 text-teal-200">
             <pre id="cellModalContent"></pre>
         </div>
         <div class="text-right pt-2">
@@ -180,7 +180,7 @@ include __DIR__ . '/includes/header.php';
                     const preview = val.length > 35 ? (val.substring(0, 35) + '...') : val;
                     tbody += `
                         <td class="py-2.5 px-4">
-                            <button onclick="openJsonModal('${col}', ${JSON.stringify(val).replace(/"/g, '&quot;')})" class="text-sky-400 hover:text-sky-300 underline font-mono text-[10px]">
+                            <button onclick="openJsonModal('${col}', ${JSON.stringify(val).replace(/"/g, '&quot;')})" class="text-[#0CA1AF] hover:text-teal-200 underline font-mono text-[10px]">
                                 ${preview}
                             </button>
                         </td>
@@ -207,7 +207,7 @@ include __DIR__ . '/includes/header.php';
     }
 
     function openJsonModal(colName, rawJson) {
-        document.getElementById('cellModalTitle').innerHTML = `<i class="fa-solid fa-code text-sky-400 mr-2"></i> JSON Payload: ${colName}`;
+        document.getElementById('cellModalTitle').innerHTML = `<i class="fa-solid fa-code text-[#0CA1AF] mr-2"></i> JSON Payload: ${colName}`;
         try {
             const parsed = JSON.parse(rawJson);
             document.getElementById('cellModalContent').textContent = JSON.stringify(parsed, null, 2);

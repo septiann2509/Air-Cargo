@@ -26,7 +26,7 @@ include __DIR__ . '/includes/header.php';
             <div class="flex items-center space-x-2">
                 <span class="w-3 h-3 rounded-full bg-emerald-400 animate-ping"></span>
                 <h1 class="text-xl sm:text-2xl font-black text-white tracking-tight">Laboratorium Simulasi Aliran Data (PoC)</h1>
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-950 text-indigo-300 border border-indigo-700/60 uppercase">
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#087F8A]/20 text-[#0CA1AF] border border-[#087F8A]/50 uppercase">
                     Interactive Engine
                 </span>
             </div>
@@ -39,7 +39,7 @@ include __DIR__ . '/includes/header.php';
         <div class="flex flex-wrap items-center gap-3">
             <div class="flex items-center space-x-2 bg-slate-900/90 px-3 py-1.5 rounded-xl border border-slate-700">
                 <label for="cargoSelect" class="text-xs text-slate-400 font-medium">Pilih Kargo:</label>
-                <select id="cargoSelect" onchange="changeCargo(this.value)" class="bg-transparent text-xs font-semibold text-sky-400 focus:outline-none cursor-pointer">
+                <select id="cargoSelect" onchange="changeCargo(this.value)" class="bg-transparent text-xs font-semibold text-[#0CA1AF] focus:outline-none cursor-pointer">
                     <?php foreach ($cargos as $cg): ?>
                         <option value="<?= htmlspecialchars($cg['id']) ?>" class="bg-slate-900 text-white" <?= $cg['id'] === $selectedCargoId ? 'selected' : '' ?>>
                             <?= htmlspecialchars($cg['awb_number']) ?> &bull; <?= htmlspecialchars($cg['description']) ?> (Tahap <?= $cg['current_stage'] ?>)
@@ -49,7 +49,7 @@ include __DIR__ . '/includes/header.php';
             </div>
 
             <!-- Auto-Run Demo Button -->
-            <button onclick="triggerAutoRun()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-lg shadow-emerald-500/20 transition-all flex items-center">
+            <button onclick="triggerAutoRun()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-bold text-xs shadow-lg shadow-teal-500/20 transition-all flex items-center">
                 <i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i>
                 <span>Auto-Run Demo (1-Click)</span>
             </button>
@@ -70,14 +70,14 @@ include __DIR__ . '/includes/header.php';
             </div>
             <div>
                 <span class="text-slate-500 block text-[10px] uppercase font-semibold">GS1 SSCC (18-Digit)</span>
-                <span id="card-sscc" class="text-sky-400 font-mono font-bold">-</span>
+                <span id="card-sscc" class="text-[#0CA1AF] font-mono font-bold">-</span>
             </div>
             <div>
-                <span class="text-slate-500 block text-[10px] uppercase font-semibold">Shipper & Penerima</span>
+                <span class="text-slate-500 block text-[10px] uppercase font-semibold">Shipper &amp; Penerima</span>
                 <span id="card-shipper" class="text-slate-200 truncate block font-medium">-</span>
             </div>
             <div>
-                <span class="text-slate-500 block text-[10px] uppercase font-semibold">Komoditas & Koli</span>
+                <span class="text-slate-500 block text-[10px] uppercase font-semibold">Komoditas &amp; Koli</span>
                 <span id="card-commodity" class="text-slate-200 block">-</span>
             </div>
             <div>
@@ -97,10 +97,10 @@ include __DIR__ . '/includes/header.php';
     <div class="glass-panel p-5 rounded-2xl border border-slate-800 mb-8">
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center">
-                <i class="fa-solid fa-arrows-split-up-and-left text-sky-400 mr-2"></i>
+                <i class="fa-solid fa-arrows-split-up-and-left text-[#0CA1AF] mr-2"></i>
                 Progres 7 Tahapan Perpindahan Data Kargo
             </h3>
-            <span id="currentStageBadge" class="text-[11px] font-mono px-2 py-0.5 rounded bg-sky-950 text-sky-300 border border-sky-800">
+            <span id="currentStageBadge" class="text-[11px] font-mono px-2 py-0.5 rounded bg-[#087F8A]/20 text-[#0CA1AF] border border-[#087F8A]/50">
                 Tahap Aktif: 1
             </span>
         </div>
@@ -147,12 +147,12 @@ include __DIR__ . '/includes/header.php';
                 <!-- Stage Header -->
                 <div class="flex items-center justify-between pb-4 mb-5 border-b border-slate-800">
                     <div class="flex items-center space-x-3">
-                        <div id="activeStageIconWrap" class="w-12 h-12 rounded-xl bg-sky-950/80 border border-sky-500/30 text-sky-400 flex items-center justify-center text-xl">
+                        <div id="activeStageIconWrap" class="w-12 h-12 rounded-xl bg-[#087F8A]/20 border border-[#0CA1AF]/30 text-[#0CA1AF] flex items-center justify-center text-xl">
                             <i id="activeStageIcon" class="fa-solid fa-truck"></i>
                         </div>
                         <div>
-                            <span id="activeStageNumber" class="text-[10px] font-mono uppercase tracking-wider text-sky-400 font-bold">Tahap 1 dari 7</span>
-                            <h2 id="activeStageTitle" class="text-base font-bold text-white">Kedatangan Truk & Booking Slot (TMS/TAS)</h2>
+                            <span id="activeStageNumber" class="text-[10px] font-mono uppercase tracking-wider text-[#0CA1AF] font-bold">Tahap 1 dari 7</span>
+                            <h2 id="activeStageTitle" class="text-base font-bold text-white">Kedatangan Truk &amp; Booking Slot (TMS/TAS)</h2>
                         </div>
                     </div>
                     <span id="stageCompleteBadge" class="text-xs px-2.5 py-1 rounded-full font-bold bg-slate-800 text-slate-400 border border-slate-700">
@@ -199,8 +199,8 @@ include __DIR__ . '/includes/header.php';
             <div class="glass-panel p-5 rounded-2xl border border-slate-800">
                 <div class="flex items-center justify-between mb-3">
                     <h3 class="text-xs font-bold text-white flex items-center">
-                        <i class="fa-solid fa-tag text-sky-400 mr-2"></i>
-                        Anatomi Standar GS1 e-Label (Pallet & Cargo Unit)
+                        <i class="fa-solid fa-tag text-[#0CA1AF] mr-2"></i>
+                        Anatomi Standar GS1 e-Label (Pallet &amp; Cargo Unit)
                     </h3>
                     <span class="text-[10px] font-mono text-slate-400">GS1-128 / SSCC-18</span>
                 </div>
@@ -244,8 +244,8 @@ include __DIR__ . '/includes/header.php';
             <div class="glass-panel p-5 rounded-2xl border border-slate-800 flex flex-col h-[520px]">
                 <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-3">
                     <div class="flex items-center space-x-2">
-                        <span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span>
-                        <h3 class="text-xs font-bold text-white">REST API & JSON Payload Inspector</h3>
+                        <span class="w-2.5 h-2.5 rounded-full bg-[#0CA1AF]"></span>
+                        <h3 class="text-xs font-bold text-white">REST API &amp; JSON Payload Inspector</h3>
                     </div>
                     <button onclick="copyPayloadToClipboard()" class="text-[10px] text-slate-400 hover:text-white px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 transition-colors">
                         <i class="fa-solid fa-copy mr-1"></i> Salin JSON
@@ -254,7 +254,7 @@ include __DIR__ . '/includes/header.php';
 
                 <!-- Sub-Tabs: Request vs Response -->
                 <div class="flex space-x-2 mb-3">
-                    <button id="tabBtnRequest" onclick="switchPayloadTab('request')" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold bg-sky-600/30 text-sky-300 border border-sky-500/40 transition-all">
+                    <button id="tabBtnRequest" onclick="switchPayloadTab('request')" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold bg-[#087F8A]/30 text-[#0CA1AF] border border-[#087F8A]/50 transition-all">
                         <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i> HTTP Request
                     </button>
                     <button id="tabBtnResponse" onclick="switchPayloadTab('response')" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800 transition-all">
@@ -264,7 +264,7 @@ include __DIR__ . '/includes/header.php';
 
                 <!-- Code Container with Scrollbar -->
                 <div class="flex-grow overflow-auto code-container rounded-xl text-xs font-mono relative">
-                    <pre id="jsonPayloadDisplay" class="text-sky-300 leading-relaxed text-[11px]">// Memuat data JSON payload...</pre>
+                    <pre id="jsonPayloadDisplay" class="text-teal-200 leading-relaxed text-[11px]">// Memuat data JSON payload...</pre>
                 </div>
 
                 <!-- Standard Compliance Indicator -->
@@ -280,7 +280,7 @@ include __DIR__ . '/includes/header.php';
             <div class="glass-panel p-5 rounded-2xl border border-slate-800">
                 <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-800">
                     <h3 class="text-xs font-bold text-white flex items-center">
-                        <i class="fa-solid fa-clock-rotate-left text-indigo-400 mr-2"></i>
+                        <i class="fa-solid fa-clock-rotate-left text-teal-300 mr-2"></i>
                         Audit Trail Perpindahan Data (Database Log)
                     </h3>
                     <span id="logCountBadge" class="text-[10px] font-mono text-slate-400">0 Record</span>
