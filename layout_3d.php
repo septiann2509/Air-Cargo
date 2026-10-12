@@ -217,6 +217,10 @@ include __DIR__ . '/includes/header.php';
             <i class="fa-solid fa-cube text-xs"></i>
             <span class="hidden sm:inline text-xs">3D Isometrik</span>
         </button>
+        <button onclick="toggleFollowCamera()" id="btn-follow-cam" class="ctrl-btn" title="Kamera Otomatis Mengikuti Pergerakan Kargo Secara Real-Time">
+            <i class="fa-solid fa-video text-teal-300 text-xs"></i>
+            <span class="hidden sm:inline text-xs">Ikuti Kargo</span>
+        </button>
         <button onclick="toggleTourMode()" id="btn-tour" class="ctrl-btn" title="Tur Otomatis Mengikuti Alur Kargo Secara Halus">
             <i class="fa-solid fa-person-walking-arrow-right text-teal-300 text-xs"></i>
             <span class="hidden sm:inline text-xs">Tur Alur Halus</span>
@@ -245,7 +249,7 @@ include __DIR__ . '/includes/header.php';
                 </div>
                 <div class="flex items-center gap-1.5" onclick="event.stopPropagation()">
                     <span id="badge-flow-stage" class="px-2 py-0.5 rounded text-[10px] font-bold bg-teal-500/20 text-teal-300 border border-teal-500/40">
-                        STAGE: DOCK 2
+                        TAHAP 1/6: DOCK 2
                     </span>
                     <button onclick="toggleSimCard()" id="btn-toggle-sim" class="text-white/60 hover:text-white p-1 rounded hover:bg-white/10 transition-colors" title="Sembunyikan / Tampilkan Panel Simulasi">
                         <i class="fa-solid fa-chevron-up text-xs transition-transform duration-300" id="icon-toggle-sim"></i>
@@ -287,16 +291,36 @@ include __DIR__ . '/includes/header.php';
                     </button>
                 </div>
 
+                <!-- DIRECT 6-STAGE STEP BUTTONS -->
+                <div class="mt-2.5 pt-2 border-t border-white/10">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="text-[9.5px] font-bold text-teal-300 uppercase tracking-wider">Lompat ke Tahap Alur:</span>
+                        <button onclick="toggleFollowCamera()" id="btn-follow-cargo-card" class="text-[9px] px-2 py-0.5 rounded bg-teal-500/20 text-teal-300 border border-teal-500/30 hover:bg-teal-500/40 font-bold transition-all">
+                            <i class="fa-solid fa-video mr-1 text-[8px]"></i> Ikuti Kargo
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-3 gap-1 text-[9.5px]">
+                        <button onclick="jumpToProcessStep(1)" class="p-1 rounded bg-white/5 hover:bg-blue-600/30 text-white border border-white/10 hover:border-blue-400 font-bold text-center transition-all truncate" title="Tahap 1: Bongkar dari Truk">1. Turun Truk</button>
+                        <button onclick="jumpToProcessStep(2)" class="p-1 rounded bg-white/5 hover:bg-teal-600/30 text-white border border-white/10 hover:border-teal-400 font-bold text-center transition-all truncate" title="Tahap 2: Scan RFID Portal">2. Scan RFID</button>
+                        <button onclick="jumpToProcessStep(3)" class="p-1 rounded bg-white/5 hover:bg-amber-600/30 text-white border border-white/10 hover:border-amber-400 font-bold text-center transition-all truncate" title="Tahap 3: X-Ray AVSEC">3. X-Ray</button>
+                        <button onclick="jumpToProcessStep(4)" class="p-1 rounded bg-white/5 hover:bg-emerald-600/30 text-white border border-white/10 hover:border-emerald-400 font-bold text-center transition-all truncate" title="Tahap 4: Central Storage & Build-Up ULD">4. Storage</button>
+                        <button onclick="jumpToProcessStep(5)" class="p-1 rounded bg-white/5 hover:bg-purple-600/30 text-white border border-white/10 hover:border-purple-400 font-bold text-center transition-all truncate" title="Tahap 5: Timbangan ULD 15T">5. Timbangan</button>
+                        <button onclick="jumpToProcessStep(6)" class="p-1 rounded bg-white/5 hover:bg-sky-600/30 text-white border border-white/10 hover:border-sky-400 font-bold text-center transition-all truncate" title="Tahap 6: Loading Pesawat">6. Pesawat</button>
+                    </div>
+                </div>
+
                 <!-- Flow Progress Bar -->
                 <div class="mt-2.5">
                     <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
                         <div id="bar-flow-progress" class="bg-gradient-to-r from-[#0CA1AF] via-[#04AFBF] to-[#10B981] h-1.5 rounded-full transition-all duration-300" style="width: 15%;"></div>
                     </div>
                     <div class="flex justify-between text-[9px] text-white/50 mt-1 font-mono">
-                        <span>Truk</span>
-                        <span>RFID</span>
-                        <span>X-Ray</span>
-                        <span id="label-flow-end">Pesawat</span>
+                        <span>1. Truk</span>
+                        <span>2. RFID</span>
+                        <span>3. X-Ray</span>
+                        <span>4. Storage</span>
+                        <span>5. Timbang</span>
+                        <span id="label-flow-end">6. Pesawat</span>
                     </div>
                 </div>
 
@@ -376,15 +400,35 @@ include __DIR__ . '/includes/header.php';
         <p id="tt-sub" class="text-[10px] text-white/70 mt-0.5">-</p>
     </div>
 
-    <!-- BOTTOM CENTER: REAL FIELD WORKFLOW LEGEND -->
-    <div class="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 hidden 2xl:flex items-center gap-3 px-4 py-2 rounded-xl glass-panel text-[11px]">
-        <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-blue-500"></span> Truk Datang (Landside)</div>
-        <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-teal-400"></span> RFID Portal</div>
-        <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-amber-400"></span> X-Ray AVSEC</div>
-        <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-rose-500"></span> Ruang Karantina (Suspect)</div>
-        <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-emerald-500"></span> Storage &amp; WS</div>
-        <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-purple-500"></span> Timbangan ULD (15T)</div>
-        <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-sky-400"></span> Apron &amp; Pesawat</div>
+    <!-- BOTTOM CENTER: REAL FIELD WORKFLOW INTERACTIVE STEPPER -->
+    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-2xl glass-panel text-[11px] shadow-2xl backdrop-blur-md border border-white/10">
+        <button onclick="jumpToProcessStep(1)" class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl hover:bg-white/10 transition-colors text-white font-bold" title="Tahap 1: Turun dari Truk">
+            <span class="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-sm shadow-blue-500/50"></span> 1. Truk
+        </button>
+        <i class="fa-solid fa-chevron-right text-[8px] text-white/30"></i>
+        <button onclick="jumpToProcessStep(2)" class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl hover:bg-white/10 transition-colors text-white font-bold" title="Tahap 2: Scan RFID Portal">
+            <span class="w-2.5 h-2.5 rounded-full bg-teal-400 shadow-sm shadow-teal-400/50"></span> 2. RFID
+        </button>
+        <i class="fa-solid fa-chevron-right text-[8px] text-white/30"></i>
+        <button onclick="jumpToProcessStep(3)" class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl hover:bg-white/10 transition-colors text-white font-bold" title="Tahap 3: X-Ray AVSEC">
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-sm shadow-amber-400/50"></span> 3. X-Ray
+        </button>
+        <i class="fa-solid fa-chevron-right text-[8px] text-white/30"></i>
+        <button onclick="goToStep('quarantine')" class="flex items-center gap-1.5 px-2 py-1 rounded-xl hover:bg-white/10 transition-colors text-rose-300 font-bold" title="Tahap 3B: Ruang Karantina Suspect">
+            <span class="w-2 h-2 rounded-full bg-rose-500"></span> 3B. Karantina
+        </button>
+        <i class="fa-solid fa-chevron-right text-[8px] text-white/30"></i>
+        <button onclick="jumpToProcessStep(4)" class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl hover:bg-white/10 transition-colors text-white font-bold" title="Tahap 4: Central Storage & Build-Up ULD">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50"></span> 4. Central Storage
+        </button>
+        <i class="fa-solid fa-chevron-right text-[8px] text-white/30"></i>
+        <button onclick="jumpToProcessStep(5)" class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl hover:bg-white/10 transition-colors text-white font-bold" title="Tahap 5: Timbangan Lantai ULD 15T">
+            <span class="w-2.5 h-2.5 rounded-full bg-purple-500 shadow-sm shadow-purple-500/50"></span> 5. Timbangan ULD
+        </button>
+        <i class="fa-solid fa-chevron-right text-[8px] text-white/30"></i>
+        <button onclick="jumpToProcessStep(6)" class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl hover:bg-white/10 transition-colors text-white font-bold" title="Tahap 6: Cargo High-Loader & Pemuatan Boeing 777F">
+            <span class="w-2.5 h-2.5 rounded-full bg-sky-400 shadow-sm shadow-sky-400/50"></span> 6. Loading Pesawat
+        </button>
     </div>
 
 </div>
@@ -403,7 +447,7 @@ const FIELD_STATIONS = {
         id: 'overview',
         num: 'OVERVIEW TERMINAL',
         title: 'Denah Terpadu Terminal Kargo Intermodal',
-        desc: 'Tampilan terpadu seluruh area terminal: dari sisi darat (Landside Truck Docks), area inspeksi keamanan AVSEC, fasilitas ruang karantina kargo suspect, gudang penyimpanan & perakitan ULD, timbangan lantai 15 Ton, hingga pemuatan ke pesawat di sisi udara (Airside).',
+        desc: 'Tampilan terpadu seluruh 6 alur proses terminal kargo: (1) Bongkar barang dari truk di sisi darat, (2) Pemindaian nirkabel RFID Portal, (3) Pemeriksaan keamanan X-Ray AVSEC, (4) Central Storage & Perakitan kontainer ULD, (5) Penimbangan timbangan lantai 15 Ton, hingga (6) Pemuatan ke pesawat Boeing 777F di apron sisi udara.',
         hw: 'Seluruh Ekosistem Hardware Layer 1 (Scanner, X-Ray, ETD, Scale, Loader)',
         sw: 'CMS Core Integration & TMS/TAS Hub',
         data: 'GS1 SSCC, IATA e-AWB, ICAO CSD, OIML R76, Electronic Loadsheet',
@@ -412,9 +456,9 @@ const FIELD_STATIONS = {
     },
     dock: {
         id: 'dock',
-        num: 'LOKASI 1: SISI DARAT (LANDSIDE)',
-        title: 'Truck Dock 1, 2, 3 & Area Bongkar Kargo',
-        desc: 'Truk kontainer dari jalan akses darat merapat mundur ke dermaga muat (Truck Dock). Bagian belakang bak truk terhubung ke dock leveler hidrolik di dinding terminal. Palet kargo diturunkan menggunakan armada forklift ke area penerimaan.',
+        num: 'TAHAP 1: SISI DARAT (LANDSIDE)',
+        title: '1. Bongkar Barang dari Truk (Truck Docks 1 - 3)',
+        desc: 'Truk kontainer tiba di Truck Dock 2 setelah diverifikasi jadwal dan bookingnya melalui Truck Appointment System (TAS). Koli/palet kargo diturunkan dari dalam bak truk melewati dock leveler hidrolik menuju jalur penerimaan kargo terminal.',
         hw: 'Hydraulic Dock Leveler, Industrial Roller Door, RFID Gate Reader, Electric Forklift',
         sw: 'TMS / TAS (Truck Appointment System) Inbound Gate',
         data: 'Plat Nomor Truk, Slot Dock ID, Driver ID, Surat Jalan / Booking ID',
@@ -423,20 +467,20 @@ const FIELD_STATIONS = {
     },
     rfid: {
         id: 'rfid',
-        num: 'LOKASI 2: GERBANG PEMERIKSAAN',
-        title: 'Gerbang Portal AIDC High-Speed RFID Scan',
-        desc: 'Tepat setelah diturunkan dari truk, palet kargo dialirkan ke atas konveyor dan melintasi Portal Gantry RFID (kecepatan 2.5 m/s). Antena RFID membaca tag GS1 SSCC 18-digit dan mencocokkannya ke database CMS.',
+        num: 'TAHAP 2: PEMERIKSAAN AWAL',
+        title: '2. Gerbang Portal High-Speed RFID Scan',
+        desc: 'Palet kargo dialirkan di atas konveyor melintasi Portal Gantry RFID dengan kecepatan 2.5 m/s. Antena RFID membaca tag GS1 SSCC 18-digit secara nirkabel dan seketika mencocokkannya ke database CMS untuk memvalidasi manifest & e-AWB.',
         hw: 'High-Speed RFID Tunnel Antenna, Barcode Omnidirectional Scanner, LED Status Gate',
         sw: 'CMS Inbound Ingestion Service & GS1 SSCC Validator',
         data: '(00) SSCC 18-Digit, (01) GTIN-14, (10) Batch, (17) Expiry Date',
-        camPos: [-28, 18, 2],
-        camTarget: [-28, 2, -19]
+        camPos: [-28, 18, -10],
+        camTarget: [-28, 2, -27]
     },
     xray: {
         id: 'xray',
-        num: 'LOKASI 3: PEMERIKSAAN KEAMANAN AVSEC',
-        title: 'Mesin Dual-View X-Ray Screening (Line 1 - 3)',
-        desc: '3 Jalur terowongan X-Ray berjejer untuk memeriksa isi fisik kargo dari dua sudut pandang. Menghasilkan status CLEARED (lolos) dan menerbitkan sertifikat CSD. Barang mencurigakan langsung dialihkan ke Area Penanganan Lanjutan.',
+        num: 'TAHAP 3: PEMERIKSAAN KEAMANAN',
+        title: '3. Mesin Dual-View X-Ray Screening (Lines 1 - 3)',
+        desc: '3 Jalur terowongan X-Ray berjejer memeriksa kerapatan fisik isi kargo dari dua sudut pandang (horizontal & vertikal). Kargo yang aman mendapat status CLEARED dan diterbitkan sertifikat Cargo Security Declaration (CSD). Kargo yang dicurigai dialihkan ke Ruang Karantina.',
         hw: 'Dual-View X-Ray Screening (180x180cm), Lead Curtains, Operator Console',
         sw: 'AVSEC Core System & Cargo Security Declaration (CSD) Generator',
         data: 'Status CLEARED/SUSPECT, Density Scan Hash, CSD Digital Certificate',
@@ -445,9 +489,9 @@ const FIELD_STATIONS = {
     },
     quarantine: {
         id: 'quarantine',
-        num: 'LOKASI 3B: FASILITAS ISOLASI KHUSUS',
-        title: 'Ruang Karantina & Penanganan Lanjutan (Suspect Cargo Room)',
-        desc: 'Ruang tertutup berpartisi keamanan fisik dan berpintu khusus bagi kargo yang TIDAK LOLOS X-Ray. Di dalam ruangan ini, kargo diperiksa manual di atas meja stainless steel dan diuji usapan bahan peledak (ETD). Kargo berstatus SUSPECT resmi di-HOLD dan DILARANG KERAS dialirkan ke Airside atau dimuat ke pesawat.',
+        num: 'TAHAP 3B: FASILITAS ISOLASI',
+        title: '3B. Ruang Karantina & Uji Lanjutan ETD (Kargo Suspect)',
+        desc: 'Ruang tertutup berpartisi fisik khusus kargo suspect yang tidak lolos X-Ray. Kargo diperiksa manual di meja stainless steel dan diuji usapan bahan peledak (Explosive Trace Detector / ETD). Status kargo: SUSPECT & HOLD, DILARANG KERAS ke pesawat.',
         hw: 'Explosive Trace Detector (ETD), Stainless Steel Inspection Table, Diverter Conveyor Spur, Red Strobe Alarm, Hazmat Evidence Vault',
         sw: 'AVSEC Incident Logging & Customs/Police Escalation Protocol',
         data: 'Status: SUSPECT / HOLD, Nomor e-AWB, Alasan Penolakan X-Ray, ID Petugas Pemeriksa, Sertifikat CSD: REJECTED',
@@ -456,10 +500,10 @@ const FIELD_STATIONS = {
     },
     storage: {
         id: 'storage',
-        num: 'LOKASI 4: GUDANG UTAMA TERMINAL',
-        title: 'Central Storage & Meja Kerja ULD (WS 1 - 24)',
-        desc: 'Kargo yang lolos X-Ray disimpan sementara di Central Storage, kemudian didistribusikan ke 24 meja kerja (Workstations WS 1 - 24). Di sini kargo ditata dan dimuat ke dalam kontainer pesawat khusus (ULD AKE / PMC).',
-        hw: 'Industrial Storage Racks, Ball-Transfer Workstation Tables, Overhead Hoist, Roller Track Loop',
+        num: 'TAHAP 4: CENTRAL STORAGE & BUILD-UP',
+        title: '4. Central Storage & Perakitan Kontainer ULD',
+        desc: 'Kargo yang lolos inspeksi X-Ray disimpan sementara di Central Storage, kemudian disusun dan dirakit (build-up) di area perakitan tengah ke dalam kontainer khusus pesawat (ULD AKE) dengan mematuhi Center of Gravity (CoG). Setelah siap, kontainer dialirkan langsung menuju stasiun penimbangan.',
+        hw: 'Industrial Storage Racks, Central ULD Build-Up Bed, Roller Transfer Conveyor, Electric Forklift',
         sw: 'Weight & Balance Engine / CoG Calculation System',
         data: 'Nomor Kontainer ULD (AKE/PMC), Posisi Kompartemen, Center of Gravity (CoG)',
         camPos: [0, 24, 28],
@@ -467,20 +511,20 @@ const FIELD_STATIONS = {
     },
     scale: {
         id: 'scale',
-        num: 'LOKASI 5: PENIMBANGAN SEBELUM TERBANG',
-        title: 'Smart ULD Weighing Station (Timbangan Lantai 15 Ton)',
-        desc: 'Di ujung jalur conveyor sebelum keluar ke sisi udara (Airside), kontainer ULD yang sudah jadi ditimbang di atas timbangan lantai beroda rol. Memverifikasi berat aktual kotor terhadap toleransi e-AWB sebelum diizinkan dimuat ke pesawat.',
+        num: 'TAHAP 5: PENIMBANGAN SEBELUM TERBANG',
+        title: '5. Smart ULD Weighing Station (Timbangan Lantai 15 Ton)',
+        desc: 'Kontainer ULD AKE yang telah selesai dirakit meluncur ke atas timbangan lantai beroda rol (Smart ULD Floor Scale 15T). Sistem membaca berat aktual kotor (1,580 kg) dan membandingkannya dengan toleransi berat e-AWB (maks deviasi 0.2%). Setelah dinyatakan PASS, kontainer diizinkan meluncur ke sisi udara (Airside).',
         hw: 'Smart ULD Floor Scale (15 Ton OIML R76), Omnidirectional Roller Bed, Digital Display Tower',
         sw: 'CMS Weight Module & Tolerance Verifier (Maks deviasi 0.2%)',
-        data: 'Actual Gross Weight (kg), Tare Weight, Balance Verification Status: PASS',
+        data: 'Actual Gross Weight: 1,580 kg, Tare Weight: 120 kg, Status: PASS (+0.06%)',
         camPos: [35, 18, 30],
         camTarget: [35, 2, 8]
     },
     loading: {
         id: 'loading',
-        num: 'LOKASI 6: SISI UDARA (AIRSIDE APRON)',
-        title: 'Pemuatan ke Pesawat (Cargo High-Loader & Boeing 777F)',
-        desc: 'Melalui Gerbang Kargo Airside terbuka, ULD yang telah lolos verifikasi timbangan meluncur langsung ke platform Cargo High-Loader. Platform hidrolik mengangkat kontainer setinggi pintu kompartemen kargo pesawat (Y = 3.8m) dan memasukkannya ke dalam kompartemen kargo yang telah siap. Status penerbangan resmi diterbitkan menjadi DEPARTED.',
+        num: 'TAHAP 6: SISI UDARA (AIRSIDE APRON)',
+        title: '6. Cargo High-Loader & Pemuatan ke Boeing 777F',
+        desc: 'Melalui Gerbang Kargo Airside terbuka, ULD yang telah lolos verifikasi timbangan meluncur langsung ke platform Cargo High-Loader. Platform hidrolik mengangkat kontainer setinggi pintu palka pesawat (3.85m), lalu mendorong ULD masuk ke dalam kompartemen kargo utama Boeing 777F. Status penerbangan resmi terbit menjadi DEPARTED.',
         hw: 'Cargo High-Loader Transporter, Commercial Cargo Freighter (Boeing 777F / Airbus A330F), EFB Tablet',
         sw: 'CMS Flight Ops Integration & Electronic Loadsheet Release',
         data: 'Loadsheet Final, Compartment Pos (e.g. 11L, 22R), Status DEPARTED',
@@ -692,10 +736,6 @@ const gateLintel = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.8, 12.6), MAT.met
 gateLintel.position.set(0, 4.4, 0);
 airsideGateGroup.add(gatePostLeft, gatePostRight, gateLintel);
 
-// Tabung Rol Pintu Industri Terbuka di Atas (Industrial Overhead Roll-Up Shutter Drum)
-const rollerDrum = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, 12.2, 20), MAT.metalSilver);
-rollerDrum.position.set(0, 4.0, 0);
-airsideGateGroup.add(rollerDrum);
 
 // Plang Peringatan Batas Ketinggian & Rambu Gerbang Airside
 const gateSign = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.65, 9.5), new THREE.MeshStandardMaterial({ color: 0xF59E0B, roughness: 0.4 }));
@@ -720,6 +760,63 @@ airsideGateGroup.add(apronTransferTrack);
 });
 
 layoutGroup.add(airsideGateGroup);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// JARINGAN CONVEYOR UTUH TANPA CELAH (100% KONTINU DARI DOCK TRUK KE PESAWAT)
+// Menghubungkan seluruh stasiun: Dock 2 -> RFID -> X-Ray -> Central Storage -> Timbangan -> Apron
+// ─────────────────────────────────────────────────────────────────────────────
+function createConnectingConveyorSystem() {
+    const net = new THREE.Group();
+    const cMat = MAT.conveyorRoller;
+    const rMat = MAT.yellowSafety;
+
+    function makeSegment(w, h, d, x, y, z, rails = true, railAxis = 'z') {
+        const seg = new THREE.Group();
+        const conv = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), cMat);
+        conv.position.set(x, y, z);
+        conv.receiveShadow = true;
+        seg.add(conv);
+
+        if (rails) {
+            if (railAxis === 'x') {
+                [-d / 2, d / 2].forEach(offsetZ => {
+                    const r = new THREE.Mesh(new THREE.BoxGeometry(w, 0.22, 0.1), rMat);
+                    r.position.set(x, y + h / 2 + 0.11, z + offsetZ);
+                    seg.add(r);
+                });
+            } else {
+                [-w / 2, w / 2].forEach(offsetX => {
+                    const r = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.22, d), rMat);
+                    r.position.set(x + offsetX, y + h / 2 + 0.11, z);
+                    seg.add(r);
+                });
+            }
+        }
+        return seg;
+    }
+
+    // 1. DOCK 2: Ramp Penurunan dari Truk Dock 2 (Z = -36 s.d. Z = -31 di X = 0)
+    net.add(makeSegment(2.6, 0.32, 5.0, 0, 0.16, -33.5, true, 'z'));
+
+    // 2. TRUNK PENERIMAAN: Rel Horizontal dari Dock 2 ke RFID (X = 0 s.d. X = -28 di Z = -31)
+    net.add(makeSegment(28.0, 0.32, 2.6, -14.0, 0.16, -31.0, true, 'x'));
+
+    // 3. RFID KE X-RAY: Rel Transfer Horizontal dari Portal RFID ke X-Ray Line 1 (X = -28 s.d. X = -13 di Z = -23.5)
+    net.add(makeSegment(15.0, 0.32, 2.6, -20.5, 0.16, -23.5, true, 'x'));
+
+    // 4. X-RAY LINE 1 EXIT KE CENTRAL STORAGE:
+    // Segmen A: Keluar dari X-Ray Line 1 meluncur ke selatan (Z = -16 s.d. Z = -10 di X = -13)
+    net.add(makeSegment(2.6, 0.32, 6.0, -13.0, 0.16, -13.0, true, 'z'));
+    // Segmen B: Berbelok ke timur masuk ke koridor utama Central Storage (X = -13 s.d. X = 0 di Z = -10)
+    net.add(makeSegment(13.0, 0.32, 2.6, -6.5, 0.16, -10.0, true, 'x'));
+
+    // 5. DIVERTER SPUR KE RUANG KARANTINA:
+    // Menghubungkan jalur X-Ray Line 2 (X = -5) ke konveyor ruang karantina (X = 4)
+    net.add(makeSegment(9.0, 0.32, 2.2, -0.5, 0.16, -20.0, true, 'x'));
+
+    return net;
+}
+layoutGroup.add(createConnectingConveyorSystem());
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 1. AREA TRUCK DOCK (SISI DARAT - LANDSIDE) DENGAN DETAIL REALISTIS
@@ -877,7 +974,7 @@ scene.add(rfidGroup);
 
 function createDetailedRfidPortal() {
     const portal = new THREE.Group();
-    portal.position.set(-28, 0, -20);
+    portal.position.set(-28, 0, -27);
 
     const colGeo = new THREE.BoxGeometry(0.5, 4.2, 0.6);
     const cL = new THREE.Mesh(colGeo, MAT.metalDark);
@@ -906,8 +1003,8 @@ function createDetailedRfidPortal() {
     scanLight.position.set(0, 3.4, 0);
     portal.add(scanLight);
 
-    const conv = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.4, 8.0), MAT.conveyorRoller);
-    conv.position.set(0, 0.2, 0);
+    const conv = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.32, 8.0), MAT.conveyorRoller);
+    conv.position.set(0, 0.16, 0);
     portal.add(conv);
 
     bindInteractive(beam, 'rfid');
@@ -917,7 +1014,7 @@ function createDetailedRfidPortal() {
 rfidGroup.add(createDetailedRfidPortal());
 
 const rfidLabel = makeLabelSprite("LOKASI 2", "AIDC RFID SCAN PORTAL", "#0CA1AF");
-rfidLabel.position.set(-28, 8.0, -20);
+rfidLabel.position.set(-28, 8.0, -27);
 rfidGroup.add(rfidLabel);
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1190,80 +1287,43 @@ function createDetailedStorage() {
 
     for (let rx = -10; rx <= 10; rx += 5) {
         for (let rz = -6; rz <= 6; rz += 4.5) {
+            // Berikan koridor terbuka di tengah agar kargo bisa melintas langsung ke tengah
+            if (Math.abs(rx) <= 2.5) continue;
             const h = (Math.abs(rx * 3 + rz) % 3) + 1;
             cs.add(addStack(rx, rz, h));
         }
     }
 
-    cs.add(createDetailedForklift(-4, 0, Math.PI / 2));
+    // Jalur Roller Conveyor Utama Masuk ke Tengah Central Storage (X = 0, Z = -10 s.d. Z = 6)
+    const centerLaneIn = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.32, 16.0), MAT.conveyorRoller);
+    centerLaneIn.position.set(0, 0.16, -2);
+
+    // Stasiun Meja Kerja Perakitan ULD Utama di Tengah
+    const centerBuildBed = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.32, 4.2), MAT.conveyorRoller);
+    centerBuildBed.position.set(0, 0.16, 0);
+
+    const centerRim = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.08, 4.5), MAT.yellowSafety);
+    centerRim.position.set(0, 0.04, 0);
+
+    // Rel Transfer dari Tengah Central Storage Mengalir Langsung ke Timbangan (X = 0 s.d. X = 33 di Z = 8)
+    const centerLaneOut = new THREE.Mesh(new THREE.BoxGeometry(33.0, 0.32, 2.6), MAT.conveyorRoller);
+    centerLaneOut.position.set(16.5, 0.16, 2);
+
+    // Rel pengaman samping sepanjang rel keluar menuju timbangan
+    [-1.35, 1.35].forEach(oz => {
+        const outRail = new THREE.Mesh(new THREE.BoxGeometry(33.0, 0.22, 0.1), MAT.yellowSafety);
+        outRail.position.set(16.5, 0.38, 2 + oz);
+        cs.add(outRail);
+    });
+
+    cs.add(centerLaneIn, centerBuildBed, centerRim, centerLaneOut);
+
+    cs.add(createDetailedForklift(-8, 4, Math.PI / 2));
     bindInteractive(pad, 'storage');
+    bindInteractive(centerBuildBed, 'storage');
     return cs;
 }
 storageGroup.add(createDetailedStorage());
-
-// Meja Kerja Ball-Transfer (Workstations)
-function createBallTransferWorkstation(x, z, rotY = 0) {
-    const ws = new THREE.Group();
-    ws.position.set(x, 0, z);
-    ws.rotation.y = rotY;
-
-    const tbl = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.6, 2.2), MAT.metalSilver);
-    tbl.position.y = 0.3;
-    tbl.castShadow = true;
-    ws.add(tbl);
-
-    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.8), MAT.metalDark);
-    pole.position.set(1.1, 0.9, -0.9);
-    ws.add(pole);
-
-    const scr = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.45, 0.06), new THREE.MeshBasicMaterial({ color: 0x0CA1AF }));
-    scr.position.set(1.1, 1.8, -0.9);
-    ws.add(scr);
-
-    bindInteractive(tbl, 'storage');
-    return ws;
-}
-
-// Kolom Kiri (WS 1-8)
-[-5, -1, 3, 7, 11, 15].forEach(z => storageGroup.add(createBallTransferWorkstation(-24, z, Math.PI / 2)));
-// Baris Atas (WS 9-16)
-[-18, -13, -8, -3, 2, 7, 12, 17].forEach(x => storageGroup.add(createBallTransferWorkstation(x, 21, 0)));
-// Kolom Kanan (WS 17-24)
-[15, 11, 7, 3, -1, -5].forEach(z => storageGroup.add(createBallTransferWorkstation(18, z, -Math.PI / 2)));
-
-// Model Kontainer ULD AKE Realistis
-function createRealisticAkeUld() {
-    const uld = new THREE.Group();
-
-    const base = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.22, 2.4), MAT.metalSilver);
-    base.position.y = 0.11;
-    uld.add(base);
-
-    const ubox = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.9, 2.4), MAT.uldAluminum);
-    ubox.position.y = 1.25;
-    ubox.castShadow = true;
-    uld.add(ubox);
-
-    const curtain = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 1.7), MAT.uldCanvasBlue);
-    curtain.position.set(0, 1.25, 1.22);
-    uld.add(curtain);
-
-    return uld;
-}
-
-// Lintasan Roller Conveyor U-Shaped Loop
-const convMat = MAT.conveyorRoller;
-const trackLeft = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.35, 36), convMat);
-trackLeft.position.set(-29, 0.35, 5);
-const trackTop = new THREE.Mesh(new THREE.BoxGeometry(56, 0.35, 2.8), convMat);
-trackTop.position.set(-1, 0.35, 25);
-const trackRight = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.35, 36), convMat);
-trackRight.position.set(27, 0.35, 5);
-storageGroup.add(trackLeft, trackTop, trackRight);
-
-const uldA = createRealisticAkeUld(); uldA.position.set(-29, 0.55, 4); storageGroup.add(uldA);
-const uldB = createRealisticAkeUld(); uldB.position.set(0, 0.55, 25); storageGroup.add(uldB);
-const uldC = createRealisticAkeUld(); uldC.position.set(27, 0.55, 14); storageGroup.add(uldC);
 
 const storageLabel = makeLabelSprite("LOKASI 4", "CENTRAL STORAGE & ULD BUILD-UP", "#10B981");
 storageLabel.position.set(0, 9.0, 6);
@@ -1272,8 +1332,13 @@ storageGroup.add(storageLabel);
 // ─────────────────────────────────────────────────────────────────────────────
 // 5. SMART ULD WEIGHING STATION (TIMBANGAN LANTAI 15 TON)
 // ─────────────────────────────────────────────────────────────────────────────
+// 5. SMART ULD WEIGHING STATION (TIMBANGAN LANTAI 15 TON)
+// ─────────────────────────────────────────────────────────────────────────────
 const scaleGroup = new THREE.Group();
 scene.add(scaleGroup);
+
+let scaleDisplayObj = null;
+let scaleStatusRing = null;
 
 function createDetailedSmartScale() {
     const sc = new THREE.Group();
@@ -1288,23 +1353,79 @@ function createDetailedSmartScale() {
     rim.position.y = 0.05;
     sc.add(rim);
 
+    // Menara Display Digital
     const tower = new THREE.Mesh(new THREE.BoxGeometry(0.5, 3.4, 0.5), MAT.metalDark);
     tower.position.set(2.4, 1.7, -2.0);
     sc.add(tower);
 
-    const ledDisp = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.6, 0.15), new THREE.MeshBasicMaterial({ color: 0x10B981 }));
+    // Layar LED Digital Dinamis (Canvas Texture)
+    const scaleCanvas = document.createElement('canvas');
+    scaleCanvas.width = 256;
+    scaleCanvas.height = 128;
+    const sCtx = scaleCanvas.getContext('2d');
+    sCtx.fillStyle = '#064E3B';
+    sCtx.fillRect(0, 0, 256, 128);
+    sCtx.fillStyle = '#10B981';
+    sCtx.font = 'bold 32px monospace';
+    sCtx.fillText('READY', 24, 46);
+    sCtx.font = 'bold 22px monospace';
+    sCtx.fillText('0.00 kg', 24, 88);
+    sCtx.font = '14px monospace';
+    sCtx.fillText('OIML R76 CERTIFIED', 24, 114);
+
+    const sTex = new THREE.CanvasTexture(scaleCanvas);
+    const ledDisp = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.6, 0.15), new THREE.MeshBasicMaterial({ map: sTex }));
     ledDisp.position.set(2.4, 3.1, -2.0);
     sc.add(ledDisp);
+    scaleDisplayObj = { canvas: scaleCanvas, ctx: sCtx, texture: sTex, mesh: ledDisp };
 
-    const weighedUld = createRealisticAkeUld();
-    weighedUld.position.set(0, 0.45, 0);
-    sc.add(weighedUld);
+    // Lingkaran Status LED di Lantai
+    const ringGeo = new THREE.RingGeometry(2.6, 2.9, 32);
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0xA855F7, side: THREE.DoubleSide, transparent: true, opacity: 0.5 });
+    scaleStatusRing = new THREE.Mesh(ringGeo, ringMat);
+    scaleStatusRing.rotation.x = -Math.PI / 2;
+    scaleStatusRing.position.y = 0.06;
+    sc.add(scaleStatusRing);
 
     bindInteractive(bed, 'scale');
     bindInteractive(tower, 'scale');
     return sc;
 }
 scaleGroup.add(createDetailedSmartScale());
+
+function updateScaleScreen(weightKg = 0, status = 'READY', sub = '0.00 kg') {
+    if (!scaleDisplayObj) return;
+    const { canvas, ctx, texture } = scaleDisplayObj;
+    ctx.clearRect(0, 0, 256, 128);
+
+    if (status === 'PASS') {
+        ctx.fillStyle = '#064E3B';
+        ctx.fillRect(0, 0, 256, 128);
+        ctx.fillStyle = '#34D399';
+        ctx.font = 'bold 32px monospace';
+        ctx.fillText('1,580 kg', 20, 46);
+        ctx.fillStyle = '#10B981';
+        ctx.font = 'bold 22px monospace';
+        ctx.fillText('STATUS: PASS', 20, 84);
+        ctx.fillStyle = '#A7F3D0';
+        ctx.font = '13px monospace';
+        ctx.fillText('DEV: +0.06% (e-AWB OK)', 20, 112);
+        if (scaleStatusRing) scaleStatusRing.material.color.setHex(0x10B981);
+    } else {
+        ctx.fillStyle = '#064E3B';
+        ctx.fillRect(0, 0, 256, 128);
+        ctx.fillStyle = '#10B981';
+        ctx.font = 'bold 30px monospace';
+        ctx.fillText('READY', 24, 46);
+        ctx.font = 'bold 22px monospace';
+        ctx.fillText('0.00 kg', 24, 88);
+        ctx.fillStyle = '#6EE7B7';
+        ctx.font = '13px monospace';
+        ctx.fillText('OIML R76 15-TON SCALE', 24, 114);
+        if (scaleStatusRing) scaleStatusRing.material.color.setHex(0xA855F7);
+    }
+    texture.needsUpdate = true;
+}
 
 const scaleLabel = makeLabelSprite("LOKASI 5", "SMART ULD WEIGHING SCALE (15T)", "#A855F7");
 scaleLabel.position.set(35, 8.0, 8);
@@ -1315,6 +1436,10 @@ scaleGroup.add(scaleLabel);
 // ─────────────────────────────────────────────────────────────────────────────
 const airsideGroup = new THREE.Group();
 scene.add(airsideGroup);
+
+let hlElevatorGroup = null;
+let hlScissorArm1 = null;
+let hlScissorArm2 = null;
 
 function createDetailedHighLoader() {
     const hl = new THREE.Group();
@@ -1348,40 +1473,59 @@ function createDetailedHighLoader() {
         hl.add(w);
     });
 
-    // Rangka Pengangkat Scissor-Lift Hidrolik Ganda
-    [-1.2, 1.2].forEach(sz => {
-        const scis1 = new THREE.Mesh(new THREE.BoxGeometry(0.15, 3.2, 0.15), MAT.metalSilver);
-        scis1.rotation.z = Math.PI / 5;
-        scis1.position.set(0, 2.2, sz);
-        const scis2 = new THREE.Mesh(new THREE.BoxGeometry(0.15, 3.2, 0.15), MAT.metalSilver);
-        scis2.rotation.z = -Math.PI / 5;
-        scis2.position.set(0, 2.2, sz);
-        hl.add(scis1, scis2);
-    });
+    // Sub-grup Platform Elevator Bergerak Hidrolik
+    hlElevatorGroup = new THREE.Group();
+    hlElevatorGroup.position.set(0.6, 0.55, 0); // Ketinggian awal sejajar rel transfer
 
-    // Platform Elevator Pengangkut ULD Setinggi Pintu Kargo Pesawat (Y = 3.8m)
+    // Platform Elevator Pengangkut ULD
     const plat = new THREE.Mesh(new THREE.BoxGeometry(5.6, 0.35, 3.6), MAT.conveyorRoller);
-    plat.position.set(0.6, 3.8, 0);
+    plat.position.y = 0;
     plat.castShadow = true;
-    hl.add(plat);
+    hlElevatorGroup.add(plat);
 
     // Pagar Pembatas Keselamatan Kuning di Platform
     [-1.8, 1.8].forEach(pz => {
         const rail = new THREE.Mesh(new THREE.BoxGeometry(5.4, 0.8, 0.08), MAT.yellowSafety);
-        rail.position.set(0.6, 4.25, pz);
-        hl.add(rail);
+        rail.position.set(0, 0.45, pz);
+        hlElevatorGroup.add(rail);
     });
 
-    // Kontainer ULD AKE di Atas Platform
-    const uld = createRealisticAkeUld();
-    uld.position.set(0.6, 4.0, 0);
-    hl.add(uld);
+    // Rangka Scissor-Lift Hidrolik yang Menyesuaikan
+    hlScissorArm1 = new THREE.Mesh(new THREE.BoxGeometry(0.15, 3.4, 0.15), MAT.metalSilver);
+    hlScissorArm1.position.set(0, -1.2, -1.2);
+    hlScissorArm1.rotation.z = Math.PI / 4.5;
+    hlScissorArm2 = new THREE.Mesh(new THREE.BoxGeometry(0.15, 3.4, 0.15), MAT.metalSilver);
+    hlScissorArm2.position.set(0, -1.2, 1.2);
+    hlScissorArm2.rotation.z = -Math.PI / 4.5;
+    hlElevatorGroup.add(hlScissorArm1, hlScissorArm2);
+
+    hl.add(hlElevatorGroup);
 
     bindInteractive(chas, 'loading');
     bindInteractive(plat, 'loading');
     return hl;
 }
 airsideGroup.add(createDetailedHighLoader());
+
+// Model Kontainer ULD AKE Realistis (Digunakan di dalam palka Boeing 777F)
+function createRealisticAkeUld() {
+    const uld = new THREE.Group();
+
+    const base = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.22, 2.4), MAT.metalSilver);
+    base.position.y = 0.11;
+    uld.add(base);
+
+    const ubox = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.9, 2.4), MAT.uldAluminum);
+    ubox.position.y = 1.25;
+    ubox.castShadow = true;
+    uld.add(ubox);
+
+    const curtain = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 1.7), MAT.uldCanvasBlue);
+    curtain.position.set(0, 1.25, 1.22);
+    uld.add(curtain);
+
+    return uld;
+}
 
 function createDetailedCargoPlane() {
     const plane = new THREE.Group();
@@ -1983,52 +2127,507 @@ loadingLabel.position.set(56, 10.5, 8);
 airsideGroup.add(loadingLabel);
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SIMULASI ALUR KARGO NYATA & DUAL SKENARIO (NORMAL vs SUSPECT)
+// SIMULASI ALUR KARGO REALISTIS 6-TAHAP (TRUK -> RFID -> X-RAY -> WS -> TIMBANGAN -> PESAWAT)
 // ─────────────────────────────────────────────────────────────────────────────
 const flowSimGroup = new THREE.Group();
 scene.add(flowSimGroup);
 
 const movingCargo = new THREE.Group();
-const mBase = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.2, 2.0), MAT.palletWood);
-mBase.position.y = 0.1;
-const mBox = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.2, 1.6), MAT.cardboardBox);
-mBox.position.y = 0.8;
+
+// 1. PALLET MODE: Digunakan saat di Truk, RFID, dan X-Ray
+const palletModeGroup = new THREE.Group();
+const pWood = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.2, 2.0), MAT.palletWood);
+pWood.position.y = 0.1;
+
+const cBox1 = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.9, 1.6), MAT.cardboardBox);
+cBox1.position.y = 0.65;
+cBox1.castShadow = true;
+
+const cBox2 = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.65, 0.85), MAT.cardboardBox);
+cBox2.position.set(-0.35, 1.42, 0.35);
+cBox2.castShadow = true;
+
+const cBox3 = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.65, 0.75), new THREE.MeshStandardMaterial({ color: 0xC26A05, roughness: 0.85 }));
+cBox3.position.set(0.38, 1.42, -0.35);
+cBox3.castShadow = true;
+
+const strapMat = new THREE.MeshStandardMaterial({ color: 0x1E293B, roughness: 0.5 });
+const strap1 = new THREE.Mesh(new THREE.BoxGeometry(1.62, 0.92, 0.04), strapMat);
+strap1.position.y = 0.65;
+const strap2 = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.92, 1.62), strapMat);
+strap2.position.y = 0.65;
+
 const mTag = new THREE.Mesh(new THREE.SphereGeometry(0.18, 12, 12), new THREE.MeshBasicMaterial({ color: 0x0CA1AF }));
-mTag.position.set(0, 1.5, 0.85);
-movingCargo.add(mBase, mBox, mTag);
+mTag.position.set(0.82, 0.75, 0);
+
+palletModeGroup.add(pWood, cBox1, cBox2, cBox3, strap1, strap2, mTag);
+movingCargo.add(palletModeGroup);
+
+// 2. ULD MODE: Kontainer Pesawat AKE Nyata (Digunakan setelah dirakit di Workstation, lalu ditimbang & dimuat ke pesawat)
+const uldModeGroup = new THREE.Group();
+function createMovingAkeUld() {
+    const uld = new THREE.Group();
+
+    const base = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.22, 2.4), MAT.metalSilver);
+    base.position.y = 0.11;
+    uld.add(base);
+
+    const ubox = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.9, 2.4), MAT.uldAluminum);
+    ubox.position.y = 1.25;
+    ubox.castShadow = true;
+    uld.add(ubox);
+
+    const curtain = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 1.7), MAT.uldCanvasBlue);
+    curtain.position.set(0, 1.25, 1.22);
+    uld.add(curtain);
+
+    // Stensil Kode Kontainer ULD
+    const stencCanvas = document.createElement('canvas');
+    stencCanvas.width = 256;
+    stencCanvas.height = 128;
+    const sctx = stencCanvas.getContext('2d');
+    sctx.fillStyle = '#E2E8F0';
+    sctx.fillRect(0, 0, 256, 128);
+    sctx.fillStyle = '#0A2540';
+    sctx.font = 'bold 24px monospace';
+    sctx.fillText('AKE 78219 GA', 15, 36);
+    sctx.fillStyle = '#087F8A';
+    sctx.font = 'bold 16px sans-serif';
+    sctx.fillText('INJOURNEY CARGO', 15, 68);
+    sctx.fillStyle = '#475569';
+    sctx.font = '13px monospace';
+    sctx.fillText('TARE: 120 KG  MAX: 1588 KG', 15, 100);
+
+    const stencTex = new THREE.CanvasTexture(stencCanvas);
+    const stencMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.8), new THREE.MeshBasicMaterial({ map: stencTex }));
+    stencMesh.position.set(1.22, 1.35, 0);
+    stencMesh.rotation.y = Math.PI / 2;
+    uld.add(stencMesh);
+
+    return uld;
+}
+uldModeGroup.add(createMovingAkeUld());
+uldModeGroup.visible = false;
+movingCargo.add(uldModeGroup);
+
+// 3. FLOATING 3D HUD BILLBOARD: Melayang tepat di atas kargo menjelaskan setiap proses secara nyata
+function makeCargoHudSprite(title, sub, color = '#3B82F6') {
+    const c = document.createElement('canvas');
+    c.width = 512;
+    c.height = 160;
+    const ctx = c.getContext('2d');
+
+    ctx.fillStyle = 'rgba(8, 20, 42, 0.94)';
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.roundRect(10, 10, 492, 140, 24);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = color;
+    ctx.font = '900 24px Barlow, sans-serif';
+    ctx.fillText(title, 28, 52);
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 22px Barlow, sans-serif';
+    ctx.fillText(sub, 28, 96);
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
+    ctx.beginPath();
+    ctx.roundRect(28, 114, 456, 26, 8);
+    ctx.fill();
+    ctx.fillStyle = color;
+    ctx.font = 'bold 15px monospace';
+    ctx.fillText('● REAL-TIME OPERATIONAL STAGE', 38, 132);
+
+    const tex = new THREE.CanvasTexture(c);
+    const spriteMat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
+    const sprite = new THREE.Sprite(spriteMat);
+    sprite.scale.set(7.8, 2.45, 1);
+    sprite.position.y = 3.6;
+    return { sprite, canvas: c, ctx, texture: tex };
+}
+const cargoHud = makeCargoHudSprite("1. BONGKAR DARI TRUK", "Menurunkan palet dari Dock 2", "#3B82F6");
+movingCargo.add(cargoHud.sprite);
+
 flowSimGroup.add(movingCargo);
 
-// Skenario 1: Alur Normal (CLEARED Lolos sampai ke Pesawat)
+function updateCargoHudText(title, sub, color = '#0CA1AF') {
+    if (!cargoHud) return;
+    const { canvas, ctx, texture } = cargoHud;
+    ctx.clearRect(0, 0, 512, 160);
+
+    ctx.fillStyle = 'rgba(8, 20, 42, 0.94)';
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.roundRect(10, 10, 492, 140, 24);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = color;
+    ctx.font = '900 24px Barlow, sans-serif';
+    ctx.fillText(title, 28, 52);
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 22px Barlow, sans-serif';
+    ctx.fillText(sub, 28, 96);
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
+    ctx.beginPath();
+    ctx.roundRect(28, 114, 456, 26, 8);
+    ctx.fill();
+    ctx.fillStyle = color;
+    ctx.font = 'bold 15px monospace';
+    ctx.fillText('● REAL-TIME OPERATIONAL STAGE', 38, 132);
+
+    texture.needsUpdate = true;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WAYPOINTS 6-TAHAP ALUR OPERASIONAL LENGKAP
+// ─────────────────────────────────────────────────────────────────────────────
 const WAYPOINTS_NORMAL = [
-    { pos: new THREE.Vector3(0, 0.2, -32), stage: 'dock', text: 'Truk tiba & palet dibongkar di Dock 2' },
-    { pos: new THREE.Vector3(-14, 0.2, -32), stage: 'dock', text: 'Palet dialirkan ke jalur penerimaan kargo' },
-    { pos: new THREE.Vector3(-28, 0.2, -26), stage: 'rfid', text: 'Memasuki gerbang Portal RFID Scanner' },
-    { pos: new THREE.Vector3(-28, 0.2, -19), stage: 'rfid', text: 'Label GS1 SSCC 18-digit terdeteksi otomatis' },
-    { pos: new THREE.Vector3(-13, 0.2, -19), stage: 'xray', text: 'Masuk terowongan Dual-View X-Ray AVSEC Line 1' },
-    { pos: new THREE.Vector3(-5, 0.2, -19), stage: 'xray', text: 'Pemeriksaan keamanan: Status CLEARED (CSD terbit)' },
-    { pos: new THREE.Vector3(-5, 0.2, -6), stage: 'storage', text: 'Transit penataan di Central Storage' },
-    { pos: new THREE.Vector3(-24, 0.2, 4), stage: 'storage', text: 'Masuk meja kerja ULD Workstation' },
-    { pos: new THREE.Vector3(-29, 0.6, 16), stage: 'storage', text: 'Kargo disusun ke dalam kontainer ULD AKE' },
-    { pos: new THREE.Vector3(0, 0.6, 25), stage: 'storage', text: 'Kontainer ULD meluncur di atas roller conveyor' },
-    { pos: new THREE.Vector3(27, 0.6, 12), stage: 'scale', text: 'ULD dialirkan menuju Smart Weighing Station' },
-    { pos: new THREE.Vector3(35, 0.6, 8), stage: 'scale', text: 'Ditimbang di Smart Scale: 1,580 kg (Toleransi PASS)' },
-    { pos: new THREE.Vector3(41, 0.6, 8), stage: 'scale', text: 'Meluncur keluar melewati Gerbang Kargo Airside #1' },
-    { pos: new THREE.Vector3(52, 1.4, 8), stage: 'loading', text: 'Dinaikkan ke platform elevator Cargo High-Loader' },
-    { pos: new THREE.Vector3(61, 4.0, 8), stage: 'loading', text: 'Dimuat ke dalam kompartemen kargo pesawat (DEPARTED Released)' }
+    // 1. BONGKAR TRUK (DOCK 2)
+    {
+        pos: new THREE.Vector3(0, 0.45, -36),
+        step: 1,
+        stage: 'dock',
+        title: '1. BONGKAR DARI TRUK DOCK 2',
+        text: 'Truk tiba & palet disiapkan di Dock 2 (TAS Verified)',
+        subtext: 'Koli diverifikasi jadwal & dibongkar dari bak truk',
+        isUld: false,
+        color: '#3B82F6'
+    },
+    {
+        pos: new THREE.Vector3(0, 0.35, -31),
+        step: 1,
+        stage: 'dock',
+        title: '1. TURUN KE REL PENERIMAAN',
+        text: 'Palet diturunkan melalui Dock Leveler ke rel konveyor utama',
+        subtext: 'Memasuki jalur konveyor penerimaan dermaga muat',
+        isUld: false,
+        color: '#3B82F6'
+    },
+    {
+        pos: new THREE.Vector3(-14, 0.35, -31),
+        step: 1,
+        stage: 'dock',
+        title: '1. MELUNCUR DI REL PENERIMAAN',
+        text: 'Palet dialirkan di atas konveyor penerimaan menuju RFID',
+        subtext: 'Menuju gerbang portal identifikasi nirkabel otomatis',
+        isUld: false,
+        color: '#3B82F6'
+    },
+    {
+        pos: new THREE.Vector3(-28, 0.35, -31),
+        step: 1,
+        stage: 'dock',
+        title: '1. TIBA DI BELOKAN RFID',
+        text: 'Palet bersiap membelok memasuki lorong pemindaian RFID',
+        subtext: 'Posisi koli lurus sejajar antena portal identifikasi',
+        isUld: false,
+        color: '#3B82F6'
+    },
+
+    // 2. SCAN RFID PORTAL
+    {
+        pos: new THREE.Vector3(-28, 0.35, -27),
+        step: 2,
+        stage: 'rfid',
+        title: '2. GERBANG RFID SCAN PORTAL',
+        text: 'Palet memasuki lorong High-Speed RFID Portal',
+        subtext: 'Antena memindai tag tanpa sentuh kecepatan 2.5 m/s',
+        isUld: false,
+        color: '#0CA1AF'
+    },
+    {
+        pos: new THREE.Vector3(-28, 0.35, -23.5),
+        step: 2,
+        stage: 'rfid',
+        title: '2. RFID MATCHED: GS1 SSCC VALID',
+        text: 'Tag GS1 SSCC 18-digit terdeteksi & cocok dengan e-AWB',
+        subtext: 'Nomor SSCC terverifikasi di CMS: (00) 08901234567890128',
+        isUld: false,
+        color: '#0CA1AF'
+    },
+    {
+        pos: new THREE.Vector3(-20, 0.35, -23.5),
+        step: 2,
+        stage: 'rfid',
+        title: '2. REL TRANSFER MENUJU X-RAY',
+        text: 'Palet meluncur di rel transfer penghubung menuju AVSEC',
+        subtext: 'Diarahkan ke stasiun Dual-View X-Ray Screening Line 1',
+        isUld: false,
+        color: '#0CA1AF'
+    },
+
+    // 3. INSPEKSI X-RAY AVSEC
+    {
+        pos: new THREE.Vector3(-13, 0.35, -23.5),
+        step: 3,
+        stage: 'xray',
+        title: '3. MASUK TEROWONGAN X-RAY LINE 1',
+        text: 'Masuk terowongan Dual-View X-Ray Screening Line 1',
+        subtext: 'Pemindaian keamanan fisik sudut horizontal & vertikal',
+        isUld: false,
+        color: '#F59E0B'
+    },
+    {
+        pos: new THREE.Vector3(-13, 0.35, -16),
+        step: 3,
+        stage: 'xray',
+        title: '3. X-RAY CLEARED: CSD RESMI TERBIT',
+        text: 'Inspeksi keamanan lolos: Status CLEARED (CSD terbit)',
+        subtext: 'Cargo Security Declaration (CSD) resmi diterbitkan',
+        isUld: false,
+        color: '#F59E0B'
+    },
+
+    // 4. CENTRAL STORAGE & ULD BUILD-UP (LANGSUNG KE TENGAH)
+    {
+        pos: new THREE.Vector3(-13, 0.35, -10),
+        step: 4,
+        stage: 'storage',
+        title: '4. REL PENGHUBUNG CENTRAL STORAGE',
+        text: 'Palet meluncur keluar dari X-Ray menuju Central Storage',
+        subtext: 'Mengalir di atas rel konveyor transfer gudang',
+        isUld: false,
+        color: '#10B981'
+    },
+    {
+        pos: new THREE.Vector3(0, 0.35, -10),
+        step: 4,
+        stage: 'storage',
+        title: '4. MASUK KORIDOR UTAMA GUDANG',
+        text: 'Palet berbelok masuk ke koridor utama Central Storage',
+        subtext: 'Menuju stasiun perakitan kontainer di bagian tengah',
+        isUld: false,
+        color: '#10B981'
+    },
+    {
+        pos: new THREE.Vector3(0, 0.35, -2),
+        step: 4,
+        stage: 'storage',
+        title: '4. STAGING DI CENTRAL STORAGE',
+        text: 'Transit penataan koli di area staging Central Storage',
+        subtext: 'Penataan kargo sesuai jadwal penerbangan Flight GA-882',
+        isUld: false,
+        color: '#10B981'
+    },
+    {
+        pos: new THREE.Vector3(0, 0.55, 6),
+        step: 4,
+        stage: 'storage',
+        title: '4. BUILD-UP: DIRAKIT KE ULD AKE',
+        text: 'Koli disusun & dikunci ke Kontainer ULD AKE #78219 di tengah',
+        subtext: 'Transformasi: Kargo selesai dirakit menjadi Kontainer ULD Pesawat',
+        isUld: true,
+        color: '#10B981'
+    },
+    {
+        pos: new THREE.Vector3(16, 0.55, 8),
+        step: 4,
+        stage: 'storage',
+        title: '4. ULD MENUJU TIMBANGAN LANTAI',
+        text: 'Kontainer ULD meluncur di rel transfer tengah ke Timbangan',
+        subtext: 'Keluar dari Central Storage menuju Smart Weighing Station',
+        isUld: true,
+        color: '#10B981'
+    },
+
+    // 5. TIMBANGAN ULD (15 TON)
+    {
+        pos: new THREE.Vector3(35, 0.45, 8),
+        step: 5,
+        stage: 'scale',
+        title: '5. PENIMBANGAN ULD LANTAI 15T',
+        text: 'Ditimbang di Smart Scale: 1,580 kg (Toleransi PASS)',
+        subtext: 'Deviasi +0.06% (Toleransi e-AWB PASS) -> Izin Airside OK',
+        isUld: true,
+        isWeighing: true,
+        color: '#A855F7'
+    },
+    {
+        pos: new THREE.Vector3(42, 0.55, 8),
+        step: 5,
+        stage: 'scale',
+        title: '5. KELUAR GERBANG AIRSIDE #1',
+        text: 'Meluncur keluar melewati Gerbang Kargo Airside #1',
+        subtext: 'Pintu gerbang terbuka menghubungkan terminal ke apron',
+        isUld: true,
+        color: '#A855F7'
+    },
+
+    // 6. LOADING KE PESAWAT (HIGH-LOADER & BOEING 777F)
+    {
+        pos: new THREE.Vector3(53, 0.55, 8),
+        step: 6,
+        stage: 'loading',
+        title: '6. MASUK PLATFORM HIGH-LOADER',
+        text: 'Kontainer ULD berpindah ke platform Cargo High-Loader',
+        subtext: 'Platform menerima ULD dari rel transfer sisi gerbang',
+        isUld: true,
+        isHighLoader: true,
+        color: '#38BDF8'
+    },
+    {
+        pos: new THREE.Vector3(53, 3.85, 8),
+        step: 6,
+        stage: 'loading',
+        title: '6. HIGH-LOADER TERANGKAT KE ATAS',
+        text: 'Scissor-lift hidrolis mengangkat ULD setinggi pintu pesawat (3.85m)',
+        subtext: 'Platform elevator naik presisi sejajar pintu kargo utama',
+        isUld: true,
+        isElevating: true,
+        color: '#38BDF8'
+    },
+    {
+        pos: new THREE.Vector3(61, 3.85, 8),
+        step: 6,
+        stage: 'loading',
+        title: '6. DIMUAT KE BOEING 777F (DEPARTED)',
+        text: 'ULD meluncur masuk ke kompartemen kargo (DEPARTED Ready)',
+        subtext: 'ULD terkunci di rel pesawat. Manifes final e-Loadsheet sukses!',
+        isUld: true,
+        isLoaded: true,
+        color: '#38BDF8'
+    }
 ];
 
 // Skenario 2: Alur Kargo SUSPECT (TIDAK LOLOS X-RAY & DIISOLASI KE RUANG KARANTINA)
 const WAYPOINTS_SUSPECT = [
-    { pos: new THREE.Vector3(0, 0.2, -32), stage: 'dock', text: 'Truk tiba & palet dibongkar di Dock 2' },
-    { pos: new THREE.Vector3(-14, 0.2, -32), stage: 'dock', text: 'Palet dialirkan ke jalur penerimaan kargo' },
-    { pos: new THREE.Vector3(-28, 0.2, -26), stage: 'rfid', text: 'Memasuki gerbang Portal RFID Scanner' },
-    { pos: new THREE.Vector3(-28, 0.2, -19), stage: 'rfid', text: 'Label GS1 SSCC 18-digit terverifikasi awal' },
-    { pos: new THREE.Vector3(-13, 0.2, -19), stage: 'xray', text: 'Masuk terowongan Dual-View X-Ray Line 2' },
-    { pos: new THREE.Vector3(-5, 0.2, -19), stage: 'xray', text: '⚠️ PERINGATAN X-RAY: Terdeteksi Anomali Kerapatan / Bahan Mencurigakan!' },
-    { pos: new THREE.Vector3(5, 0.2, -19), stage: 'quarantine', text: '🚨 DIVERTER SPUR AKTIF: Palet otomatis dialihkan ke Jalur Karantina' },
-    { pos: new THREE.Vector3(14, 0.2, -19), stage: 'quarantine', text: 'Palet meluncur melewati pintu masuk Ruang Karantina' },
-    { pos: new THREE.Vector3(21, 0.45, -19), stage: 'quarantine', text: 'Palet tiba di Meja Pemeriksaan Fisik Sekunder (Lokasi 3B)' },
-    { pos: new THREE.Vector3(22, 0.7, -19), stage: 'quarantine', text: '🛑 STATUS: SUSPECT & HOLD! Petugas AVSEC melakukan uji usapan ETD. DILARANG ke Pesawat!' }
+    {
+        pos: new THREE.Vector3(0, 0.45, -36),
+        step: 1,
+        stage: 'dock',
+        title: '1. BONGKAR DARI TRUK DOCK 2',
+        text: 'Truk tiba & palet dibongkar di Dock 2 (TAS Verified)',
+        subtext: 'Koli diverifikasi jadwal & dibongkar dari bak truk',
+        isUld: false,
+        color: '#3B82F6'
+    },
+    {
+        pos: new THREE.Vector3(0, 0.35, -31),
+        step: 1,
+        stage: 'dock',
+        title: '1. TURUN KE REL PENERIMAAN',
+        text: 'Palet diturunkan dari bak truk ke rel konveyor utama',
+        subtext: 'Palet dialirkan ke area penerimaan kargo terminal',
+        isUld: false,
+        color: '#3B82F6'
+    },
+    {
+        pos: new THREE.Vector3(-14, 0.35, -31),
+        step: 1,
+        stage: 'dock',
+        title: '1. MELUNCUR DI REL PENERIMAAN',
+        text: 'Palet dialirkan ke jalur penerimaan kargo',
+        subtext: 'Menuju gerbang portal identifikasi otomatis',
+        isUld: false,
+        color: '#3B82F6'
+    },
+    {
+        pos: new THREE.Vector3(-28, 0.35, -31),
+        step: 1,
+        stage: 'dock',
+        title: '1. TIBA DI BELOKAN RFID',
+        text: 'Palet bersiap membelok memasuki lorong pemindaian RFID',
+        subtext: 'Posisi koli lurus sejajar antena portal identifikasi',
+        isUld: false,
+        color: '#3B82F6'
+    },
+    {
+        pos: new THREE.Vector3(-28, 0.35, -27),
+        step: 2,
+        stage: 'rfid',
+        title: '2. GERBANG RFID SCAN PORTAL',
+        text: 'Memasuki gerbang Portal RFID Scanner',
+        subtext: 'Antena memindai tag tanpa sentuh kecepatan 2.5 m/s',
+        isUld: false,
+        color: '#0CA1AF'
+    },
+    {
+        pos: new THREE.Vector3(-28, 0.35, -23.5),
+        step: 2,
+        stage: 'rfid',
+        title: '2. RFID VERIFIKASI AWAL',
+        text: 'Label GS1 SSCC 18-digit terverifikasi awal di CMS',
+        subtext: 'Data awal kargo dicocokkan sebelum masuk AVSEC',
+        isUld: false,
+        color: '#0CA1AF'
+    },
+    {
+        pos: new THREE.Vector3(-14, 0.35, -23.5),
+        step: 2,
+        stage: 'rfid',
+        title: '2. REL TRANSFER MENUJU X-RAY LINE 2',
+        text: 'Palet dialirkan di rel transfer menuju X-Ray Line 2',
+        subtext: 'Diarahkan ke stasiun inspeksi keamanan Line 2',
+        isUld: false,
+        color: '#0CA1AF'
+    },
+    {
+        pos: new THREE.Vector3(-5, 0.35, -23.5),
+        step: 3,
+        stage: 'xray',
+        title: '3. MASUK X-RAY LINE 2',
+        text: 'Masuk terowongan Dual-View X-Ray Line 2',
+        subtext: 'Pemindaian sensor mendeteksi ketidaksesuaian densitas',
+        isUld: false,
+        color: '#EF4444'
+    },
+    {
+        pos: new THREE.Vector3(-5, 0.35, -20),
+        step: 3,
+        stage: 'xray',
+        title: '3. ⚠️ ANOMALI TERDETEKSI!',
+        text: '⚠️ PERINGATAN X-RAY: Terdeteksi Anomali Kerapatan Mencurigakan!',
+        subtext: 'Sensor AVSEC membunyikan alarm: Status SUSPECT',
+        isUld: false,
+        color: '#EF4444'
+    },
+    {
+        pos: new THREE.Vector3(5, 0.35, -20),
+        step: 3,
+        stage: 'quarantine',
+        title: '3B. DIVERTER SPUR AKTIF',
+        text: '🚨 DIVERTER SPUR AKTIF: Palet otomatis dialihkan ke Karantina',
+        subtext: 'Lengan pengalih mekanis membelokkan palet dari jalur utama',
+        isUld: false,
+        color: '#EF4444'
+    },
+    {
+        pos: new THREE.Vector3(14, 0.35, -20),
+        step: 3,
+        stage: 'quarantine',
+        title: '3B. MASUK RUANG KARANTINA',
+        text: 'Palet meluncur melewati pintu masuk Ruang Karantina (3B)',
+        subtext: 'Memasuki ruangan terisolasi khusus penanganan lanjutan',
+        isUld: false,
+        color: '#EF4444'
+    },
+    {
+        pos: new THREE.Vector3(21, 0.45, -20),
+        step: 3,
+        stage: 'quarantine',
+        title: '3B. MEJA PEMERIKSAAN SEKUNDER',
+        text: 'Palet tiba di Meja Pemeriksaan Fisik Sekunder',
+        subtext: 'Petugas AVSEC melakukan inspeksi manual & uji usap ETD',
+        isUld: false,
+        color: '#EF4444'
+    },
+    {
+        pos: new THREE.Vector3(22, 0.7, -20),
+        step: 3,
+        stage: 'quarantine',
+        title: '3B. 🛑 STATUS: SUSPECT & HOLD',
+        text: '🛑 STATUS: SUSPECT & HOLD! DILARANG KERAS ke Pesawat!',
+        subtext: 'Kargo ditahan dalam brankas bukti. Laporan insiden diterbitkan.',
+        isUld: false,
+        color: '#EF4444'
+    }
 ];
 
 let currentScenario = 'normal';
@@ -2046,31 +2645,37 @@ function setScenario(scen) {
 
     if (scen === 'suspect') {
         activeWaypoints = WAYPOINTS_SUSPECT;
-        btnSusp.classList.remove('bg-white/10', 'text-rose-300');
-        btnSusp.classList.add('bg-rose-600', 'text-white', 'shadow-lg');
-        btnNorm.classList.remove('bg-[#0CA1AF]', 'text-white');
-        btnNorm.classList.add('bg-white/10', 'text-slate-300');
-        lblEnd.textContent = 'Karantina';
+        if (btnSusp) {
+            btnSusp.classList.remove('bg-white/10', 'text-rose-300');
+            btnSusp.classList.add('bg-rose-600', 'text-white', 'shadow-lg');
+        }
+        if (btnNorm) {
+            btnNorm.classList.remove('bg-[#0CA1AF]', 'text-white');
+            btnNorm.classList.add('bg-white/10', 'text-slate-300');
+        }
+        if (lblEnd) lblEnd.textContent = 'Karantina';
 
         addLogEntry('⚠️ Skenario Kargo SUSPECT (Tidak Lolos X-Ray) diaktifkan!');
         restartFlow();
-
-        // Kamera meluncur fokus ke area X-Ray & Ruang Karantina secara halus
         flyCameraSmooth(new THREE.Vector3(12, 22, 12), new THREE.Vector3(10, 2, -20), 1300);
     } else {
         activeWaypoints = WAYPOINTS_NORMAL;
-        btnNorm.classList.add('bg-[#0CA1AF]', 'text-white');
-        btnNorm.classList.remove('bg-white/10', 'text-slate-300');
-        btnSusp.classList.add('bg-white/10', 'text-rose-300');
-        btnSusp.classList.remove('bg-rose-600', 'text-white', 'shadow-lg');
-        lblEnd.textContent = 'Pesawat';
+        if (btnNorm) {
+            btnNorm.classList.add('bg-[#0CA1AF]', 'text-white');
+            btnNorm.classList.remove('bg-white/10', 'text-slate-300');
+        }
+        if (btnSusp) {
+            btnSusp.classList.add('bg-white/10', 'text-rose-300');
+            btnSusp.classList.remove('bg-rose-600', 'text-white', 'shadow-lg');
+        }
+        if (lblEnd) lblEnd.textContent = 'Pesawat';
 
-        // Reset warna kardus & tag ke normal
-        mBox.material.color.setHex(0xD97706);
+        cBox1.material.color.setHex(0xD97706);
+        cBox2.material.color.setHex(0xD97706);
         mTag.material.color.setHex(0x0CA1AF);
         quarantineAlarmLight.intensity = 0;
 
-        addLogEntry('Alur kargo normal (CLEARED) diaktifkan.');
+        addLogEntry('Alur kargo normal (CLEARED Lolos ke Pesawat) diaktifkan.');
         restartFlow();
     }
 }
@@ -2085,30 +2690,46 @@ function updateCargoFlow(dt) {
 
         const current = activeWaypoints[wpIdx];
         const isAlert = current.text.includes('⚠️') || current.text.includes('🚨') || current.text.includes('🛑');
-        addLogEntry(`[${current.stage.toUpperCase()}] ${current.text}`, isAlert);
+        addLogEntry(`[TAHAP ${current.step}: ${current.stage.toUpperCase()}] ${current.text}`, isAlert);
 
+        // Update progress bar & badge
         const pct = Math.round(((wpIdx + 1) / activeWaypoints.length) * 100);
-        document.getElementById('bar-flow-progress').style.width = pct + '%';
-        document.getElementById('badge-flow-stage').textContent = `STAGE: ${current.stage.toUpperCase()} (${pct}%)`;
+        const bar = document.getElementById('bar-flow-progress');
+        if (bar) bar.style.width = pct + '%';
+        const badge = document.getElementById('badge-flow-stage');
+        if (badge) badge.textContent = `TAHAP ${current.step}/6: ${current.stage.toUpperCase()} (${pct}%)`;
+
+        // Update floating 3D HUD billboard
+        updateCargoHudText(current.title, current.subtext, current.color);
+
+        // Update active bottom bar buttons & top chips
+        document.querySelectorAll('.step-chip').forEach(c => c.classList.remove('active'));
+        const chip = document.getElementById(`chip-${current.stage}`);
+        if (chip) chip.classList.add('active');
+
+        // Buka otomatis informasi stasiun kerja terkait jika tidak sedang di-close pengguna
+        const st = FIELD_STATIONS[current.stage];
+        if (st && !tourActive) {
+            openInspector(st);
+        }
 
         // Logika Reaktif Skenario Suspect
         if (currentScenario === 'suspect') {
-            if (wpIdx >= 5) {
-                // Kargo terdeteksi suspect: kardus berubah merah & tag berkedip merah
-                mBox.material.color.setHex(0xDC2626);
+            if (wpIdx >= 8) {
+                cBox1.material.color.setHex(0xDC2626);
+                cBox2.material.color.setHex(0xDC2626);
                 mTag.material.color.setHex(0xFF0000);
                 quarantineAlarmLight.intensity = 2.8;
 
-                // X-Ray Line 2 led berubah merah
                 const l2 = xrayLeds.find(l => l.lineNum === 2);
                 if (l2) l2.mesh.material.color.setHex(0xEF4444);
             }
             if (wpIdx === activeWaypoints.length - 1) {
-                // Tiba di meja inspeksi ruang karantina
                 openInspector(FIELD_STATIONS['quarantine']);
             }
         } else {
-            mBox.material.color.setHex(0xD97706);
+            cBox1.material.color.setHex(0xD97706);
+            cBox2.material.color.setHex(0xD97706);
             mTag.material.color.setHex(0x0CA1AF);
             quarantineAlarmLight.intensity = 0;
             const l2 = xrayLeds.find(l => l.lineNum === 2);
@@ -2116,22 +2737,61 @@ function updateCargoFlow(dt) {
         }
     }
 
-    const pA = activeWaypoints[wpIdx].pos;
-    const pB = activeWaypoints[(wpIdx + 1) % activeWaypoints.length].pos;
+    const cur = activeWaypoints[wpIdx];
+    const nxt = activeWaypoints[(wpIdx + 1) % activeWaypoints.length];
+    const pA = cur.pos;
+    const pB = nxt.pos;
     movingCargo.position.lerpVectors(pA, pB, wpT);
+
+    // Transformasi Tampilan: Pallet Kayu vs Kontainer ULD Pesawat
+    if (cur.isUld) {
+        palletModeGroup.visible = false;
+        uldModeGroup.visible = true;
+    } else {
+        palletModeGroup.visible = true;
+        uldModeGroup.visible = false;
+    }
+
+    // Animasi Gerak Elevator High-Loader & Palka Pesawat
+    if (hlElevatorGroup) {
+        if (cur.stage === 'loading') {
+            if (cur.isElevating) {
+                hlElevatorGroup.position.y = THREE.MathUtils.lerp(0.55, 3.85, wpT);
+            } else if (cur.isLoaded) {
+                hlElevatorGroup.position.y = 3.85;
+            } else {
+                hlElevatorGroup.position.y = 0.55;
+            }
+        } else {
+            hlElevatorGroup.position.y = 0.55;
+        }
+    }
+
+    // Animasi Penimbangan Smart ULD Scale
+    if (cur.stage === 'scale') {
+        updateScaleScreen(1580, 'PASS');
+    } else {
+        updateScaleScreen(0, 'READY');
+    }
+
+    // Efek Pemindaian RFID
+    if (cur.stage === 'rfid') {
+        mTag.material.color.setHex(0x10B981);
+    }
 
     mTag.scale.setScalar(1 + Math.sin(Date.now() * 0.009) * 0.35);
 
     // Kedipan suar alarm di ruang karantina saat suspect aktif
-    if (currentScenario === 'suspect' && wpIdx >= 5) {
+    if (currentScenario === 'suspect' && wpIdx >= 8) {
         quarantineAlarmLight.intensity = (Math.sin(Date.now() * 0.015) > 0) ? 3.5 : 0.2;
     }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// TRANSISI KAMERA ULTRA SMOOTH (BEBAS PUSING, TANPA SPIN 180 DERAJAT)
+// TRANSISI KAMERA ULTRA SMOOTH & MODE IKUTI KARGO (FOLLOW CAM)
 // ─────────────────────────────────────────────────────────────────────────────
 let tweenAnimId = null;
+let followCargoCam = false;
 
 function flyCameraSmooth(destPos, destTarget, duration = 1400) {
     if (tweenAnimId) cancelAnimationFrame(tweenAnimId);
@@ -2157,11 +2817,21 @@ function flyCameraSmooth(destPos, destTarget, duration = 1400) {
         if (p < 1) {
             tweenAnimId = requestAnimationFrame(step);
         } else {
-            controls.enabled = true;
+            if (!followCargoCam) controls.enabled = true;
         }
     }
     step();
 }
+
+const STAGE_TO_WP_INDEX = {
+    dock: 0,
+    rfid: 4,
+    xray: 7,
+    quarantine: 9,
+    storage: 9,
+    scale: 14,
+    loading: 16
+};
 
 function goToStep(key) {
     document.querySelectorAll('.step-chip').forEach(c => c.classList.remove('active'));
@@ -2169,14 +2839,66 @@ function goToStep(key) {
     if (chip) chip.classList.add('active');
 
     if (key === 'overview') {
+        followCargoCam = false;
+        const btn1 = document.getElementById('btn-follow-cam');
+        if (btn1) btn1.classList.remove('active');
+        controls.enabled = true;
         resetCamera();
         return;
+    }
+
+    if (key === 'quarantine' && currentScenario !== 'suspect') {
+        setScenario('suspect');
+    } else if (key !== 'quarantine' && currentScenario === 'suspect') {
+        setScenario('normal');
+    }
+
+    // Singkronkan kargo ke awal stasiun yang dipilih
+    if (STAGE_TO_WP_INDEX[key] !== undefined) {
+        wpIdx = STAGE_TO_WP_INDEX[key];
+        wpT = 0;
+        const cur = activeWaypoints[wpIdx];
+        if (cur) {
+            updateCargoHudText(cur.title, cur.subtext, cur.color);
+            addLogEntry(`[PILIH TAHAP] Melompat ke ${cur.title}`);
+        }
     }
 
     const st = FIELD_STATIONS[key];
     if (st) {
         flyCameraSmooth(new THREE.Vector3(...st.camPos), new THREE.Vector3(...st.camTarget));
         openInspector(st);
+    }
+}
+
+function jumpToProcessStep(stepNum) {
+    const stepMap = {
+        1: 'dock',
+        2: 'rfid',
+        3: 'xray',
+        4: 'storage',
+        5: 'scale',
+        6: 'loading'
+    };
+    const key = stepMap[stepNum] || 'dock';
+    goToStep(key);
+}
+
+function toggleFollowCamera() {
+    followCargoCam = !followCargoCam;
+    const btn1 = document.getElementById('btn-follow-cam');
+    if (btn1) btn1.classList.toggle('active', followCargoCam);
+    const btn2 = document.getElementById('btn-follow-cargo-card');
+    if (btn2) {
+        btn2.classList.toggle('bg-[#0CA1AF]', followCargoCam);
+        btn2.classList.toggle('text-white', followCargoCam);
+    }
+    if (followCargoCam) {
+        controls.enabled = false;
+        addLogEntry('🎥 Mode Kamera Mengikuti Kargo aktif.');
+    } else {
+        controls.enabled = true;
+        addLogEntry('Mode Kamera Mengikuti Kargo dinonaktifkan.');
     }
 }
 
@@ -2482,6 +3204,13 @@ function animate() {
     const dt = (now - prevTime) / 1000;
     prevTime = now;
 
+    if (followCargoCam && isFlowActive) {
+        const targetPos = movingCargo.position.clone();
+        const camOffset = new THREE.Vector3(14, 11, 14);
+        camera.position.lerp(targetPos.clone().add(camOffset), dt * 2.8);
+        controls.target.lerp(targetPos, dt * 2.8);
+    }
+
     controls.update();
     updateCargoFlow(dt);
     renderer.render(scene, camera);
@@ -2489,18 +3218,27 @@ function animate() {
 animate();
 
 // Sembunyikan Loading Screen & Inisialisasi Kartu Tahap Overview
-window.addEventListener('load', () => {
+function hideLoadingScreen() {
     openInspector(FIELD_STATIONS['overview']);
     updateInspectorCollapseState();
     updateSimCollapseState();
     setTimeout(() => {
         const scr = document.getElementById('loading-screen');
-        if (scr) {
+        if (scr && scr.style.display !== 'none') {
             scr.style.opacity = '0';
-            setTimeout(() => scr.style.display = 'none', 500);
+            setTimeout(() => { scr.style.display = 'none'; }, 400);
         }
-    }, 500);
-});
+    }, 300);
+}
+
+if (document.readyState === 'complete') {
+    hideLoadingScreen();
+} else {
+    window.addEventListener('load', hideLoadingScreen);
+    document.addEventListener('DOMContentLoaded', hideLoadingScreen);
+}
+// Fallback keselamatan agar loading tidak pernah menggantung
+setTimeout(hideLoadingScreen, 2000);
 </script>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>
