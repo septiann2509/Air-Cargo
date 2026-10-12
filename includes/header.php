@@ -17,6 +17,9 @@ $companyShort   = 'AC';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title><?= isset($pageTitle) ? htmlspecialchars($pageTitle) . ' — ' : '' ?><?= $companyName ?> Advisory Portal</title>
     <link rel="shortcut icon" type="image/x-icon" href="https://injourneyairports.id/kawung.ico">
 
@@ -69,7 +72,7 @@ $companyShort   = 'AC';
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="assets/css/style.css?v=2">
+    <link rel="stylesheet" href="assets/css/style.css?v=<?= time() ?>">
     <style>
         /* InJourney Gradients & Theme Styles */
         body {

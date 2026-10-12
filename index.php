@@ -15,6 +15,9 @@ $companyShort   = 'AC';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title><?= $companyName ?> — <?= $companyTagline ?> | InJourney Airports Ecosystem</title>
     <meta name="description" content="<?= $companyName ?> adalah firma konsultan teknologi logistik yang merekomendasikan arsitektur sistem digital dan integrasi multimoda Air Cargo & Intermodal Terminal Bandara.">
     <link rel="shortcut icon" type="image/x-icon" href="https://injourneyairports.id/kawung.ico">
