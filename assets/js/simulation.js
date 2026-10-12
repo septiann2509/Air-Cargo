@@ -67,7 +67,7 @@ const STAGE_METADATA = {
     }
 };
 
-function initSimulation(cargoId) {
+function initSimulation(cargoId, targetStageView = null) {
     if (!cargoId) return;
 
     fetch(`api/cargo.php?action=detail&id=${encodeURIComponent(cargoId)}`)
@@ -78,7 +78,7 @@ function initSimulation(cargoId) {
                 renderCargoHeader(currentCargoData);
                 renderAuditTimeline(res.data.logs);
                 updateStepperState(currentCargoData.current_stage, currentCargoData.status);
-                selectStageView(currentCargoData.current_stage || 1);
+                selectStageView(targetStageView || currentCargoData.current_stage || 1);
             } else {
                 Swal.fire({
                     title: 'Error',
@@ -214,6 +214,37 @@ function selectStageView(stage) {
     renderStageGraphic(stage);
     renderStageActionButtons(stage);
     updatePayloadInspector(stage);
+
+    // Update quick navigation toolbar if present
+    for (let s = 1; s <= 7; s++) {
+        const qBtn = document.getElementById(`quick-stage-${s}`);
+        if (qBtn) {
+            if (s === stage) {
+                qBtn.className = 'w-7 h-7 rounded-lg bg-[#087F8A] text-white font-black text-[11px] shadow-sm flex items-center justify-center';
+            } else {
+                qBtn.className = 'w-7 h-7 rounded-lg border border-gray-200 bg-white hover:bg-teal-50 hover:border-teal-300 hover:text-[#087F8A] font-bold text-slate-700 transition-all flex items-center justify-center text-[11px]';
+            }
+        }
+    }
+    const prevBtn = document.getElementById('btnNavPrev');
+    if (prevBtn) {
+        prevBtn.disabled = (stage <= 1);
+        prevBtn.style.opacity = (stage <= 1) ? '0.4' : '1';
+        prevBtn.style.pointerEvents = (stage <= 1) ? 'none' : 'auto';
+    }
+    const nextBtn = document.getElementById('btnNavNext');
+    if (nextBtn) {
+        nextBtn.disabled = (stage >= 7);
+        nextBtn.style.opacity = (stage >= 7) ? '0.4' : '1';
+        nextBtn.style.pointerEvents = (stage >= 7) ? 'none' : 'auto';
+    }
+}
+
+function navigateStep(dir) {
+    let target = (currentStageView || 1) + dir;
+    if (target < 1) target = 1;
+    if (target > 7) target = 7;
+    selectStageView(target);
 }
 
 function renderStageGraphic(stage) {
@@ -352,27 +383,82 @@ function renderStageGraphic(stage) {
 function renderStageActionButtons(stage) {
     const container = document.getElementById('stageActionButtons');
     const c = currentCargoData;
-    if (!c) return;
+    if (!container || !c) return;
 
     const currentCargoStage = c.current_stage;
     container.innerHTML = '';
 
-    // If stage 4 (AVSEC), provide 2 choices: Pass or Fail
+    // ── TAHAP 4: SCREENING X-RAY AVSEC ──
     if (stage === 4) {
-        container.innerHTML = `
-            <button onclick="executeStageAction(4, 'CLEARED')" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-500/20 transition-all flex items-center transform hover:-translate-y-0.5">
-                <i class="fa-solid fa-shield-halved mr-1.5"></i>
-                <span>Simulasi Loloskan X-Ray (CLEARED)</span>
-            </button>
-            <button onclick="executeStageAction(4, 'SUSPECT')" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-bold text-xs shadow-md shadow-rose-500/20 transition-all flex items-center transform hover:-translate-y-0.5">
-                <i class="fa-solid fa-triangle-exclamation mr-1.5"></i>
-                <span>Simulasi Temuan Bahaya (SUSPECT)</span>
-            </button>
-        `;
-        return;
+        if (c.status === 'CLEARED') {
+            // Status kargo sudah CLEARED: Tonjolkan tombol lanjut ke Tahap 5
+            container.innerHTML = `
+                <button onclick="selectStageView(5)" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-bold text-xs shadow-md shadow-teal-500/25 transition-all flex items-center transform hover:-translate-y-0.5 animate-pulse">
+                    <i class="fa-solid fa-scale-balanced mr-2 text-sm"></i>
+                    <span>Lihat &amp; Lanjut ke Tahap 5 (Penimbangan Smart Scale)</span>
+                    <i class="fa-solid fa-arrow-right ml-2 text-xs"></i>
+                </button>
+                <button onclick="executeStageAction(4, 'CLEARED')" class="px-3.5 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold border border-emerald-300 shadow-sm transition-all flex items-center">
+                    <i class="fa-solid fa-rotate mr-1.5 text-xs text-emerald-600"></i>
+                    <span>Simulasi Ulang Lolos (CLEARED)</span>
+                </button>
+                <button onclick="executeStageAction(4, 'SUSPECT')" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-rose-50 text-rose-700 hover:text-rose-800 text-xs font-bold border border-rose-300 shadow-sm transition-all flex items-center">
+                    <i class="fa-solid fa-triangle-exclamation mr-1.5 text-xs text-rose-500"></i>
+                    <span>Simulasi Temuan Bahaya (SUSPECT)</span>
+                </button>
+                <button onclick="selectStageView(3)" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-600 hover:text-[#087F8A] text-xs font-bold border border-gray-300 shadow-sm transition-colors flex items-center">
+                    <i class="fa-solid fa-arrow-left mr-1.5 text-xs"></i>
+                    <span>Lihat Tahap 3</span>
+                </button>
+            `;
+            return;
+        } else if (c.status === 'SUSPECT') {
+            container.innerHTML = `
+                <div class="w-full mb-2 p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center justify-between">
+                    <span class="font-bold"><i class="fa-solid fa-triangle-exclamation mr-1.5 text-rose-600"></i> Kargo Berstatus SUSPECT — Ditahan di Ruang Karantina</span>
+                    <span class="text-[10px] bg-rose-200/60 px-2 py-0.5 rounded font-mono font-bold">HOLD</span>
+                </div>
+                <button onclick="executeStageAction(4, 'CLEARED')" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-500/20 transition-all flex items-center transform hover:-translate-y-0.5">
+                    <i class="fa-solid fa-shield-halved mr-1.5"></i>
+                    <span>Verifikasi Ulang &amp; Loloskan (CLEARED)</span>
+                </button>
+                <button onclick="selectStageView(5)" class="px-4 py-2.5 rounded-xl bg-white hover:bg-teal-50 text-[#0D1C42] hover:text-[#087F8A] text-xs font-bold border border-teal-300 shadow-sm transition-all flex items-center">
+                    <i class="fa-solid fa-scale-balanced mr-1.5 text-xs text-[#087F8A]"></i>
+                    <span>Lihat Tahap 5</span>
+                    <i class="fa-solid fa-arrow-right ml-1.5 text-xs text-[#087F8A]"></i>
+                </button>
+                <button onclick="selectStageView(3)" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-600 hover:text-[#087F8A] text-xs font-bold border border-gray-300 shadow-sm transition-colors flex items-center">
+                    <i class="fa-solid fa-arrow-left mr-1.5 text-xs"></i>
+                    <span>Lihat Tahap 3</span>
+                </button>
+            `;
+            return;
+        } else {
+            // Belum screening X-Ray
+            container.innerHTML = `
+                <button onclick="executeStageAction(4, 'CLEARED')" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-500/20 transition-all flex items-center transform hover:-translate-y-0.5">
+                    <i class="fa-solid fa-shield-halved mr-1.5"></i>
+                    <span>Simulasi Loloskan X-Ray (CLEARED)</span>
+                </button>
+                <button onclick="executeStageAction(4, 'SUSPECT')" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-bold text-xs shadow-md shadow-rose-500/20 transition-all flex items-center transform hover:-translate-y-0.5">
+                    <i class="fa-solid fa-triangle-exclamation mr-1.5"></i>
+                    <span>Simulasi Temuan Bahaya (SUSPECT)</span>
+                </button>
+                <button onclick="selectStageView(5)" class="px-4 py-2.5 rounded-xl bg-white hover:bg-teal-50 text-[#0D1C42] hover:text-[#087F8A] text-xs font-bold border border-teal-300 shadow-sm transition-all flex items-center transform hover:-translate-y-0.5">
+                    <i class="fa-solid fa-scale-balanced mr-1.5 text-xs text-[#087F8A]"></i>
+                    <span>Lihat Tahap 5</span>
+                    <i class="fa-solid fa-arrow-right ml-1.5 text-xs text-[#087F8A]"></i>
+                </button>
+                <button onclick="selectStageView(3)" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-600 hover:text-[#087F8A] text-xs font-bold border border-gray-300 shadow-sm transition-colors flex items-center">
+                    <i class="fa-solid fa-arrow-left mr-1.5 text-xs"></i>
+                    <span>Lihat Tahap 3</span>
+                </button>
+            `;
+            return;
+        }
     }
 
-    // Default button for other stages
+    // ── TAHAP LAIN (1, 2, 3, 5, 6, 7) ──
     let btnText = `Jalankan Tahap ${stage}`;
     let btnIcon = 'fa-play';
     if (stage === 1) { btnText = 'Daftarkan Truk di Dock (TMS)'; btnIcon = 'fa-truck'; }
@@ -382,8 +468,7 @@ function renderStageActionButtons(stage) {
     else if (stage === 6) { btnText = 'Alokasikan ke ULD & Cek CoG'; btnIcon = 'fa-boxes-packing'; }
     else if (stage === 7) { btnText = 'Finalisasi Manifes & Load Pesawat'; btnIcon = 'fa-plane-departure'; }
 
-    const isCurrentOrNext = (stage === currentCargoStage) || (stage === currentCargoStage + 1);
-    const disabledAttr = (stage > currentCargoStage + 1 && c.status !== 'SUSPECT') ? 'disabled opacity-50 cursor-not-allowed' : '';
+    const disabledAttr = (stage > currentCargoStage + 1 && c.status !== 'SUSPECT') ? 'disabled style="opacity:0.45;cursor:not-allowed;"' : '';
 
     container.innerHTML = `
         <button onclick="executeStageAction(${stage}, 'CLEARED')" ${disabledAttr} class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-bold text-xs shadow-md shadow-teal-500/25 transition-all flex items-center transform hover:-translate-y-0.5">
@@ -394,6 +479,12 @@ function renderStageActionButtons(stage) {
             <button onclick="selectStageView(${stage + 1})" class="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-[#0D1C42] hover:text-[#087F8A] text-xs font-bold border border-gray-300 shadow-sm transition-colors flex items-center">
                 <span>Lihat Tahap ${stage + 1}</span>
                 <i class="fa-solid fa-arrow-right ml-1.5 text-xs"></i>
+            </button>
+        ` : ''}
+        ${stage > 1 ? `
+            <button onclick="selectStageView(${stage - 1})" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-600 hover:text-[#087F8A] text-xs font-bold border border-gray-300 shadow-sm transition-colors flex items-center">
+                <i class="fa-solid fa-arrow-left mr-1.5 text-xs"></i>
+                <span>Lihat Tahap ${stage - 1}</span>
             </button>
         ` : ''}
     `;
@@ -434,7 +525,12 @@ function executeStageAction(stage, avsecDecision) {
                 confirmButtonColor: (avsecDecision === 'SUSPECT') ? '#e11d48' : '#087F8A',
                 customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
             }).then(() => {
-                initSimulation(currentCargoData.id);
+                // Maju otomatis ke tahap berikutnya setelah sukses
+                let nextView = stage;
+                if (avsecDecision === 'CLEARED' && stage < 7) {
+                    nextView = stage + 1;
+                }
+                initSimulation(currentCargoData.id, nextView);
             });
         } else {
             Swal.fire({

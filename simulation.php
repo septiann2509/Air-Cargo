@@ -11,8 +11,9 @@ $db = getDb();
 $cargosStmt = $db->query("SELECT id, awb_number, sscc, shipper, description, current_stage, status FROM cargo_shipments ORDER BY created_at DESC");
 $cargos = $cargosStmt->fetchAll();
 
-// Kargo terpilih
+// Kargo terpilih & Tahap awal (opsional dari query string ?stage=5)
 $selectedCargoId = $_GET['cargo_id'] ?? ($cargos[0]['id'] ?? '');
+$initialStage = (int)($_GET['stage'] ?? 0);
 
 $pageTitle = 'Simulasi 7-Tahap PoC — Air Cargo Data Transfer';
 $bodyClass = 'bg-[#F8FAFC] text-slate-800';
@@ -54,6 +55,12 @@ include __DIR__ . '/includes/header.php';
                 <i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i>
                 <span>Auto-Run Demo (1-Click)</span>
             </button>
+
+            <!-- Denah 3D Terminal Link Button -->
+            <a href="layout_3d.php" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-teal-50 text-[#087F8A] hover:text-[#0CA1AF] text-xs font-bold border border-teal-200 shadow-sm transition-all flex items-center">
+                <i class="fa-solid fa-cubes mr-1.5 text-xs text-[#0CA1AF]"></i>
+                <span>Denah 3D</span>
+            </a>
 
             <!-- Reset Button -->
             <button onclick="confirmResetData()" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-600 hover:text-rose-600 text-xs font-bold border border-gray-300 shadow-sm transition-colors flex items-center">
@@ -194,6 +201,26 @@ include __DIR__ . '/includes/header.php';
                     <!-- Dynamic Buttons rendered via JS based on current stage -->
                 </div>
 
+                <!-- Quick Stage Navigation Toolbar (Maju / Mundur Langsung Antar-Tahap) -->
+                <div class="mt-5 pt-4 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3 text-xs">
+                    <button type="button" onclick="navigateStep(-1)" id="btnNavPrev" class="px-3.5 py-2 rounded-xl border border-gray-200 bg-white hover:bg-slate-50 text-slate-700 font-bold flex items-center gap-1.5 shadow-sm transition-all" title="Kembali ke Tahap Sebelumnya">
+                        <i class="fa-solid fa-arrow-left text-[11px]"></i>
+                        <span>Tahap Sebelumnya</span>
+                    </button>
+                    <div class="flex items-center gap-1 font-mono text-[11px]">
+                        <span class="text-[10px] uppercase font-bold text-slate-400 mr-1 font-sans">Lompat:</span>
+                        <?php for($i = 1; $i <= 7; $i++): ?>
+                            <button type="button" onclick="selectStageView(<?= $i ?>)" id="quick-stage-<?= $i ?>" class="w-8 h-8 rounded-xl border border-gray-200 bg-white hover:bg-teal-50 hover:border-teal-300 hover:text-[#087F8A] font-bold text-slate-700 transition-all flex items-center justify-center" title="Buka Langsung Tahap <?= $i ?>">
+                                <?= $i ?>
+                            </button>
+                        <?php endfor; ?>
+                    </div>
+                    <button type="button" onclick="navigateStep(1)" id="btnNavNext" class="px-3.5 py-2 rounded-xl border border-teal-200 bg-teal-50 hover:bg-teal-100 text-[#087F8A] font-bold flex items-center gap-1.5 shadow-sm transition-all" title="Lanjut ke Tahap Selanjutnya">
+                        <span>Tahap Selanjutnya</span>
+                        <i class="fa-solid fa-arrow-right text-[11px]"></i>
+                    </button>
+                </div>
+
             </div>
 
             <!-- GS1 e-Label Anatomy Visualization (Shows up particularly on Stage 2 & 3) -->
@@ -299,11 +326,11 @@ include __DIR__ . '/includes/header.php';
 </div>
 
 <!-- Simulation Engine Scripts -->
-<script src="assets/js/simulation.js"></script>
+<script src="assets/js/simulation.js?v=<?= filemtime(__DIR__ . '/assets/js/simulation.js') ?>"></script>
 <script>
-    // Initialize simulation page with current cargo
+    // Inisialisasi simulasi dengan kargo terpilih & tahap awal (jika diberikan)
     document.addEventListener('DOMContentLoaded', () => {
-        initSimulation('<?= htmlspecialchars($selectedCargoId) ?>');
+        initSimulation('<?= htmlspecialchars($selectedCargoId) ?>', <?= $initialStage > 0 ? $initialStage : 'null' ?>);
     });
 
     function changeCargo(cargoId) {

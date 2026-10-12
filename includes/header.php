@@ -131,6 +131,11 @@ $companyShort   = 'AC';
                         <i class="fa-solid fa-database text-xs <?= ($currentPage === 'database_viewer.php') ? 'text-[#087F8A]' : 'text-teal-200' ?>"></i>
                         <span>Database Live</span>
                     </a>
+                    <a href="layout_3d.php" class="px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap text-xs xl:text-[13px] 2xl:text-sm font-bold <?= ($currentPage === 'layout_3d.php') ? 'bg-white text-[#087F8A] shadow-md font-extrabold' : 'text-white/85 hover:text-white hover:bg-white/15' ?>">
+                        <i class="fa-solid fa-cubes text-xs <?= ($currentPage === 'layout_3d.php') ? 'text-[#087F8A]' : 'text-teal-200' ?>"></i>
+                        <span>Denah 3D</span>
+                        <span class="text-[9px] px-1.5 py-0.2 rounded-full <?= ($currentPage === 'layout_3d.php') ? 'bg-teal-100 text-[#087F8A]' : 'bg-teal-400/25 text-teal-100 border border-teal-300/30' ?> font-bold">WebGL</span>
+                    </a>
                 </nav>
 
                 <!-- User & Action Controls -->
@@ -172,6 +177,7 @@ $companyShort   = 'AC';
             <a href="dashboard.php" class="py-2.5 rounded-xl <?= ($currentPage === 'dashboard.php') ? 'bg-white text-[#087F8A]' : 'text-white hover:bg-white/15' ?>">Dashboard Eksekutif</a>
             <a href="simulation.php" class="py-2.5 rounded-xl <?= ($currentPage === 'simulation.php') ? 'bg-white text-[#087F8A]' : 'text-white hover:bg-white/15' ?>">Simulasi 7-Tahap PoC</a>
             <a href="database_viewer.php" class="py-2.5 rounded-xl <?= ($currentPage === 'database_viewer.php') ? 'bg-white text-[#087F8A]' : 'text-white hover:bg-white/15' ?>">Database Live</a>
+            <a href="layout_3d.php" class="py-2.5 rounded-xl <?= ($currentPage === 'layout_3d.php') ? 'bg-white text-[#087F8A]' : 'text-white hover:bg-white/15' ?>">Denah 3D Terminal</a>
         </div>
         <div class="text-center text-xs text-white/80 space-y-1">
             <p class="font-bold text-white"><?= $companyName ?> &bull; <?= $companyTagline ?></p>

@@ -149,6 +149,11 @@ $companyShort   = 'AC';
             <i class="fa-solid fa-database text-xs text-teal-300"></i>
             <span>Database Live</span>
         </a>
+        <a href="layout_3d.php" class="px-3 py-1.5 rounded-lg text-white/85 hover:text-white hover:bg-white/10 transition-all flex items-center gap-1.5 whitespace-nowrap text-xs xl:text-[13px] 2xl:text-sm font-semibold">
+            <i class="fa-solid fa-cubes text-xs text-teal-300"></i>
+            <span>Denah 3D</span>
+            <span class="text-[9px] px-1.5 py-0.2 rounded-full bg-teal-400/20 text-teal-300 border border-teal-300/30 font-bold">WebGL</span>
+        </a>
     </nav>
 
     <!-- Right Controls: Language Selector & Auth Portal -->
@@ -190,6 +195,7 @@ $companyShort   = 'AC';
         <a href="dashboard.php" class="hover:text-teal-200">Dashboard Eksekutif</a>
         <a href="simulation.php" class="hover:text-teal-200">Simulasi 7-Tahap PoC</a>
         <a href="database_viewer.php" class="hover:text-teal-200">Database Live</a>
+        <a href="layout_3d.php" class="hover:text-teal-200">Denah 3D Terminal</a>
     </div>
     <div class="text-center text-xs text-white/70 space-y-1">
         <p><?= $companyName ?> &bull; Air Cargo &amp; Intermodal Advisory 2026</p>
@@ -953,6 +959,7 @@ $companyShort   = 'AC';
                     <li><a href="dashboard.php" class="hover:text-white transition-colors">Dashboard Eksekutif</a></li>
                     <li><a href="simulation.php" class="hover:text-white transition-colors">Simulasi 7-Tahap PoC</a></li>
                     <li><a href="database_viewer.php" class="hover:text-white transition-colors">Database Viewer Live</a></li>
+                    <li><a href="layout_3d.php" class="hover:text-white transition-colors">Denah 3D Terminal (WebGL)</a></li>
                 </ul>
             </div>
 
