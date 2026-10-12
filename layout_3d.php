@@ -15,12 +15,31 @@ include __DIR__ . '/includes/header.php';
     body { background: #08121E !important; overflow-x: hidden; }
     main { padding: 0 !important; }
 
+    #sub-toolbar {
+        position: fixed;
+        top: 64px;
+        left: 0;
+        right: 0;
+        height: 48px;
+        z-index: 40;
+        background: rgba(8, 18, 38, 0.96);
+        border-bottom: 1px solid rgba(12, 161, 175, 0.28);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    }
+
     #canvas-container {
         position: relative;
         width: 100%;
-        height: calc(100vh - 64px);
+        height: calc(100vh - 112px);
         overflow: hidden;
         background: #08121E;
+        margin-top: 48px;
     }
     #three-canvas {
         width: 100%;
@@ -145,10 +164,67 @@ include __DIR__ . '/includes/header.php';
     }
 </style>
 
+<!-- SUB-TOOLBAR: 8 TAHAP ALUR OPERASIONAL (LEGA, UTUH, BEBAS TABRAKAN) -->
+<div id="sub-toolbar">
+    <div class="flex items-center justify-center gap-1.5 sm:gap-2 overflow-x-auto min-w-0 w-full py-1 px-2" style="scrollbar-width: none; -ms-overflow-style: none;">
+        <button class="step-chip active flex-shrink-0" id="chip-overview" onclick="goToStep('overview')">
+            <i class="fa-solid fa-map text-xs text-teal-300"></i>
+            <span>Overview Denah</span>
+        </button>
+        <button class="step-chip flex-shrink-0" id="chip-dock" onclick="goToStep('dock')">
+            <i class="fa-solid fa-truck text-xs text-blue-400"></i>
+            <span>1. Truck Docks</span>
+        </button>
+        <button class="step-chip flex-shrink-0" id="chip-rfid" onclick="goToStep('rfid')">
+            <i class="fa-solid fa-wifi text-xs text-teal-300"></i>
+            <span>2. Scan RFID</span>
+        </button>
+        <button class="step-chip flex-shrink-0" id="chip-xray" onclick="goToStep('xray')">
+            <i class="fa-solid fa-shield-halved text-xs text-amber-400"></i>
+            <span>3. X-Ray AVSEC</span>
+        </button>
+        <button class="step-chip flex-shrink-0" id="chip-quarantine" onclick="goToStep('quarantine')">
+            <i class="fa-solid fa-triangle-exclamation text-xs text-rose-400"></i>
+            <span>3B. Ruang Karantina</span>
+        </button>
+        <button class="step-chip flex-shrink-0" id="chip-storage" onclick="goToStep('storage')">
+            <i class="fa-solid fa-boxes-stacked text-xs text-emerald-400"></i>
+            <span>4. Storage &amp; WS</span>
+        </button>
+        <button class="step-chip flex-shrink-0" id="chip-scale" onclick="goToStep('scale')">
+            <i class="fa-solid fa-scale-balanced text-xs text-purple-400"></i>
+            <span>5. Timbangan ULD</span>
+        </button>
+        <button class="step-chip flex-shrink-0" id="chip-loading" onclick="goToStep('loading')">
+            <i class="fa-solid fa-plane-departure text-xs text-sky-400"></i>
+            <span>6. Pemuatan Pesawat</span>
+        </button>
+    </div>
+</div>
+
 <div id="canvas-container">
     
     <!-- 3D WebGL Canvas -->
     <canvas id="three-canvas"></canvas>
+
+    <!-- FLOATING CAMERA PRESET CONTROLS (Top Right of 3D Canvas, Standalone Glass Widget) -->
+    <div class="absolute top-3 right-4 z-20 flex items-center gap-1.5 p-1.5 rounded-xl glass-panel shadow-2xl">
+        <button onclick="setViewPreset('topdown')" id="btn-topdown" class="ctrl-btn" title="Tampak Atas 2D (Sesuai Blueprint)">
+            <i class="fa-solid fa-arrows-to-dot text-xs"></i>
+            <span class="hidden sm:inline text-xs">Tampak Atas 2D</span>
+        </button>
+        <button onclick="setViewPreset('isometric')" id="btn-isometric" class="ctrl-btn active" title="3D Isometrik Sinematik">
+            <i class="fa-solid fa-cube text-xs"></i>
+            <span class="hidden sm:inline text-xs">3D Isometrik</span>
+        </button>
+        <button onclick="toggleTourMode()" id="btn-tour" class="ctrl-btn" title="Tur Otomatis Mengikuti Alur Kargo Secara Halus">
+            <i class="fa-solid fa-person-walking-arrow-right text-teal-300 text-xs"></i>
+            <span class="hidden sm:inline text-xs">Tur Alur Halus</span>
+        </button>
+        <button onclick="resetCamera()" class="ctrl-btn" title="Reset Kamera">
+            <i class="fa-solid fa-house text-slate-300 text-xs"></i>
+        </button>
+    </div>
 
     <!-- LOADING SCREEN -->
     <div id="loading-screen">
@@ -157,174 +233,140 @@ include __DIR__ . '/includes/header.php';
         <p class="text-xs text-white/50 mt-1">Mengonfigurasi Ruang Karantina, X-Ray Lines, Conveyor ULD &amp; Pemuatan Pesawat</p>
     </div>
 
-    <!-- TOP BAR: RANGKAIAN ALUR OPERASIONAL DI LAPANGAN -->
-    <div class="absolute top-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 p-1.5 rounded-2xl glass-panel max-w-[96vw] overflow-x-auto">
-        <button class="step-chip active" id="chip-overview" onclick="goToStep('overview')">
-            <i class="fa-solid fa-map text-xs text-teal-300"></i>
-            <span>Overview Denah</span>
-        </button>
-        <button class="step-chip" id="chip-dock" onclick="goToStep('dock')">
-            <i class="fa-solid fa-truck text-xs text-blue-400"></i>
-            <span>1. Truck Docks (Landside)</span>
-        </button>
-        <button class="step-chip" id="chip-rfid" onclick="goToStep('rfid')">
-            <i class="fa-solid fa-wifi text-xs text-teal-300"></i>
-            <span>2. Scan RFID Portal</span>
-        </button>
-        <button class="step-chip" id="chip-xray" onclick="goToStep('xray')">
-            <i class="fa-solid fa-shield-halved text-xs text-amber-400"></i>
-            <span>3. X-Ray AVSEC (Line 1-3)</span>
-        </button>
-        <button class="step-chip" id="chip-quarantine" onclick="goToStep('quarantine')">
-            <i class="fa-solid fa-triangle-exclamation text-xs text-rose-400"></i>
-            <span>3B. Ruang Karantina (Suspect)</span>
-        </button>
-        <button class="step-chip" id="chip-storage" onclick="goToStep('storage')">
-            <i class="fa-solid fa-boxes-stacked text-xs text-emerald-400"></i>
-            <span>4. Central Storage &amp; WS</span>
-        </button>
-        <button class="step-chip" id="chip-scale" onclick="goToStep('scale')">
-            <i class="fa-solid fa-scale-balanced text-xs text-purple-400"></i>
-            <span>5. Timbangan ULD (15T)</span>
-        </button>
-        <button class="step-chip" id="chip-loading" onclick="goToStep('loading')">
-            <i class="fa-solid fa-plane-departure text-xs text-sky-400"></i>
-            <span>6. Pemuatan Pesawat (Airside)</span>
-        </button>
-    </div>
-
-    <!-- VIEW & CAMERA PRESETS (Top Right) -->
-    <div class="absolute top-4 right-4 z-30 flex items-center gap-2">
-        <div class="glass-panel p-1.5 rounded-xl flex items-center gap-1.5">
-            <button onclick="setViewPreset('topdown')" id="btn-topdown" class="ctrl-btn" title="Tampak Atas 2D (Sesuai Blueprint)">
-                <i class="fa-solid fa-arrows-to-dot"></i>
-                <span class="hidden sm:inline">Tampak Atas 2D</span>
-            </button>
-            <button onclick="setViewPreset('isometric')" id="btn-isometric" class="ctrl-btn active" title="3D Isometrik Sinematik">
-                <i class="fa-solid fa-cube"></i>
-                <span class="hidden sm:inline">3D Isometrik</span>
-            </button>
-            <button onclick="toggleTourMode()" id="btn-tour" class="ctrl-btn" title="Tur Otomatis Mengikuti Alur Kargo Secara Halus">
-                <i class="fa-solid fa-person-walking-arrow-right text-teal-300"></i>
-                <span class="hidden sm:inline">Tur Alur Halus</span>
-            </button>
-            <button onclick="resetCamera()" class="ctrl-btn" title="Reset Kamera">
-                <i class="fa-solid fa-house text-slate-300"></i>
-            </button>
-        </div>
-    </div>
-
-    <!-- BOTTOM LEFT: SIMULATION CONTROLS & LIVE FLOW STATUS -->
-    <div class="absolute bottom-5 left-5 z-30 flex flex-col gap-3 max-w-sm w-full">
-        <div class="glass-panel p-4 rounded-2xl">
-            <div class="flex items-center justify-between pb-2 mb-2 border-b border-white/10">
+    <!-- BOTTOM LEFT: SIMULATION CONTROLS & STAGE DETAILS PANEL -->
+    <div class="absolute bottom-5 left-5 z-30 flex flex-col gap-3 max-w-sm w-full max-h-[calc(100vh-130px)] overflow-y-auto pr-1" style="scrollbar-width: thin; scrollbar-color: rgba(12, 161, 175, 0.4) transparent;">
+        
+        <!-- CARD 1: SIMULASI ALUR KARGO REAL-TIME -->
+        <div class="glass-panel p-3.5 rounded-2xl flex-shrink-0 transition-all duration-300">
+            <div class="flex items-center justify-between pb-1.5 border-b border-white/10 cursor-pointer select-none" onclick="toggleSimCard()" title="Klik untuk Sembunyikan/Tampilkan Panel Simulasi">
                 <div class="flex items-center gap-2">
                     <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span class="text-xs font-black tracking-wider uppercase text-teal-300">Simulasi Alur Kargo Real-Time</span>
+                    <span class="text-xs font-black tracking-wider uppercase text-teal-300">Simulasi Alur Kargo</span>
                 </div>
-                <span id="badge-flow-stage" class="px-2 py-0.5 rounded text-[10px] font-bold bg-teal-500/20 text-teal-300 border border-teal-500/40">
-                    STAGE: DOCK 2
-                </span>
-            </div>
-
-            <!-- Controls (Play, Reset, Step) -->
-            <div class="flex items-center justify-between gap-3 mt-2">
-                <div class="flex items-center gap-1.5">
-                    <button onclick="toggleFlow()" id="btn-flow-play" class="w-8 h-8 rounded-lg bg-[#0CA1AF] hover:bg-[#087F8A] text-white flex items-center justify-center text-xs font-bold transition-all" title="Play/Pause Aliran Kargo">
-                        <i class="fa-solid fa-pause" id="icon-flow-play"></i>
-                    </button>
-                    <button onclick="restartFlow()" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-xs font-bold transition-all" title="Ulangi dari Truk Datang">
-                        <i class="fa-solid fa-backward-step"></i>
-                    </button>
-                    <button onclick="stepNextFlow()" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-xs font-bold transition-all" title="Langkah Berikutnya">
-                        <i class="fa-solid fa-forward-step"></i>
+                <div class="flex items-center gap-1.5" onclick="event.stopPropagation()">
+                    <span id="badge-flow-stage" class="px-2 py-0.5 rounded text-[10px] font-bold bg-teal-500/20 text-teal-300 border border-teal-500/40">
+                        STAGE: DOCK 2
+                    </span>
+                    <button onclick="toggleSimCard()" id="btn-toggle-sim" class="text-white/60 hover:text-white p-1 rounded hover:bg-white/10 transition-colors" title="Sembunyikan / Tampilkan Panel Simulasi">
+                        <i class="fa-solid fa-chevron-up text-xs transition-transform duration-300" id="icon-toggle-sim"></i>
                     </button>
                 </div>
+            </div>
 
-                <!-- Speed Selection -->
-                <div class="flex items-center gap-1 bg-white/5 p-1 rounded-lg border border-white/10 text-[10px]">
-                    <button onclick="setSpeed(1)" id="spd-1" class="px-2 py-0.5 rounded font-bold bg-[#0CA1AF] text-white">1x</button>
-                    <button onclick="setSpeed(2)" id="spd-2" class="px-2 py-0.5 rounded font-bold text-white/70 hover:text-white">2x</button>
-                    <button onclick="setSpeed(4)" id="spd-4" class="px-2 py-0.5 rounded font-bold text-white/70 hover:text-white">4x</button>
+            <!-- Collapsible Body for Card 1 -->
+            <div id="sim-collapsible-body" class="transition-all duration-300 overflow-hidden" style="max-height: 500px; opacity: 1;">
+                <!-- Controls (Play, Reset, Step) -->
+                <div class="flex items-center justify-between gap-3 mt-2.5">
+                    <div class="flex items-center gap-1.5">
+                        <button onclick="toggleFlow()" id="btn-flow-play" class="w-8 h-8 rounded-lg bg-[#0CA1AF] hover:bg-[#087F8A] text-white flex items-center justify-center text-xs font-bold transition-all" title="Play/Pause Aliran Kargo">
+                            <i class="fa-solid fa-pause" id="icon-flow-play"></i>
+                        </button>
+                        <button onclick="restartFlow()" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-xs font-bold transition-all" title="Ulangi dari Truk Datang">
+                            <i class="fa-solid fa-backward-step"></i>
+                        </button>
+                        <button onclick="stepNextFlow()" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-xs font-bold transition-all" title="Langkah Berikutnya">
+                            <i class="fa-solid fa-forward-step"></i>
+                        </button>
+                    </div>
+
+                    <!-- Speed Selection -->
+                    <div class="flex items-center gap-1 bg-white/5 p-1 rounded-lg border border-white/10 text-[10px]">
+                        <button onclick="setSpeed(1)" id="spd-1" class="px-2 py-0.5 rounded font-bold bg-[#0CA1AF] text-white">1x</button>
+                        <button onclick="setSpeed(2)" id="spd-2" class="px-2 py-0.5 rounded font-bold text-white/70 hover:text-white">2x</button>
+                        <button onclick="setSpeed(4)" id="spd-4" class="px-2 py-0.5 rounded font-bold text-white/70 hover:text-white">4x</button>
+                    </div>
+                </div>
+
+                <!-- SCENARIO TOGGLE BUTTONS (Normal vs Suspect) -->
+                <div class="mt-2.5 pt-2 border-t border-white/10 flex items-center gap-1.5">
+                    <button onclick="setScenario('normal')" id="btn-scen-normal" class="flex-1 py-1.5 px-2 rounded-lg text-[10px] font-bold bg-[#0CA1AF] text-white flex items-center justify-center gap-1 transition-all shadow-sm">
+                        <i class="fa-solid fa-circle-check"></i> Alur Lolos (Normal)
+                    </button>
+                    <button onclick="setScenario('suspect')" id="btn-scen-suspect" class="flex-1 py-1.5 px-2 rounded-lg text-[10px] font-bold bg-white/10 hover:bg-rose-900/40 text-rose-300 hover:text-white border border-rose-500/30 flex items-center justify-center gap-1 transition-all">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Skenario SUSPECT
+                    </button>
+                </div>
+
+                <!-- Flow Progress Bar -->
+                <div class="mt-2.5">
+                    <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                        <div id="bar-flow-progress" class="bg-gradient-to-r from-[#0CA1AF] via-[#04AFBF] to-[#10B981] h-1.5 rounded-full transition-all duration-300" style="width: 15%;"></div>
+                    </div>
+                    <div class="flex justify-between text-[9px] text-white/50 mt-1 font-mono">
+                        <span>Truk</span>
+                        <span>RFID</span>
+                        <span>X-Ray</span>
+                        <span id="label-flow-end">Pesawat</span>
+                    </div>
+                </div>
+
+                <!-- Event Feed -->
+                <div class="mt-2.5 pt-2 border-t border-white/10">
+                    <span class="text-[10px] text-white/60 font-bold uppercase tracking-wider block mb-1">Audit Trail Operasional Lapangan:</span>
+                    <div id="live-log-box" class="space-y-1.5 max-h-16 overflow-y-auto pr-1 text-[10px]">
+                        <div class="log-entry text-teal-300">[00:00] Truk B 9481 KGA merapat di Truck Dock 2 (TAS Verified).</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CARD 2: PENJELASAN TAHAPAN OPERASIONAL LAPANGAN (BISA DI-HIDE / DILIPAT KE BAWAH) -->
+        <div id="inspector-card" class="glass-panel p-3.5 rounded-2xl flex-shrink-0 transition-all duration-300">
+            <!-- Header Bar (Selalu Muncul - Berfungsi sebagai Toggle Bar ke Bawah) -->
+            <div class="flex items-center justify-between cursor-pointer select-none" onclick="toggleInspectorCard()" title="Klik untuk Sembunyikan / Tampilkan Informasi Tahapan">
+                <div class="flex items-center gap-2 min-w-0 pr-2">
+                    <span id="ins-stage-tag" class="text-[9px] font-black uppercase tracking-wider text-teal-300 px-2 py-0.5 rounded bg-teal-500/20 border border-teal-500/30 whitespace-nowrap flex-shrink-0">
+                        OVERVIEW TERMINAL
+                    </span>
+                    <h4 id="ins-title-header" class="text-xs font-bold text-white truncate hidden">Denah Terpadu Terminal</h4>
+                </div>
+                <div class="flex items-center gap-1 flex-shrink-0" onclick="event.stopPropagation()">
+                    <button onclick="goToStep('overview')" title="Kembali ke Ringkasan" class="text-white/60 hover:text-white p-1 rounded hover:bg-white/10 transition-colors">
+                        <i class="fa-solid fa-rotate-left text-xs"></i>
+                    </button>
+                    <button onclick="toggleInspectorCard()" id="btn-toggle-ins" title="Sembunyikan / Tampilkan ke Bawah" class="text-white/80 hover:text-white p-1 rounded hover:bg-white/10 transition-colors flex items-center justify-center w-6 h-6">
+                        <i class="fa-solid fa-chevron-down text-xs transition-transform duration-300" id="icon-toggle-ins"></i>
+                    </button>
                 </div>
             </div>
 
-            <!-- SCENARIO TOGGLE BUTTONS (Normal vs Suspect) -->
-            <div class="mt-3 pt-2 border-t border-white/10 flex items-center gap-1.5">
-                <button onclick="setScenario('normal')" id="btn-scen-normal" class="flex-1 py-1.5 px-2 rounded-lg text-[10px] font-bold bg-[#0CA1AF] text-white flex items-center justify-center gap-1 transition-all shadow-sm">
-                    <i class="fa-solid fa-circle-check"></i> Alur Lolos (Normal)
-                </button>
-                <button onclick="setScenario('suspect')" id="btn-scen-suspect" class="flex-1 py-1.5 px-2 rounded-lg text-[10px] font-bold bg-white/10 hover:bg-rose-900/40 text-rose-300 hover:text-white border border-rose-500/30 flex items-center justify-center gap-1 transition-all">
-                    <i class="fa-solid fa-triangle-exclamation"></i> Skenario SUSPECT
-                </button>
-            </div>
+            <!-- Collapsible Body Section (Akan Melipat Mulus Saat Di-Hide) -->
+            <div id="ins-collapsible-body" class="transition-all duration-300 overflow-hidden" style="max-height: 600px; opacity: 1;">
+                <h3 id="ins-title" class="text-sm font-extrabold text-white mt-2 leading-tight">Denah Terpadu Terminal Kargo Intermodal</h3>
+                
+                <p id="ins-desc" class="text-[11px] text-white/80 leading-relaxed mt-1 text-justify">
+                    Tampilan terpadu seluruh area terminal: dari sisi darat (Landside Truck Docks), area inspeksi keamanan AVSEC, fasilitas ruang karantina kargo suspect, gudang penyimpanan &amp; perakitan ULD, timbangan lantai 15 Ton, hingga pemuatan ke pesawat di sisi udara (Airside).
+                </p>
 
-            <!-- Flow Progress Bar -->
-            <div class="mt-3">
-                <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                    <div id="bar-flow-progress" class="bg-gradient-to-r from-[#0CA1AF] via-[#04AFBF] to-[#10B981] h-1.5 rounded-full transition-all duration-300" style="width: 15%;"></div>
+                <!-- Hardware & Software Badges -->
+                <div class="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-white/10 text-[10px]">
+                    <div class="p-2 rounded-lg bg-white/5 border border-white/10">
+                        <span class="text-[8px] uppercase font-bold text-teal-300 block">Layer 1: Perangkat</span>
+                        <span id="ins-hw" class="font-bold text-white block mt-0.5 leading-snug">Seluruh Ekosistem Hardware Layer 1</span>
+                    </div>
+                    <div class="p-2 rounded-lg bg-white/5 border border-white/10">
+                        <span class="text-[8px] uppercase font-bold text-blue-300 block">Layer 3: Software</span>
+                        <span id="ins-sw" class="font-bold text-white block mt-0.5 leading-snug">CMS Core Integration &amp; TMS Hub</span>
+                    </div>
                 </div>
-                <div class="flex justify-between text-[9px] text-white/50 mt-1 font-mono">
-                    <span>Truk</span>
-                    <span>RFID</span>
-                    <span>X-Ray</span>
-                    <span id="label-flow-end">Pesawat</span>
+
+                <!-- Data Protocol -->
+                <div class="mt-2 p-2 rounded-lg bg-teal-500/10 border border-teal-500/20 text-[10px]">
+                    <span class="text-[8px] uppercase font-bold text-teal-300 block">Layer 4: Standar Data</span>
+                    <span id="ins-data" class="font-mono text-emerald-300 block mt-0.5 text-[9.5px]">GS1 SSCC, IATA e-AWB, ICAO CSD, OIML R76</span>
+                </div>
+
+                <div class="mt-2.5 flex gap-2">
+                    <a href="simulation.php" id="ins-sim-link" class="flex-1 text-center py-1.5 rounded-xl bg-gradient-to-r from-[#0CA1AF] to-[#087F8A] hover:from-[#04AFBF] hover:to-[#0CA1AF] text-white text-xs font-bold transition-all shadow-md">
+                        <i class="fa-solid fa-play mr-1.5 text-[10px]"></i> Buka Simulator PoC
+                    </a>
+                    <button onclick="resetCamera()" class="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-all">
+                        Reset
+                    </button>
                 </div>
             </div>
-
-            <!-- Event Feed -->
-            <div class="mt-3 pt-2 border-t border-white/10">
-                <span class="text-[10px] text-white/60 font-bold uppercase tracking-wider block mb-1">Audit Trail Operasional Lapangan:</span>
-                <div id="live-log-box" class="space-y-1.5 max-h-24 overflow-y-auto pr-1">
-                    <div class="log-entry text-teal-300">[00:00] Truk B 9481 KGA merapat di Truck Dock 2 (TAS Verified).</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- BOTTOM RIGHT: INSPECTOR PANEL (Pops up when clicked) -->
-    <div id="inspector-card" class="glass-panel absolute bottom-5 right-5 z-30 p-5 rounded-2xl max-w-sm w-full transition-all duration-300 translate-y-3 opacity-0 pointer-events-none">
-        <div class="flex items-start justify-between mb-2">
-            <div>
-                <span id="ins-stage-tag" class="text-[9px] font-black uppercase tracking-wider text-teal-300 px-2 py-0.5 rounded bg-teal-500/20 border border-teal-500/30">
-                    LOKASI LAPANGAN
-                </span>
-                <h3 id="ins-title" class="text-base font-extrabold text-white mt-1 leading-tight">-</h3>
-            </div>
-            <button onclick="closeInspector()" class="text-white/60 hover:text-white p-1">
-                <i class="fa-solid fa-xmark text-sm"></i>
-            </button>
-        </div>
-        <p id="ins-desc" class="text-xs text-white/80 leading-relaxed mt-1">
-            -
-        </p>
-
-        <!-- Hardware & Software Badges -->
-        <div class="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-white/10 text-[11px]">
-            <div class="p-2 rounded-lg bg-white/5 border border-white/10">
-                <span class="text-[9px] uppercase font-bold text-teal-300 block">Layer 1: Perangkat</span>
-                <span id="ins-hw" class="font-bold text-white block mt-0.5">-</span>
-            </div>
-            <div class="p-2 rounded-lg bg-white/5 border border-white/10">
-                <span class="text-[9px] uppercase font-bold text-blue-300 block">Layer 3: Software</span>
-                <span id="ins-sw" class="font-bold text-white block mt-0.5">-</span>
-            </div>
         </div>
 
-        <!-- Data Protocol -->
-        <div class="mt-2.5 p-2 rounded-lg bg-teal-500/10 border border-teal-500/20 text-[11px]">
-            <span class="text-[9px] uppercase font-bold text-teal-300 block">Layer 4: Standar Data</span>
-            <span id="ins-data" class="font-mono text-emerald-300 block mt-0.5 text-[10px]">-</span>
-        </div>
-
-        <div class="mt-3 flex gap-2">
-            <a href="simulation.php" id="ins-sim-link" class="flex-1 text-center py-2 rounded-xl bg-gradient-to-r from-[#0CA1AF] to-[#087F8A] hover:from-[#04AFBF] hover:to-[#0CA1AF] text-white text-xs font-bold transition-all shadow-md">
-                <i class="fa-solid fa-play mr-1.5 text-[10px]"></i> Buka Simulator PoC
-            </a>
-            <button onclick="resetCamera()" class="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-all">
-                Reset
-            </button>
-        </div>
     </div>
 
     <!-- HOVER TOOLTIP -->
@@ -335,7 +377,7 @@ include __DIR__ . '/includes/header.php';
     </div>
 
     <!-- BOTTOM CENTER: REAL FIELD WORKFLOW LEGEND -->
-    <div class="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 hidden lg:flex items-center gap-3 px-4 py-2 rounded-xl glass-panel text-[11px]">
+    <div class="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 hidden 2xl:flex items-center gap-3 px-4 py-2 rounded-xl glass-panel text-[11px]">
         <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-blue-500"></span> Truk Datang (Landside)</div>
         <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-teal-400"></span> RFID Portal</div>
         <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-amber-400"></span> X-Ray AVSEC</div>
@@ -539,7 +581,11 @@ const MAT = {
     uldCanvasBlue: new THREE.MeshStandardMaterial({ color: 0x1D4ED8, roughness: 0.7 }),
     truckCabBlue: new THREE.MeshStandardMaterial({ color: 0x0284C7, roughness: 0.3, metalness: 0.5 }),
     truckTire: new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.9 }),
-    planeWhite: new THREE.MeshStandardMaterial({ color: 0xF8FAFC, roughness: 0.25, metalness: 0.3 }),
+    planeWhite: new THREE.MeshStandardMaterial({ color: 0xF8FAFC, roughness: 0.25, metalness: 0.28, side: THREE.DoubleSide }),
+    planeNavy: new THREE.MeshStandardMaterial({ color: 0x0A2540, roughness: 0.35, metalness: 0.25 }),
+    cockpitGlass: new THREE.MeshStandardMaterial({ color: 0x07111E, roughness: 0.08, metalness: 0.92 }),
+    chromeIntake: new THREE.MeshStandardMaterial({ color: 0xE2E8F0, metalness: 0.95, roughness: 0.12 }),
+    engineCore: new THREE.MeshStandardMaterial({ color: 0x1E293B, metalness: 0.8, roughness: 0.4 }),
 };
 
 const interactiveMeshes = [];
@@ -1343,13 +1389,13 @@ function createDetailedCargoPlane() {
     plane.position.set(64, 0, 0);
 
     // ─────────────────────────────────────────────────────────────────────────
-    // 1. FUSELAGE (BADAN PESAWAT KOMERSIAL - STREAMLINED)
+    // 1. FUSELAGE / BADAN PESAWAT BOEING 777F FREIGHTER
     // ─────────────────────────────────────────────────────────────────────────
     const fuseGroup = new THREE.Group();
     plane.add(fuseGroup);
 
-    // Silinder Kabin Utama (Main Fuselage Tube: Z = -2 sampai Z = 32, panjang 34m, radius 3.1m)
-    const mainFuseGeo = new THREE.CylinderGeometry(3.1, 3.1, 34, 32);
+    // Tabung Utama Fuselage (Z = -2 sampai Z = 32, panjang 34m, radius 3.1m)
+    const mainFuseGeo = new THREE.CylinderGeometry(3.1, 3.1, 34, 48);
     mainFuseGeo.rotateX(Math.PI / 2);
     const mainFuselage = new THREE.Mesh(mainFuseGeo, MAT.planeWhite);
     mainFuselage.position.set(0, 5.2, 15);
@@ -1357,343 +1403,577 @@ function createDetailedCargoPlane() {
     mainFuselage.receiveShadow = true;
     fuseGroup.add(mainFuselage);
 
-    // Hidung Aerodinamis (Aerodynamic Nose Radome: Z = -16 sampai Z = -2)
-    const noseGeo = new THREE.CylinderGeometry(3.1, 0.4, 14, 32);
+    // Transisi Hidung Forward Fuselage (Z = -2 sampai Z = -9)
+    const fwdFuseGeo = new THREE.CylinderGeometry(3.1, 2.5, 7, 48);
+    fwdFuseGeo.rotateX(Math.PI / 2);
+    const fwdFuselage = new THREE.Mesh(fwdFuseGeo, MAT.planeWhite);
+    fwdFuselage.position.set(0, 5.1, -5.5);
+    fwdFuselage.castShadow = true;
+    fuseGroup.add(fwdFuselage);
+
+    // Kerucut Hidung Radome (Z = -9 sampai Z = -16, radius 2.5m ke 0.8m)
+    const noseGeo = new THREE.CylinderGeometry(2.5, 0.8, 7, 48);
     noseGeo.rotateX(Math.PI / 2);
     const noseMesh = new THREE.Mesh(noseGeo, MAT.planeWhite);
-    noseMesh.position.set(0, 5.0, -9);
+    noseMesh.position.set(0, 4.85, -12.5);
     noseMesh.castShadow = true;
     fuseGroup.add(noseMesh);
 
-    // Radome Cap (Kubah Ujung Hidung Melengkung)
-    const radomeCap = new THREE.Mesh(new THREE.SphereGeometry(0.7, 24, 16), MAT.metalSilver);
-    radomeCap.position.set(0, 4.8, -16);
+    // Radome Nose Cap Bulat Aerodinamis (Ujung Depan Hidung Pesawat di Z = -16)
+    const radomeCap = new THREE.Mesh(new THREE.SphereGeometry(0.82, 32, 24), MAT.metalSilver);
+    radomeCap.scale.set(1.0, 0.95, 1.4);
+    radomeCap.position.set(0, 4.65, -16.0);
     fuseGroup.add(radomeCap);
 
-    // Ekor Kerucut Belakang (Tapered Aft Fuselage: Z = 32 sampai Z = 46)
-    const tailConeGeo = new THREE.CylinderGeometry(0.7, 3.1, 14, 32);
-    tailConeGeo.rotateX(Math.PI / 2);
-    const tailConeMesh = new THREE.Mesh(tailConeGeo, MAT.planeWhite);
-    tailConeMesh.position.set(0, 5.7, 39);
-    tailConeMesh.castShadow = true;
-    fuseGroup.add(tailConeMesh);
+    // Aerodynamic Belly Fairing (Wing-to-Body Belly Fairing: Z = 5 sampai Z = 23)
+    const bellyFairing = new THREE.Mesh(new THREE.BoxGeometry(6.6, 1.3, 18), MAT.planeWhite);
+    bellyFairing.position.set(0, 3.8, 14);
+    bellyFairing.castShadow = true;
+    fuseGroup.add(bellyFairing);
 
-    // Knalpot APU Logam (Auxiliary Power Unit Exhaust Port)
-    const apuExhaust = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.4, 1.2, 16), MAT.metalDark);
-    apuExhaust.rotateX(Math.PI / 2);
-    apuExhaust.position.set(0, 6.2, 46.5);
-    fuseGroup.add(apuExhaust);
+    // Aft Fuselage Upswept Tail (Z = 32 sampai Z = 47, radius 3.1m ke 1.1m, belly melengkung ke atas)
+    const aftFuseGeo = new THREE.CylinderGeometry(1.1, 3.1, 15, 48);
+    aftFuseGeo.rotateX(Math.PI / 2);
+    const aftFuselage = new THREE.Mesh(aftFuseGeo, MAT.planeWhite);
+    aftFuselage.position.set(0, 5.8, 39.5);
+    aftFuselage.castShadow = true;
+    fuseGroup.add(aftFuselage);
+
+    // Kerucut Ekor APU Cone (Z = 47 sampai Z = 51.5)
+    const apuConeGeo = new THREE.CylinderGeometry(0.4, 1.1, 4.5, 32);
+    apuConeGeo.rotateX(Math.PI / 2);
+    const apuCone = new THREE.Mesh(apuConeGeo, MAT.planeWhite);
+    apuCone.position.set(0, 6.4, 49.2);
+    apuCone.castShadow = true;
+    fuseGroup.add(apuCone);
+
+    // Saluran Pembuangan APU Exhaust Logam Tahan Panas
+    const apuPipe = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.38, 1.4, 24), MAT.engineCore);
+    apuPipe.rotateX(Math.PI / 2);
+    apuPipe.position.set(0, 6.45, 51.6);
+    fuseGroup.add(apuPipe);
 
     // ─────────────────────────────────────────────────────────────────────────
-    // 2. KOKPIT & KACA JENDELA DEPAN (COCKPIT WINDSHIELD)
+    // 2. KOKPIT & KACA JENDELA AERODINAMIS DENGAN VISOR MASK
     // ─────────────────────────────────────────────────────────────────────────
-    const winGeo = new THREE.BoxGeometry(2.4, 0.7, 0.1);
-    const cockpitFront = new THREE.Mesh(winGeo, new THREE.MeshStandardMaterial({ color: 0x091424, roughness: 0.1, metalness: 0.9 }));
-    cockpitFront.position.set(0, 6.3, -11.8);
-    cockpitFront.rotation.x = -Math.PI / 6;
-    fuseGroup.add(cockpitFront);
+    // Mask Hitam Anti-Glare di Sekeliling Kaca Kokpit
+    const visorMask = new THREE.Mesh(new THREE.BoxGeometry(2.7, 1.1, 0.08), MAT.cockpitGlass);
+    visorMask.position.set(0, 6.35, -11.9);
+    visorMask.rotation.x = -Math.PI / 6.2;
+    fuseGroup.add(visorMask);
 
-    [-1.25, 1.25].forEach(wx => {
-        const sideWin = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.6, 1.4), new THREE.MeshStandardMaterial({ color: 0x091424, roughness: 0.1, metalness: 0.9 }));
-        sideWin.position.set(wx, 6.3, -11.2);
-        sideWin.rotation.y = (wx > 0) ? -Math.PI / 6 : Math.PI / 6;
-        fuseGroup.add(sideWin);
+    // 2 Kaca Depan Utama (Center Windshields - Angled)
+    [-0.65, 0.65].forEach(cx => {
+        const frontPane = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.72, 0.12), MAT.cockpitGlass);
+        frontPane.position.set(cx, 6.35, -11.92);
+        frontPane.rotation.x = -Math.PI / 6.2;
+        frontPane.rotation.y = (cx > 0) ? -0.1 : 0.1;
+        fuseGroup.add(frontPane);
     });
 
-    // Strip Livery InJourney Teal di Sepanjang Badan Pesawat
+    // 2 Kaca Samping Geser (Side Windows)
+    [-1.4, 1.4].forEach(sx => {
+        const sidePane = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.62, 1.4), MAT.cockpitGlass);
+        sidePane.position.set(sx, 6.3, -11.2);
+        sidePane.rotation.y = (sx > 0) ? -Math.PI / 5.5 : Math.PI / 5.5;
+        fuseGroup.add(sidePane);
+    });
+
+    // Wiper Kokpit
+    [-0.65, 0.65].forEach(wx => {
+        const wiper = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.65, 0.04), MAT.metalDark);
+        wiper.position.set(wx, 6.3, -11.98);
+        wiper.rotation.z = (wx > 0) ? 0.35 : -0.35;
+        fuseGroup.add(wiper);
+    });
+
+    // Probe Sensor Pitot di Hidung Pesawat
+    [-1.8, 1.8].forEach(px => {
+        const pitot = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.5), MAT.metalSilver);
+        pitot.rotateX(Math.PI / 2);
+        pitot.position.set(px, 4.8, -13.5);
+        fuseGroup.add(pitot);
+    });
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 3. LIVERY & DEKORASI INJOURNEY CARGO (STRIPES & TYPOGRAPHY)
+    // ─────────────────────────────────────────────────────────────────────────
+    // Garis Cheatline InJourney Teal & Navy di Kedua Sisi Fuselage
     [-3.12, 3.12].forEach(lx => {
-        const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.5, 42), MAT.injourneyTeal);
-        stripe.position.set(lx, 4.6, 15);
-        fuseGroup.add(stripe);
+        const tealBand = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.55, 38), MAT.injourneyTeal);
+        tealBand.position.set(lx, 4.6, 15);
+        fuseGroup.add(tealBand);
+
+        const navyBand = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.22, 36), MAT.planeNavy);
+        navyBand.position.set(lx, 4.18, 15);
+        fuseGroup.add(navyBand);
+
+        // Garis Aksen Ekor
+        const tailStripe = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.45, 12), MAT.injourneyTeal);
+        tailStripe.position.set(lx * 0.75, 5.7, 38);
+        tailStripe.rotation.x = 0.08;
+        fuseGroup.add(tailStripe);
     });
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // 3. PINTU KARGO UTAMA TERBUKA (MAIN / FORWARD CARGO DOOR)
-    // ─────────────────────────────────────────────────────────────────────────
-    // Terletak di sisi KIRI pesawat (X = -3.1, Z = 8) menghadap langsung High-Loader!
-    const cargoDoorHole = new THREE.Group();
-    cargoDoorHole.position.set(-3.1, 4.0, 8);
+    // Registrasi Pesawat PK-ACF (Port & Starboard Aft Fuselage)
+    const regLabelPort = makeLabelSprite("PK-ACF", "BOEING 777F FREIGHTER", "#0CA1AF");
+    regLabelPort.scale.set(4.5, 1.2, 1);
+    regLabelPort.position.set(-3.18, 6.0, 32);
+    regLabelPort.rotation.y = -Math.PI / 2;
+    fuseGroup.add(regLabelPort);
 
-    // Bukaan Interior Kompartemen Kargo (Illuminated Cargo Hold)
-    const holdBox = new THREE.Mesh(new THREE.BoxGeometry(3.0, 2.6, 4.2), new THREE.MeshStandardMaterial({ color: 0x1E293B, roughness: 0.8 }));
-    holdBox.position.set(1.4, 0, 0);
+    const regLabelStbd = makeLabelSprite("PK-ACF", "INJOURNEY AIR CARGO", "#0CA1AF");
+    regLabelStbd.scale.set(4.5, 1.2, 1);
+    regLabelStbd.position.set(3.18, 6.0, 32);
+    regLabelStbd.rotation.y = Math.PI / 2;
+    fuseGroup.add(regLabelStbd);
+
+    // Pintu Masuk Kru Pesawat (L1 Crew Entry Door di Sisi Port Z = -7.5)
+    const crewDoor = new THREE.Mesh(new THREE.BoxGeometry(0.08, 1.9, 1.1), MAT.metalSilver);
+    crewDoor.position.set(-3.13, 5.0, -7.5);
+    const crewWindow = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.35, 0.25), MAT.cockpitGlass);
+    crewWindow.position.set(-3.14, 5.4, -7.5);
+    fuseGroup.add(crewDoor, crewWindow);
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 4. PINTU KARGO UTAMA TERBUKA (MAIN DECK CARGO DOOR) & INTERIOR HOLD
+    // ─────────────────────────────────────────────────────────────────────────
+    // Terletak di sisi KIRI pesawat (X = -3.1, Y = 4.15, Z = 8) menghadap langsung High-Loader!
+    const cargoDoorHole = new THREE.Group();
+    cargoDoorHole.position.set(-3.1, 4.15, 8);
+
+    // Bukaan Kompartemen Kargo Interior (Illuminated Cargo Hold Interior)
+    const holdBox = new THREE.Mesh(new THREE.BoxGeometry(3.6, 2.7, 4.4), new THREE.MeshStandardMaterial({ color: 0x1E293B, roughness: 0.85 }));
+    holdBox.position.set(1.8, 0, 0);
     cargoDoorHole.add(holdBox);
 
-    // Lantai Rol Kompartemen Kargo (Internal Cargo Ball Mat / Roller Floor)
-    const holdFloor = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.1, 4.0), MAT.conveyorRoller);
-    holdFloor.position.set(1.4, -1.2, 0);
+    // Lantai Rol Kompartemen Kargo (Internal Ball Mat / Roller Bed Floor)
+    const holdFloor = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.12, 4.2), MAT.conveyorRoller);
+    holdFloor.position.set(1.8, -1.25, 0);
     cargoDoorHole.add(holdFloor);
 
-    // Lampu Penerangan Interior Kargo (Warm LED Inside Cargo Hold)
-    const holdLight = new THREE.PointLight(0xFEF08A, 1.8, 6.0);
-    holdLight.position.set(1.0, 0.8, 0);
+    // Kontainer ULD AKE yang Sudah Berada di Dalam Hold Pesawat
+    const innerUld = createRealisticAkeUld();
+    innerUld.position.set(2.4, -1.15, 0);
+    innerUld.scale.set(0.9, 0.9, 0.9);
+    cargoDoorHole.add(innerUld);
+
+    // Lampu Penerangan Interior Kargo (Warm High-Intensity LED Light)
+    const holdLight = new THREE.PointLight(0xFEF08A, 2.2, 7.5);
+    holdLight.position.set(1.2, 0.9, 0);
     cargoDoorHole.add(holdLight);
 
-    // Daun Pintu Kargo Terbuka Membumbung ke Atas (Upward-Swinging Cargo Door Hatch)
-    const doorHatch = new THREE.Mesh(new THREE.BoxGeometry(0.12, 2.5, 4.2), MAT.planeWhite);
-    doorHatch.position.set(0, 1.6, 0);
-    doorHatch.rotation.z = Math.PI / 3;
+    // Daun Pintu Kargo Membuka ke Atas (Upward-Swung Main Deck Cargo Door Hatch)
+    const doorHatch = new THREE.Mesh(new THREE.BoxGeometry(0.12, 2.6, 4.3), MAT.planeWhite);
+    doorHatch.position.set(0, 1.7, 0);
+    doorHatch.rotation.z = Math.PI / 2.8;
     cargoDoorHole.add(doorHatch);
 
-    // Batang Hidrolik Pengangkat Pintu
-    const doorActuator = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.8), MAT.metalSilver);
-    doorActuator.position.set(0.3, 0.8, 1.8);
-    doorActuator.rotation.z = Math.PI / 4;
-    cargoDoorHole.add(doorActuator);
+    // 2 Batang Silinder Hidrolik Pengangkat Pintu (Dual Hydraulic Actuators)
+    [-1.7, 1.7].forEach(hz => {
+        const hydCyl = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 1.8), MAT.metalDark);
+        hydCyl.position.set(0.35, 0.85, hz);
+        hydCyl.rotation.z = Math.PI / 3.5;
 
-    // Border Keselamatan Kuning di Ambang Pintu
-    const doorFrameRim = new THREE.Mesh(new THREE.BoxGeometry(0.15, 2.7, 4.4), MAT.yellowSafety);
-    doorFrameRim.position.set(0.05, 0, 0);
+        const hydRod = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 1.2), MAT.metalSilver);
+        hydRod.position.set(0.55, 1.25, hz);
+        hydRod.rotation.z = Math.PI / 3.5;
+
+        cargoDoorHole.add(hydCyl, hydRod);
+    });
+
+    // Ambang Pintu & Frame Pengaman Kuning (Safety Door Rim)
+    const doorFrameRim = new THREE.Mesh(new THREE.BoxGeometry(0.16, 2.85, 4.5), MAT.yellowSafety);
+    doorFrameRim.position.set(0.06, 0, 0);
     cargoDoorHole.add(doorFrameRim);
+
+    // Jembatan Rol Docking Antara High-Loader dan Pintu Kargo (Connecting Bridge)
+    const dockBridge = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.25, 3.4), MAT.conveyorRoller);
+    dockBridge.position.set(-1.25, -1.25, 0);
+    cargoDoorHole.add(dockBridge);
+
+    [-1.6, 1.6].forEach(bz => {
+        const bRail = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.7, 0.06), MAT.yellowSafety);
+        bRail.position.set(-1.25, -0.9, bz);
+        cargoDoorHole.add(bRail);
+    });
 
     fuseGroup.add(cargoDoorHole);
 
     // ─────────────────────────────────────────────────────────────────────────
-    // 4. SAYAP REALISTIS DENGAN SWEPT-BACK ANGLE & SHARKLETS
+    // 5. SAYAP SWEPT-WING AERODINAMIS MULUS (CONTINUOUS BUFFERGEOMETRY)
     // ─────────────────────────────────────────────────────────────────────────
-    function createSweptWing(isLeft) {
-        const wing = new THREE.Group();
-        const sideMult = isLeft ? -1 : 1;
+    function createSmoothAirfoilWing(isLeft) {
+        const wingGroup = new THREE.Group();
+        const side = isLeft ? -1 : 1;
 
-        const wingSpan = 22;
-        const sweepZ = 12;
-        const dihedralY = 1.4;
+        const SPAN_STATIONS = 12;
+        const positions = [];
+        const indices = [];
 
-        const segCount = 8;
-        for (let i = 0; i < segCount; i++) {
-            const t0 = i / segCount;
-            const t1 = (i + 1) / segCount;
+        for (let i = 0; i <= SPAN_STATIONS; i++) {
+            const t = i / SPAN_STATIONS;
+            const x = side * (3.15 + t * 24.5);
+            const z_le = 8.5 + t * 15.0;
+            const chord = 8.6 * (1.0 - 0.72 * t);
+            const z_te = z_le + chord;
+            const y_c = 4.25 + t * 1.85;
+            const th = 0.75 * (1.0 - 0.68 * t);
 
-            const x0 = sideMult * (3.1 + t0 * wingSpan);
-            const x1 = sideMult * (3.1 + t1 * wingSpan);
+            positions.push(
+                x, y_c, z_le,                             // 0
+                x, y_c + th * 0.52, z_le + chord * 0.28,  // 1
+                x, y_c + th * 0.45, z_le + chord * 0.70,  // 2
+                x, y_c, z_te,                             // 3
+                x, y_c - th * 0.42, z_le + chord * 0.70,  // 4
+                x, y_c - th * 0.48, z_le + chord * 0.28   // 5
+            );
 
-            const z0 = 13 + t0 * sweepZ;
-            const z1 = 13 + t1 * sweepZ;
+            if (i > 0) {
+                const cOff = i * 6;
+                const pOff = (i - 1) * 6;
 
-            const y0 = 4.2 + t0 * dihedralY;
-            const y1 = 4.2 + t1 * dihedralY;
+                for (let k = 0; k < 6; k++) {
+                    const nextK = (k + 1) % 6;
+                    const p1 = pOff + k;
+                    const p2 = pOff + nextK;
+                    const c1 = cOff + k;
+                    const c2 = cOff + nextK;
 
-            const chord0 = 7.5 * (1 - t0 * 0.72);
-            const chord1 = 7.5 * (1 - t1 * 0.72);
-            const thick = 0.65 * (1 - t0 * 0.65);
-
-            const segGeo = new THREE.BoxGeometry(Math.abs(x1 - x0), thick, (chord0 + chord1) / 2);
-            const segMesh = new THREE.Mesh(segGeo, MAT.planeWhite);
-            segMesh.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
-            segMesh.rotation.z = sideMult * 0.06;
-            segMesh.rotation.y = -sideMult * 0.12;
-            segMesh.castShadow = true;
-            wing.add(segMesh);
+                    indices.push(p1, p2, c2);
+                    indices.push(p1, c2, c1);
+                }
+            }
         }
 
-        // Flap Track Fairings (3 Pod Kano di Bawah Sayap)
-        [0.25, 0.55, 0.8].forEach(ft => {
-            const fx = sideMult * (3.1 + ft * wingSpan);
-            const fz = 16.5 + ft * sweepZ;
-            const fy = 3.9 + ft * dihedralY;
-            const canoe = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.05, 3.8, 12), MAT.metalSilver);
-            canoe.rotateX(Math.PI / 2);
-            canoe.position.set(fx, fy, fz);
-            wing.add(canoe);
+        const tipOff = SPAN_STATIONS * 6;
+        indices.push(0, 1, 2); indices.push(0, 2, 3); indices.push(0, 3, 4); indices.push(0, 4, 5);
+        indices.push(tipOff, tipOff + 2, tipOff + 1); indices.push(tipOff, tipOff + 3, tipOff + 2);
+        indices.push(tipOff, tipOff + 4, tipOff + 3); indices.push(tipOff, tipOff + 5, tipOff + 4);
+
+        const wingGeo = new THREE.BufferGeometry();
+        wingGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
+        wingGeo.setIndex(indices);
+        wingGeo.computeVertexNormals();
+
+        const wingMesh = new THREE.Mesh(wingGeo, MAT.planeWhite);
+        wingMesh.castShadow = true;
+        wingMesh.receiveShadow = true;
+        wingGroup.add(wingMesh);
+
+        // Leading Edge Slat (Bilah Tepi Depan Logam Mengkilap)
+        const slatGeo = new THREE.BufferGeometry();
+        const slatPos = [];
+        const slatInd = [];
+        for (let i = 0; i <= SPAN_STATIONS; i++) {
+            const t = i / SPAN_STATIONS;
+            const x = side * (3.15 + t * 24.5);
+            const z_le = 8.5 + t * 15.0;
+            const y_c = 4.25 + t * 1.85;
+            const th = 0.75 * (1.0 - 0.68 * t);
+            slatPos.push(
+                x, y_c, z_le - 0.05,
+                x, y_c + th * 0.35, z_le + 0.55
+            );
+            if (i > 0) {
+                const c = i * 2;
+                const p = (i - 1) * 2;
+                slatInd.push(p, p + 1, c + 1);
+                slatInd.push(p, c + 1, c);
+            }
+        }
+        slatGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(slatPos), 3));
+        slatGeo.setIndex(slatInd);
+        slatGeo.computeVertexNormals();
+        const slatMesh = new THREE.Mesh(slatGeo, MAT.metalSilver);
+        wingGroup.add(slatMesh);
+
+        // 3 Flap Track Fairings ("Canoe" Pods Aerodinamis di Bawah Sayap)
+        [0.24, 0.52, 0.78].forEach(ft => {
+            const fx = side * (3.15 + ft * 24.5);
+            const fz = (8.5 + ft * 15.0) + (8.6 * (1.0 - 0.72 * ft)) * 0.95;
+            const fy = (4.25 + ft * 1.85) - 0.35;
+
+            const canoeGroup = new THREE.Group();
+            canoeGroup.position.set(fx, fy, fz);
+
+            const cBody = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.16, 4.2, 16), MAT.metalSilver);
+            cBody.rotateX(Math.PI / 2);
+            const cSpike = new THREE.Mesh(new THREE.ConeGeometry(0.16, 1.2, 16), MAT.metalDark);
+            cSpike.rotateX(-Math.PI / 2);
+            cSpike.position.z = 2.7;
+
+            canoeGroup.add(cBody, cSpike);
+            wingGroup.add(canoeGroup);
         });
 
-        // Sharklet Vertikal di Ujung Sayap (InJourney Teal)
-        const tipX = sideMult * (3.1 + wingSpan);
-        const tipY = 4.2 + dihedralY + 1.2;
-        const tipZ = 13 + sweepZ;
+        // Sharklet / Raked Wingtip Aerodinamis di Ujung Sayap (InJourney Teal)
+        const tipX = side * (3.15 + 24.5);
+        const tipZ = 8.5 + 15.0 + 1.2;
+        const tipY = 4.25 + 1.85;
 
-        const sharklet = new THREE.Mesh(new THREE.BoxGeometry(0.12, 2.4, 1.6), MAT.injourneyTeal);
-        sharklet.position.set(tipX, tipY, tipZ);
-        sharklet.rotation.z = sideMult * 0.15;
-        sharklet.rotation.x = -Math.PI / 8;
+        const sharklet = new THREE.Mesh(new THREE.BoxGeometry(0.14, 2.5, 1.8), MAT.injourneyTeal);
+        sharklet.position.set(tipX + side * 0.25, tipY + 1.15, tipZ + 0.8);
+        sharklet.rotation.z = side * 0.22;
+        sharklet.rotation.x = -0.35;
         sharklet.castShadow = true;
-        wing.add(sharklet);
+        wingGroup.add(sharklet);
 
-        // Lampu Navigasi Sayap (Kiri = Merah, Kanan = Hijau)
+        // Lampu Navigasi Sayap (Kiri = Merah, Kanan = Hijau) & Strobe Putih
         const navCol = isLeft ? 0xEF4444 : 0x10B981;
-        const navLight = new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 8), new THREE.MeshBasicMaterial({ color: navCol }));
-        navLight.position.set(tipX, tipY - 0.4, tipZ);
-        wing.add(navLight);
+        const navLight = new THREE.Mesh(new THREE.SphereGeometry(0.2, 12, 12), new THREE.MeshBasicMaterial({ color: navCol }));
+        navLight.position.set(tipX + side * 0.35, tipY + 0.6, tipZ);
+        const strobeLight = new THREE.Mesh(new THREE.SphereGeometry(0.15, 8, 8), new THREE.MeshBasicMaterial({ color: 0xFFFFFF }));
+        strobeLight.position.set(tipX + side * 0.35, tipY + 2.2, tipZ + 1.4);
+        wingGroup.add(navLight, strobeLight);
 
-        return wing;
+        return wingGroup;
     }
 
-    plane.add(createSweptWing(true));
-    plane.add(createSweptWing(false));
+    plane.add(createSmoothAirfoilWing(true));
+    plane.add(createSmoothAirfoilWing(false));
 
     // ─────────────────────────────────────────────────────────────────────────
-    // 5. MESIN JET TURBOFAN HIGH-BYPASS REALISTIS (TWIN ENGINES)
+    // 6. MESIN JET TURBOFAN GE90 HIGH-BYPASS DENGAN 3D ROTOR FAN BLADES
     // ─────────────────────────────────────────────────────────────────────────
-    function createTurbofanEngine(isLeft) {
+    function createHighBypassEngine(isLeft) {
         const eng = new THREE.Group();
-        const sideMult = isLeft ? -1 : 1;
-        const engX = sideMult * 9.5;
-        const engY = 2.9;
-        const engZ = 15.5;
-        eng.position.set(engX, engY, engZ);
+        const side = isLeft ? -1 : 1;
+        eng.position.set(side * 9.8, 2.9, 15.2);
 
-        // Pylon Penyangga Mesin ke Sayap
-        const pylon = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.4, 4.2), MAT.metalSilver);
-        pylon.position.set(0, 1.2, 0);
+        // Pylon Aerodinamis Penyangga Mesin ke Bawah Sayap
+        const pylon = new THREE.Mesh(new THREE.BoxGeometry(0.42, 1.6, 5.0), MAT.metalSilver);
+        pylon.position.set(0, 1.3, 0.2);
+        pylon.rotation.x = 0.08;
         eng.add(pylon);
 
         // Cowling Nacelle Utama Mesin
-        const cowlGeo = new THREE.CylinderGeometry(1.35, 1.3, 6.2, 24);
-        cowlGeo.rotateX(Math.PI / 2);
-        const cowlMesh = new THREE.Mesh(cowlGeo, MAT.planeWhite);
-        cowlMesh.castShadow = true;
-        eng.add(cowlMesh);
+        const nacelleGeo = new THREE.CylinderGeometry(1.65, 1.55, 6.4, 32);
+        nacelleGeo.rotateX(Math.PI / 2);
+        const nacelle = new THREE.Mesh(nacelleGeo, MAT.planeWhite);
+        nacelle.castShadow = true;
+        eng.add(nacelle);
 
-        // Garis Aksen Teal InJourney di Cowling Mesin
-        const cowlBand = new THREE.Mesh(new THREE.CylinderGeometry(1.36, 1.36, 0.6, 24), MAT.injourneyTeal);
-        cowlBand.rotateX(Math.PI / 2);
-        cowlBand.position.set(0, 0, 0);
-        eng.add(cowlBand);
+        // Aksen Livery InJourney Teal di Cowling Mesin
+        const nacelleBand = new THREE.Mesh(new THREE.CylinderGeometry(1.66, 1.66, 0.8, 32), MAT.injourneyTeal);
+        nacelleBand.rotateX(Math.PI / 2);
+        nacelleBand.position.set(0, 0, 0.2);
+        eng.add(nacelleBand);
 
-        // Bibir Saluran Masuk Logam Mengkilap (Chrome Intake Lip)
-        const intakeLip = new THREE.Mesh(new THREE.TorusGeometry(1.32, 0.12, 16, 32), MAT.metalSilver);
-        intakeLip.position.set(0, 0, -3.1);
-        eng.add(intakeLip);
+        // Bibir Saluran Masuk Logam Mengkilap (Chrome Inlet Lip)
+        const inletLip = new THREE.Mesh(new THREE.TorusGeometry(1.6, 0.14, 20, 36), MAT.chromeIntake);
+        inletLip.position.set(0, 0, -3.2);
+        eng.add(inletLip);
 
         // Terowongan Intake Gelap Bagian Dalam
-        const intakeTunnel = new THREE.Mesh(new THREE.CylinderGeometry(1.22, 1.22, 1.4, 24), MAT.metalDark);
-        intakeTunnel.rotateX(Math.PI / 2);
-        intakeTunnel.position.set(0, 0, -2.4);
-        eng.add(intakeTunnel);
+        const duct = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 1.6, 32), MAT.engineCore);
+        duct.rotateX(Math.PI / 2);
+        duct.position.set(0, 0, -2.4);
+        eng.add(duct);
 
-        // Spinner Hub Pusat
-        const spinner = new THREE.Mesh(new THREE.ConeGeometry(0.4, 0.9, 16), MAT.metalDark);
+        // Fan Hub Spinner Kerucut Titanium dengan Garis Putih Spiral
+        const spinner = new THREE.Mesh(new THREE.ConeGeometry(0.45, 1.1, 20), MAT.engineCore);
         spinner.rotateX(-Math.PI / 2);
-        spinner.position.set(0, 0, -2.2);
+        spinner.position.set(0, 0, -2.1);
         eng.add(spinner);
 
-        // Saluran Pembuangan Knalpot Belakang (Exhaust Core & Cone)
-        const exhaustNozzle = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.05, 1.2, 24), MAT.metalDark);
-        exhaustNozzle.rotateX(Math.PI / 2);
-        exhaustNozzle.position.set(0, 0, 3.4);
-        eng.add(exhaustNozzle);
+        // Rotor Kipas 3D (18 Bilah Titanium Fan Blades)
+        const bladeGeo = new THREE.BoxGeometry(0.12, 0.85, 0.04);
+        for (let b = 0; b < 18; b++) {
+            const angle = (b / 18) * Math.PI * 2;
+            const blade = new THREE.Mesh(bladeGeo, MAT.metalSilver);
+            blade.position.set(Math.cos(angle) * 0.9, Math.sin(angle) * 0.9, -2.35);
+            blade.rotation.z = angle + 0.45;
+            eng.add(blade);
+        }
 
-        const exhaustSpike = new THREE.Mesh(new THREE.ConeGeometry(0.35, 1.1, 16), MAT.metalSilver);
+        // Saluran Pembuangan Knalpot Inti (Exhaust Core Nozzle & Center Spike)
+        const exhaustCore = new THREE.Mesh(new THREE.CylinderGeometry(1.05, 1.25, 1.4, 32), MAT.engineCore);
+        exhaustCore.rotateX(Math.PI / 2);
+        exhaustCore.position.set(0, 0, 3.5);
+        eng.add(exhaustCore);
+
+        const exhaustSpike = new THREE.Mesh(new THREE.ConeGeometry(0.42, 1.4, 20), MAT.metalSilver);
         exhaustSpike.rotateX(Math.PI / 2);
-        exhaustSpike.position.set(0, 0, 4.3);
+        exhaustSpike.position.set(0, 0, 4.6);
         eng.add(exhaustSpike);
 
         return eng;
     }
 
-    plane.add(createTurbofanEngine(true));
-    plane.add(createTurbofanEngine(false));
+    plane.add(createHighBypassEngine(true));
+    plane.add(createHighBypassEngine(false));
 
     // ─────────────────────────────────────────────────────────────────────────
-    // 6. EKOR PESAWAT (EMPENNAGE: VERTICAL FIN & HORIZONTAL STABILIZERS)
+    // 7. EKOR PESAWAT (EMPENNAGE: VERTICAL FIN DENGAN LIVERY & HORIZONTAL TAIL)
     // ─────────────────────────────────────────────────────────────────────────
-    const finGroup = new THREE.Group();
-    finGroup.position.set(0, 6.2, 36);
+    const empennage = new THREE.Group();
+    empennage.position.set(0, 6.2, 37);
 
-    const fin = new THREE.Mesh(new THREE.BoxGeometry(0.4, 8.5, 6.5), MAT.injourneyTeal);
-    fin.position.set(0, 4.5, 2.5);
-    fin.rotation.x = Math.PI / 6.5;
-    fin.castShadow = true;
-    finGroup.add(fin);
+    // Dorsal Fin Fairing (Sirip Transisi dari Punggung Fuselage ke Fin)
+    const dorsalFin = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1.8, 8.5), MAT.planeWhite);
+    dorsalFin.position.set(0, 1.2, -1.8);
+    dorsalFin.rotation.x = -0.32;
+    empennage.add(dorsalFin);
 
-    const finTrim = new THREE.Mesh(new THREE.BoxGeometry(0.42, 8.8, 0.4), MAT.planeWhite);
-    finTrim.position.set(0, 4.5, -0.6);
-    finTrim.rotation.x = Math.PI / 6.5;
-    finGroup.add(finTrim);
+    // Sirip Tegak Vertikal (Vertical Stabilizer Swept Fin)
+    const vFin = new THREE.Mesh(new THREE.BoxGeometry(0.42, 9.4, 7.2), MAT.planeNavy);
+    vFin.position.set(0, 5.0, 3.0);
+    vFin.rotation.x = Math.PI / 6.4;
+    vFin.castShadow = true;
+    empennage.add(vFin);
 
-    const tailStrobe = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 8), new THREE.MeshBasicMaterial({ color: 0xFFFFFF }));
-    tailStrobe.position.set(0, 8.8, 4.8);
-    finGroup.add(tailStrobe);
+    // Livery Wave Teal di Sirip Tegak
+    const vFinTeal = new THREE.Mesh(new THREE.BoxGeometry(0.44, 4.8, 4.2), MAT.injourneyTeal);
+    vFinTeal.position.set(0, 3.5, 2.5);
+    vFinTeal.rotation.x = Math.PI / 6.4;
+    empennage.add(vFinTeal);
 
-    plane.add(finGroup);
+    // Rudder Kemudi Putih di Bagian Belakang Sirip
+    const rudder = new THREE.Mesh(new THREE.BoxGeometry(0.38, 8.2, 1.4), MAT.planeWhite);
+    rudder.position.set(0, 5.2, 5.8);
+    rudder.rotation.x = Math.PI / 6.4;
+    empennage.add(rudder);
 
+    // Strobe Beacon Putih di Puncak Ekor
+    const topStrobe = new THREE.Mesh(new THREE.SphereGeometry(0.18, 12, 12), new THREE.MeshBasicMaterial({ color: 0xFFFFFF }));
+    topStrobe.position.set(0, 9.6, 5.2);
+    empennage.add(topStrobe);
+
+    plane.add(empennage);
+
+    // Horizontal Stabilizers (Tailplanes Kiri & Kanan)
     [-1, 1].forEach(side => {
-        const hStab = new THREE.Mesh(new THREE.BoxGeometry(7.5, 0.35, 3.4), MAT.planeWhite);
-        hStab.position.set(side * 4.4, 6.4, 41);
-        hStab.rotation.y = -side * 0.18;
-        hStab.rotation.z = side * 0.04;
+        const hStabGroup = new THREE.Group();
+        hStabGroup.position.set(side * 1.0, 6.8, 41);
+
+        const hStab = new THREE.Mesh(new THREE.BoxGeometry(8.4, 0.38, 3.8), MAT.planeWhite);
+        hStab.position.set(side * 4.2, 0, 0);
+        hStab.rotation.y = -side * 0.22;
+        hStab.rotation.z = side * 0.06;
         hStab.castShadow = true;
-        plane.add(hStab);
+        hStabGroup.add(hStab);
+
+        // Silver Slat Leading Edge Horizontal Stabilizer
+        const hSlat = new THREE.Mesh(new THREE.BoxGeometry(8.4, 0.4, 0.4), MAT.metalSilver);
+        hSlat.position.set(side * 4.2, 0, -1.8);
+        hSlat.rotation.y = -side * 0.22;
+        hStabGroup.add(hSlat);
+
+        plane.add(hStabGroup);
     });
 
     // ─────────────────────────────────────────────────────────────────────────
-    // 7. RODA PENDARAT LENGKAP (LANDING GEAR MENYENTUH ASPAL SECARA REALISTIS)
+    // 8. RODA PENDARAT REALISTIS (AUTHENTIC 6-WHEEL TRIPLE-AXLE BOGIES)
     // ─────────────────────────────────────────────────────────────────────────
-    // Roda Depan (Nose Landing Gear - NLG): Menyentuh Aspal di Y = 0
+    // Roda Depan (Nose Landing Gear - NLG): 2 Roda di Y = 0
     const nlg = new THREE.Group();
-    nlg.position.set(0, 0, -6);
+    nlg.position.set(0, 0, -6.5);
 
-    const nlgStrut = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 4.2, 12), MAT.metalSilver);
-    nlgStrut.position.y = 2.1;
+    const nlgStrut = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.14, 4.3, 16), MAT.metalSilver);
+    nlgStrut.position.y = 2.15;
     nlg.add(nlgStrut);
 
-    const taxiLight = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.25, 0.2), new THREE.MeshBasicMaterial({ color: 0xFFFBEB }));
-    taxiLight.position.set(0, 1.8, -0.2);
-    nlg.add(taxiLight);
+    // Lampu Sorot Taxi & Takeoff Depan (Dual High-Intensity Lights)
+    [-0.2, 0.2].forEach(tx => {
+        const nLight = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 0.15), new THREE.MeshBasicMaterial({ color: 0xFFFBEB }));
+        nLight.position.set(tx, 1.8, -0.2);
+        nlg.add(nLight);
+    });
 
-    const nlgAxle = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.1, 12), MAT.metalDark);
+    const nlgAxle = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 1.2, 12), MAT.metalDark);
     nlgAxle.rotateZ(Math.PI / 2);
     nlgAxle.position.y = 0.55;
     nlg.add(nlgAxle);
 
     [-0.45, 0.45].forEach(nx => {
-        const tireGeo = new THREE.CylinderGeometry(0.55, 0.55, 0.32, 20);
-        tireGeo.rotateZ(Math.PI / 2);
-        const nTire = new THREE.Mesh(tireGeo, MAT.truckTire);
+        const nTire = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.32, 24), MAT.truckTire);
+        nTire.rotateZ(Math.PI / 2);
         nTire.position.set(nx, 0.55, 0);
-        const rimGeo = new THREE.CylinderGeometry(0.35, 0.35, 0.34, 16);
-        rimGeo.rotateZ(Math.PI / 2);
-        const nRim = new THREE.Mesh(rimGeo, MAT.metalSilver);
+
+        const nRim = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.36, 0.34, 16), MAT.metalSilver);
+        nRim.rotateZ(Math.PI / 2);
         nRim.position.set(nx, 0.55, 0);
+
         nlg.add(nTire, nRim);
     });
     plane.add(nlg);
 
-    // Roda Utama Kiri & Kanan (Main Landing Gear - MLG Bogies): 8 Roda Menyentuh Aspal
-    [-4.2, 4.2].forEach(gearX => {
+    // Roda Pendarat Utama (Main Landing Gear - MLG): TRIPLE-AXLE 6-WHEEL BOGIES!
+    // Kiri & Kanan (Port & Starboard) di X = ±4.3m, Z = 18.5m
+    [-4.3, 4.3].forEach(gearX => {
         const mlg = new THREE.Group();
-        mlg.position.set(gearX, 0, 19);
+        mlg.position.set(gearX, 0, 18.5);
 
-        const mStrut = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.18, 4.4, 14), MAT.metalDark);
+        // Shock Strut Utama Besar
+        const mStrut = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.22, 4.4, 16), MAT.metalDark);
         mStrut.position.y = 2.2;
         mlg.add(mStrut);
 
-        const bogieBeam = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.25, 2.2), MAT.metalSilver);
+        // Bogie Beam 3-Axle Panjang
+        const bogieBeam = new THREE.Mesh(new THREE.BoxGeometry(1.25, 0.28, 3.8), MAT.metalSilver);
         bogieBeam.position.y = 0.65;
         mlg.add(bogieBeam);
 
-        const wLocs = [
-            [-0.55, -0.8], [0.55, -0.8],
-            [-0.55, 0.8], [0.55, 0.8]
-        ];
-        wLocs.forEach(([wx, wz]) => {
-            const mGeo = new THREE.CylinderGeometry(0.65, 0.65, 0.38, 20);
-            mGeo.rotateZ(Math.PI / 2);
-            const mTire = new THREE.Mesh(mGeo, MAT.truckTire);
-            mTire.position.set(wx, 0.65, wz);
+        // 3 Gandar Roda (Depan, Tengah, Belakang) x 2 Roda = 6 Roda per Sisi
+        const AXLE_Z_OFFSETS = [-1.3, 0.0, 1.3];
+        AXLE_Z_OFFSETS.forEach(az => {
+            const axle = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 1.45, 12), MAT.metalDark);
+            axle.rotateZ(Math.PI / 2);
+            axle.position.set(0, 0.65, az);
+            mlg.add(axle);
 
-            const mRimGeo = new THREE.CylinderGeometry(0.42, 0.42, 0.4, 16);
-            mRimGeo.rotateZ(Math.PI / 2);
-            const mRim = new THREE.Mesh(mRimGeo, MAT.metalSilver);
-            mRim.position.set(wx, 0.65, wz);
+            [-0.62, 0.62].forEach(wx => {
+                const mTire = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.65, 0.38, 24), MAT.truckTire);
+                mTire.rotateZ(Math.PI / 2);
+                mTire.position.set(wx, 0.65, az);
 
-            mlg.add(mTire, mRim);
+                const mRim = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.40, 16), MAT.metalSilver);
+                mRim.rotateZ(Math.PI / 2);
+                mRim.position.set(wx, 0.65, az);
+
+                // Brake Assembly Disk
+                const brake = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.12, 12), MAT.engineCore);
+                brake.rotateZ(Math.PI / 2);
+                brake.position.set(wx * 0.7, 0.65, az);
+
+                mlg.add(mTire, mRim, brake);
+            });
         });
+
         plane.add(mlg);
     });
 
     // ─────────────────────────────────────────────────────────────────────────
-    // 8. MARKA APRON LAPANGAN (GROUND SAFETY MARKINGS AROUND AIRCRAFT)
+    // 9. MARKA KESELAMATAN APRON & SAFETY CONES
     // ─────────────────────────────────────────────────────────────────────────
-    [-9.5, 9.5].forEach(mx => {
-        const hazArc = new THREE.Mesh(new THREE.RingGeometry(2.4, 2.7, 24, 1, 0, Math.PI), new THREE.MeshBasicMaterial({ color: 0xEF4444, side: THREE.DoubleSide }));
+    // Busur Peringatan Bahaya Hisap Mesin Jet (Turbine Hazard Red Arc)
+    [-9.8, 9.8].forEach(mx => {
+        const hazArc = new THREE.Mesh(new THREE.RingGeometry(2.6, 2.9, 32, 1, 0, Math.PI), new THREE.MeshBasicMaterial({ color: 0xEF4444, side: THREE.DoubleSide }));
         hazArc.rotation.x = -Math.PI / 2;
-        hazArc.position.set(mx, 0.05, 13);
+        hazArc.position.set(mx, 0.05, 12.8);
         plane.add(hazArc);
     });
 
+    // Kerucut Keselamatan Apron Oranye Bergaris Putih (Safety Cones)
+    const CONE_COORDS = [
+        [-9.8, 10.5], [9.8, 10.5],
+        [-27.6, 24.5], [27.6, 24.5],
+        [0, -17.5]
+    ];
+    CONE_COORDS.forEach(([cx, cz]) => {
+        const cone = new THREE.Mesh(new THREE.ConeGeometry(0.24, 0.8, 14), new THREE.MeshStandardMaterial({ color: 0xF97316, roughness: 0.5 }));
+        cone.position.set(cx, 0.4, cz);
+        const coneStripe = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.18, 0.22, 14), new THREE.MeshStandardMaterial({ color: 0xFFFFFF }));
+        coneStripe.position.set(cx, 0.4, cz);
+        plane.add(cone, coneStripe);
+    });
+
+    // Interaktivitas: Mengklik badan atau pintu pesawat mengaktifkan stage loading
     bindInteractive(mainFuselage, 'loading');
     bindInteractive(doorHatch, 'loading');
+    bindInteractive(radomeCap, 'loading');
+
     return plane;
 }
 airsideGroup.add(createDetailedCargoPlane());
@@ -1890,7 +2170,6 @@ function goToStep(key) {
 
     if (key === 'overview') {
         resetCamera();
-        closeInspector();
         return;
     }
 
@@ -1915,8 +2194,9 @@ function setViewPreset(preset) {
 function resetCamera() {
     flyCameraSmooth(DEFAULT_CAM_POS.clone(), DEFAULT_CAM_TARGET.clone(), 1400);
     document.querySelectorAll('.step-chip').forEach(c => c.classList.remove('active'));
-    document.getElementById('chip-overview').classList.add('active');
-    closeInspector();
+    const chip = document.getElementById('chip-overview');
+    if (chip) chip.classList.add('active');
+    openInspector(FIELD_STATIONS['overview']);
 }
 
 // Mode Tur Lapangan Halus Otomatis
@@ -1997,31 +2277,139 @@ canvas.addEventListener('click', e => {
     }
 });
 
-function openInspector(st) {
-    const card = document.getElementById('inspector-card');
-    document.getElementById('ins-stage-tag').textContent = st.num;
-    document.getElementById('ins-title').textContent = st.title;
-    document.getElementById('ins-desc').textContent = st.desc;
-    document.getElementById('ins-hw').textContent = st.hw;
-    document.getElementById('ins-sw').textContent = st.sw;
-    document.getElementById('ins-data').textContent = st.data;
+let isInspectorCollapsed = (localStorage.getItem('aircargo_ins_collapsed') === 'true');
 
-    const simLink = document.getElementById('ins-sim-link');
-    if (simLink) {
+function toggleInspectorCard() {
+    isInspectorCollapsed = !isInspectorCollapsed;
+    try { localStorage.setItem('aircargo_ins_collapsed', isInspectorCollapsed); } catch (e) {}
+    updateInspectorCollapseState();
+}
+
+function expandInspector() {
+    isInspectorCollapsed = false;
+    try { localStorage.setItem('aircargo_ins_collapsed', isInspectorCollapsed); } catch (e) {}
+    updateInspectorCollapseState();
+}
+
+function collapseInspector() {
+    isInspectorCollapsed = true;
+    try { localStorage.setItem('aircargo_ins_collapsed', isInspectorCollapsed); } catch (e) {}
+    updateInspectorCollapseState();
+}
+
+function updateInspectorCollapseState() {
+    const body = document.getElementById('ins-collapsible-body');
+    const icon = document.getElementById('icon-toggle-ins');
+    const headerTitle = document.getElementById('ins-title-header');
+    const btn = document.getElementById('btn-toggle-ins');
+
+    if (!body) return;
+
+    if (isInspectorCollapsed) {
+        body.style.maxHeight = '0px';
+        body.style.opacity = '0';
+        body.style.marginTop = '0px';
+        body.style.pointerEvents = 'none';
+        if (icon) {
+            icon.className = 'fa-solid fa-chevron-up text-xs transition-transform duration-300';
+        }
+        if (btn) btn.title = 'Tampilkan Detail Tahapan';
+        if (headerTitle) headerTitle.classList.remove('hidden');
+    } else {
+        body.style.maxHeight = '600px';
+        body.style.opacity = '1';
+        body.style.marginTop = '0.5rem';
+        body.style.pointerEvents = 'auto';
+        if (icon) {
+            icon.className = 'fa-solid fa-chevron-down text-xs transition-transform duration-300';
+        }
+        if (btn) btn.title = 'Sembunyikan Detail Tahapan ke Bawah';
+        if (headerTitle) headerTitle.classList.add('hidden');
+    }
+}
+
+let isSimCollapsed = (localStorage.getItem('aircargo_sim_collapsed') === 'true');
+
+function toggleSimCard() {
+    isSimCollapsed = !isSimCollapsed;
+    try { localStorage.setItem('aircargo_sim_collapsed', isSimCollapsed); } catch (e) {}
+    updateSimCollapseState();
+}
+
+function updateSimCollapseState() {
+    const body = document.getElementById('sim-collapsible-body');
+    const icon = document.getElementById('icon-toggle-sim');
+    const btn = document.getElementById('btn-toggle-sim');
+    if (!body) return;
+
+    if (isSimCollapsed) {
+        body.style.maxHeight = '0px';
+        body.style.opacity = '0';
+        body.style.marginTop = '0px';
+        body.style.pointerEvents = 'none';
+        if (icon) icon.className = 'fa-solid fa-chevron-down text-xs transition-transform duration-300';
+        if (btn) btn.title = 'Tampilkan Panel Simulasi';
+    } else {
+        body.style.maxHeight = '500px';
+        body.style.opacity = '1';
+        body.style.marginTop = '0.625rem';
+        body.style.pointerEvents = 'auto';
+        if (icon) icon.className = 'fa-solid fa-chevron-up text-xs transition-transform duration-300';
+        if (btn) btn.title = 'Sembunyikan Panel Simulasi';
+    }
+}
+
+function openInspector(st) {
+    if (!st) return;
+    const card = document.getElementById('inspector-card');
+    if (!card) return;
+
+    const elTag = document.getElementById('ins-stage-tag');
+    const elTitle = document.getElementById('ins-title');
+    const elHeaderTitle = document.getElementById('ins-title-header');
+    const elDesc = document.getElementById('ins-desc');
+    const elHw = document.getElementById('ins-hw');
+    const elSw = document.getElementById('ins-sw');
+    const elData = document.getElementById('ins-data');
+    const elSimLink = document.getElementById('ins-sim-link');
+
+    if (elTag) elTag.textContent = st.num;
+    if (elTitle) elTitle.textContent = st.title;
+    if (elHeaderTitle) elHeaderTitle.textContent = st.title;
+    if (elDesc) elDesc.textContent = st.desc;
+    if (elHw) elHw.textContent = st.hw;
+    if (elSw) elSw.textContent = st.sw;
+    if (elData) elData.textContent = st.data;
+
+    if (elSimLink) {
         const stageMap = { dock: 1, rfid: 2, xray: 4, quarantine: 4, storage: 4, scale: 5, loading: 7 };
         const stageNum = stageMap[st.id] || 1;
-        simLink.href = `simulation.php?stage=${stageNum}`;
-        simLink.innerHTML = `<i class="fa-solid fa-play mr-1.5 text-[10px]"></i> Buka Tahap ${stageNum} di Simulator`;
+        if (st.id === 'overview') {
+            elSimLink.href = 'simulation.php';
+            elSimLink.innerHTML = `<i class="fa-solid fa-play mr-1.5 text-[10px]"></i> Buka Simulator PoC`;
+        } else {
+            elSimLink.href = `simulation.php?stage=${stageNum}`;
+            elSimLink.innerHTML = `<i class="fa-solid fa-play mr-1.5 text-[10px]"></i> Buka Tahap ${stageNum} di Simulator`;
+        }
     }
 
     card.classList.remove('opacity-0', 'translate-y-3', 'pointer-events-none');
     card.classList.add('opacity-100', 'translate-y-0');
+
+    // Pertahankan status collapse yang dipilih secara manual oleh pengguna (jangan otomatis terbuka jika sudah di-hide)
+    updateInspectorCollapseState();
+
+    // Feedback visual halus saat konten tahap diperbarui
+    card.style.borderColor = 'rgba(12, 161, 175, 0.8)';
+    card.style.boxShadow = '0 0 16px rgba(12, 161, 175, 0.35)';
+    setTimeout(() => {
+        card.style.borderColor = '';
+        card.style.boxShadow = '';
+    }, 500);
 }
 
 function closeInspector() {
-    const card = document.getElementById('inspector-card');
-    card.classList.add('opacity-0', 'translate-y-3', 'pointer-events-none');
-    card.classList.remove('opacity-100', 'translate-y-0');
+    collapseInspector();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2100,8 +2488,11 @@ function animate() {
 }
 animate();
 
-// Sembunyikan Loading Screen
+// Sembunyikan Loading Screen & Inisialisasi Kartu Tahap Overview
 window.addEventListener('load', () => {
+    openInspector(FIELD_STATIONS['overview']);
+    updateInspectorCollapseState();
+    updateSimCollapseState();
     setTimeout(() => {
         const scr = document.getElementById('loading-screen');
         if (scr) {

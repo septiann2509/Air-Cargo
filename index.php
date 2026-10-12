@@ -113,54 +113,54 @@ $companyShort   = 'AC';
 <!-- ═══════════════════════════════════════════════════════════════════════════
      HEADER & NAVBAR (Menyatu Sempurna & Terang Mengikuti Video Beranda)
      ═══════════════════════════════════════════════════════════════════════════ -->
-<header id="main-header" class="fixed top-0 z-50 flex items-center justify-between w-full h-16 px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 text-white transition-all duration-300" style="background: linear-gradient(to bottom, rgba(0, 0, 0, 0.28) 0%, rgba(0, 0, 0, 0.06) 60%, transparent 100%);">
+<header id="main-header" class="fixed top-0 z-50 flex items-center justify-between w-full h-16 px-3 sm:px-5 lg:px-6 xl:px-8 text-white transition-all duration-300" style="background: linear-gradient(to bottom, rgba(0, 0, 0, 0.28) 0%, rgba(0, 0, 0, 0.06) 60%, transparent 100%);">
     
     <!-- Brand Logo -->
-    <a href="index.php" class="flex items-center gap-3 cursor-pointer select-none group flex-shrink-0">
-        <div class="w-10 h-10 rounded-xl bg-white text-[#081126] flex items-center justify-center font-black shadow-md group-hover:scale-105 transition-transform border border-white/40">
-            <span class="text-sm font-black tracking-tight">AC</span>
+    <a href="index.php" class="flex items-center gap-2.5 cursor-pointer select-none group flex-shrink-0">
+        <div class="w-9 h-9 2xl:w-10 2xl:h-10 rounded-xl bg-white text-[#081126] flex items-center justify-center font-black shadow-md group-hover:scale-105 transition-transform border border-white/40 flex-shrink-0">
+            <span class="text-xs 2xl:text-sm font-black tracking-tight">AC</span>
         </div>
         <div class="leading-tight">
-            <div class="flex items-center space-x-2">
-                <span id="brand-title" class="font-extrabold text-sm sm:text-base block tracking-tight text-white whitespace-nowrap">
+            <div class="flex items-center space-x-1.5">
+                <span id="brand-title" class="font-extrabold text-xs sm:text-sm 2xl:text-base block tracking-tight text-white whitespace-nowrap">
                     <?= $companyName ?>
                 </span>
-                <span class="text-[9px] px-2 py-0.5 rounded-full bg-white/15 text-teal-300 font-extrabold uppercase tracking-wider border border-white/20 backdrop-blur-sm hidden sm:inline-block whitespace-nowrap">Advisory</span>
+                <span class="text-[8px] 2xl:text-[9px] px-1.5 py-0.5 rounded-full bg-white/15 text-teal-300 font-extrabold uppercase tracking-wider border border-white/20 backdrop-blur-sm hidden sm:inline-block whitespace-nowrap">Advisory</span>
             </div>
-            <span id="brand-subtitle" class="text-[10px] uppercase tracking-widest font-semibold block text-slate-300 whitespace-nowrap">
+            <span id="brand-subtitle" class="text-[9px] 2xl:text-[10px] uppercase tracking-widest font-semibold block text-slate-300 whitespace-nowrap hidden lg:block">
                 <?= $companyTagline ?>
             </span>
         </div>
     </a>
 
     <!-- Navigation Menus (Rapih, 1 Baris Sejajar, Bebas Text-Wrap) -->
-    <nav class="hidden xl:flex items-center gap-1 2xl:gap-2">
-        <a href="index.php" class="px-3.5 py-1.5 rounded-lg bg-white text-[#081126] font-extrabold shadow-sm flex items-center gap-1.5 whitespace-nowrap text-xs xl:text-[13px] 2xl:text-sm">
+    <nav class="hidden xl:flex items-center gap-1 2xl:gap-1.5">
+        <a href="index.php" class="px-2.5 2xl:px-3 py-1.5 rounded-lg bg-white text-[#081126] font-extrabold shadow-sm flex items-center gap-1.5 whitespace-nowrap text-xs 2xl:text-sm">
             <i class="fa-solid fa-compass text-xs text-[#087F8A]"></i>
             <span>Beranda</span>
         </a>
-        <a href="dashboard.php" class="px-3 py-1.5 rounded-lg text-white/85 hover:text-white hover:bg-white/10 transition-all flex items-center gap-1.5 whitespace-nowrap text-xs xl:text-[13px] 2xl:text-sm font-semibold">
+        <a href="dashboard.php" class="px-2.5 2xl:px-3 py-1.5 rounded-lg text-white/85 hover:text-white hover:bg-white/10 transition-all flex items-center gap-1.5 whitespace-nowrap text-xs 2xl:text-sm font-semibold">
             <i class="fa-solid fa-chart-pie text-xs text-teal-300"></i>
             <span>Dashboard Eksekutif</span>
         </a>
-        <a href="simulation.php" class="px-3 py-1.5 rounded-lg text-white/85 hover:text-white hover:bg-white/10 transition-all flex items-center gap-1.5 whitespace-nowrap text-xs xl:text-[13px] 2xl:text-sm font-semibold">
+        <a href="simulation.php" class="px-2.5 2xl:px-3 py-1.5 rounded-lg text-white/85 hover:text-white hover:bg-white/10 transition-all flex items-center gap-1.5 whitespace-nowrap text-xs 2xl:text-sm font-semibold">
             <i class="fa-solid fa-microchip text-xs text-teal-300"></i>
             <span>Simulasi 7-Tahap</span>
-            <span class="text-[9px] px-1.5 py-0.2 rounded-full bg-teal-400/20 text-teal-300 border border-teal-300/30 font-bold">PoC</span>
+            <span class="text-[8px] 2xl:text-[9px] px-1.5 py-0.2 rounded-full bg-teal-400/20 text-teal-300 border border-teal-300/30 font-bold hidden 2xl:inline-block">PoC</span>
         </a>
-        <a href="database_viewer.php" class="px-3 py-1.5 rounded-lg text-white/85 hover:text-white hover:bg-white/10 transition-all flex items-center gap-1.5 whitespace-nowrap text-xs xl:text-[13px] 2xl:text-sm font-semibold">
+        <a href="database_viewer.php" class="px-2.5 2xl:px-3 py-1.5 rounded-lg text-white/85 hover:text-white hover:bg-white/10 transition-all flex items-center gap-1.5 whitespace-nowrap text-xs 2xl:text-sm font-semibold">
             <i class="fa-solid fa-database text-xs text-teal-300"></i>
             <span>Database Live</span>
         </a>
-        <a href="layout_3d.php" class="px-3 py-1.5 rounded-lg text-white/85 hover:text-white hover:bg-white/10 transition-all flex items-center gap-1.5 whitespace-nowrap text-xs xl:text-[13px] 2xl:text-sm font-semibold">
+        <a href="layout_3d.php" class="px-2.5 2xl:px-3 py-1.5 rounded-lg text-white/85 hover:text-white hover:bg-white/10 transition-all flex items-center gap-1.5 whitespace-nowrap text-xs 2xl:text-sm font-semibold">
             <i class="fa-solid fa-cubes text-xs text-teal-300"></i>
             <span>Denah 3D</span>
-            <span class="text-[9px] px-1.5 py-0.2 rounded-full bg-teal-400/20 text-teal-300 border border-teal-300/30 font-bold">WebGL</span>
+            <span class="text-[8px] 2xl:text-[9px] px-1.5 py-0.2 rounded-full bg-teal-400/20 text-teal-300 border border-teal-300/30 font-bold hidden 2xl:inline-block">WebGL</span>
         </a>
     </nav>
 
     <!-- Right Controls: Language Selector & Auth Portal -->
-    <div class="flex items-center gap-2.5 flex-shrink-0">
+    <div class="flex items-center gap-1.5 2xl:gap-2 flex-shrink-0">
         
         <!-- Language Switcher Pill (Compact) -->
         <div class="hidden 2xl:flex items-center rounded-lg bg-white/10 p-0.5 border border-white/20 text-xs font-bold flex-shrink-0">
@@ -170,9 +170,9 @@ $companyShort   = 'AC';
 
         <!-- Auth Button / User Status -->
         <?php if ($user): ?>
-            <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/15 backdrop-blur-md border border-white/25 text-xs text-white flex-shrink-0 whitespace-nowrap">
-                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span class="font-bold text-white"><?= htmlspecialchars($user['full_name']) ?></span>
+            <div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/15 backdrop-blur-md border border-white/25 text-xs text-white flex-shrink-0 whitespace-nowrap">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0"></span>
+                <span class="font-bold text-white max-w-[105px] xl:max-w-[130px] 2xl:max-w-none truncate" title="<?= htmlspecialchars($user['full_name']) ?>"><?= htmlspecialchars($user['full_name']) ?></span>
                 <a href="logout.php" title="Keluar" class="ml-1 text-white/70 hover:text-white transition-colors">
                     <i class="fa-solid fa-arrow-right-from-bracket text-xs"></i>
                 </a>

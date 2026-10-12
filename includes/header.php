@@ -96,68 +96,68 @@ $companyShort   = 'AC';
 
     <!-- Top Navigation Bar (Warna Sesuai Referensi Gambar Klien: InJourney Teal Gradient) -->
     <header class="sticky top-0 z-50 text-white shadow-xl transition-all duration-300 border-b border-white/20" style="background: linear-gradient(to right, #0CA1AF, #087F8A, #014D54) !important;">
-        <div class="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10">
-            <div class="flex items-center justify-between h-16">
+        <div class="w-full max-w-[1700px] mx-auto px-3 sm:px-4 lg:px-6 xl:px-8">
+            <div class="flex items-center justify-between h-16 gap-2">
                 
                 <!-- Logo & Brand (AC — PT Aerospace Consultant, matching footer design) -->
-                <div class="flex items-center space-x-3 flex-shrink-0">
-                    <a href="index.php" class="flex items-center space-x-3 group cursor-pointer select-none">
-                        <div class="w-10 h-10 rounded-xl bg-white text-[#087F8A] flex items-center justify-center font-black shadow-lg shadow-teal-900/30 group-hover:scale-105 transition-transform border border-white/40">
-                            <span class="text-sm font-black tracking-tight">AC</span>
+                <div class="flex items-center space-x-2.5 flex-shrink-0">
+                    <a href="index.php" class="flex items-center space-x-2.5 group cursor-pointer select-none">
+                        <div class="w-9 h-9 2xl:w-10 2xl:h-10 rounded-xl bg-white text-[#087F8A] flex items-center justify-center font-black shadow-lg shadow-teal-900/30 group-hover:scale-105 transition-transform border border-white/40 flex-shrink-0">
+                            <span class="text-xs 2xl:text-sm font-black tracking-tight">AC</span>
                         </div>
                         <div class="leading-tight">
-                            <div class="flex items-center space-x-2">
-                                <span class="font-extrabold text-sm sm:text-base tracking-tight text-white whitespace-nowrap"><?= $companyName ?></span>
-                                <span class="text-[9px] px-2 py-0.5 rounded-full bg-white/20 text-white font-extrabold uppercase tracking-wider border border-white/30 backdrop-blur-sm whitespace-nowrap hidden sm:inline-block">Advisory</span>
+                            <div class="flex items-center space-x-1.5">
+                                <span class="font-extrabold text-xs sm:text-sm 2xl:text-base tracking-tight text-white whitespace-nowrap"><?= $companyName ?></span>
+                                <span class="text-[8px] 2xl:text-[9px] px-1.5 py-0.5 rounded-full bg-white/20 text-white font-extrabold uppercase tracking-wider border border-white/30 backdrop-blur-sm whitespace-nowrap hidden sm:inline-block">Advisory</span>
                             </div>
-                            <p class="text-[10px] text-teal-100 font-semibold tracking-wider uppercase whitespace-nowrap"><?= $companyTagline ?></p>
+                            <p class="text-[9px] 2xl:text-[10px] text-teal-100 font-semibold tracking-wider uppercase whitespace-nowrap hidden 2xl:block"><?= $companyTagline ?></p>
                         </div>
                     </a>
                 </div>
 
                 <!-- Nav Menu Links (Rapih, 1 Baris Sejajar, Bebas Text-Wrap) -->
-                <nav class="hidden xl:flex items-center gap-1 2xl:gap-2">
-                    <a href="index.php" class="px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap text-xs xl:text-[13px] 2xl:text-sm font-bold <?= ($currentPage === 'index.php') ? 'bg-white text-[#087F8A] shadow-md font-extrabold' : 'text-white/85 hover:text-white hover:bg-white/15' ?>">
+                <nav class="hidden xl:flex items-center gap-1 2xl:gap-1.5">
+                    <a href="index.php" class="px-2.5 2xl:px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap text-xs 2xl:text-sm font-bold <?= ($currentPage === 'index.php') ? 'bg-white text-[#087F8A] shadow-md font-extrabold' : 'text-white/85 hover:text-white hover:bg-white/15' ?>">
                         <i class="fa-solid fa-compass text-xs <?= ($currentPage === 'index.php') ? 'text-[#087F8A]' : 'text-teal-200' ?>"></i>
                         <span>Beranda</span>
                     </a>
-                    <a href="dashboard.php" class="px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap text-xs xl:text-[13px] 2xl:text-sm font-bold <?= ($currentPage === 'dashboard.php') ? 'bg-white text-[#087F8A] shadow-md font-extrabold' : 'text-white/85 hover:text-white hover:bg-white/15' ?>">
+                    <a href="dashboard.php" class="px-2.5 2xl:px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap text-xs 2xl:text-sm font-bold <?= ($currentPage === 'dashboard.php') ? 'bg-white text-[#087F8A] shadow-md font-extrabold' : 'text-white/85 hover:text-white hover:bg-white/15' ?>">
                         <i class="fa-solid fa-chart-pie text-xs <?= ($currentPage === 'dashboard.php') ? 'text-[#087F8A]' : 'text-teal-200' ?>"></i>
-                        <span>Dashboard Eksekutif</span>
+                        <span><span class="hidden 2xl:inline">Dashboard </span>Eksekutif</span>
                     </a>
-                    <a href="simulation.php" class="px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap text-xs xl:text-[13px] 2xl:text-sm font-bold <?= ($currentPage === 'simulation.php') ? 'bg-white text-[#087F8A] shadow-md font-extrabold' : 'text-white/85 hover:text-white hover:bg-white/15' ?>">
+                    <a href="simulation.php" class="px-2.5 2xl:px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap text-xs 2xl:text-sm font-bold <?= ($currentPage === 'simulation.php') ? 'bg-white text-[#087F8A] shadow-md font-extrabold' : 'text-white/85 hover:text-white hover:bg-white/15' ?>">
                         <i class="fa-solid fa-microchip text-xs <?= ($currentPage === 'simulation.php') ? 'text-[#087F8A]' : 'text-teal-200' ?>"></i>
                         <span>Simulasi 7-Tahap</span>
-                        <span class="text-[9px] px-1.5 py-0.2 rounded-full <?= ($currentPage === 'simulation.php') ? 'bg-teal-100 text-[#087F8A]' : 'bg-teal-400/25 text-teal-100 border border-teal-300/30' ?> font-bold">PoC</span>
+                        <span class="text-[8px] 2xl:text-[9px] px-1.5 py-0.2 rounded-full <?= ($currentPage === 'simulation.php') ? 'bg-teal-100 text-[#087F8A]' : 'bg-teal-400/25 text-teal-100 border border-teal-300/30' ?> font-bold hidden 2xl:inline-block">PoC</span>
                     </a>
-                    <a href="database_viewer.php" class="px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap text-xs xl:text-[13px] 2xl:text-sm font-bold <?= ($currentPage === 'database_viewer.php') ? 'bg-white text-[#087F8A] shadow-md font-extrabold' : 'text-white/85 hover:text-white hover:bg-white/15' ?>">
+                    <a href="database_viewer.php" class="px-2.5 2xl:px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap text-xs 2xl:text-sm font-bold <?= ($currentPage === 'database_viewer.php') ? 'bg-white text-[#087F8A] shadow-md font-extrabold' : 'text-white/85 hover:text-white hover:bg-white/15' ?>">
                         <i class="fa-solid fa-database text-xs <?= ($currentPage === 'database_viewer.php') ? 'text-[#087F8A]' : 'text-teal-200' ?>"></i>
                         <span>Database Live</span>
                     </a>
-                    <a href="layout_3d.php" class="px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap text-xs xl:text-[13px] 2xl:text-sm font-bold <?= ($currentPage === 'layout_3d.php') ? 'bg-white text-[#087F8A] shadow-md font-extrabold' : 'text-white/85 hover:text-white hover:bg-white/15' ?>">
+                    <a href="layout_3d.php" class="px-2.5 2xl:px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap text-xs 2xl:text-sm font-bold <?= ($currentPage === 'layout_3d.php') ? 'bg-white text-[#087F8A] shadow-md font-extrabold' : 'text-white/85 hover:text-white hover:bg-white/15' ?>">
                         <i class="fa-solid fa-cubes text-xs <?= ($currentPage === 'layout_3d.php') ? 'text-[#087F8A]' : 'text-teal-200' ?>"></i>
                         <span>Denah 3D</span>
-                        <span class="text-[9px] px-1.5 py-0.2 rounded-full <?= ($currentPage === 'layout_3d.php') ? 'bg-teal-100 text-[#087F8A]' : 'bg-teal-400/25 text-teal-100 border border-teal-300/30' ?> font-bold">WebGL</span>
+                        <span class="text-[8px] 2xl:text-[9px] px-1.5 py-0.2 rounded-full <?= ($currentPage === 'layout_3d.php') ? 'bg-teal-100 text-[#087F8A]' : 'bg-teal-400/25 text-teal-100 border border-teal-300/30' ?> font-bold hidden 2xl:inline-block">WebGL</span>
                     </a>
                 </nav>
 
                 <!-- User & Action Controls -->
-                <div class="flex items-center gap-2.5 flex-shrink-0">
+                <div class="flex items-center gap-1.5 2xl:gap-2.5 flex-shrink-0">
                     <?php if ($user): ?>
-                        <div class="hidden lg:flex items-center space-x-2 text-xs bg-white/15 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/25 text-white shadow-sm whitespace-nowrap flex-shrink-0">
-                            <span class="w-2 h-2 rounded-full bg-emerald-300 animate-pulse"></span>
-                            <span class="font-bold text-white"><?= htmlspecialchars($user['full_name']) ?></span>
-                            <span class="text-[9px] px-1.5 py-0.5 rounded bg-white text-[#087F8A] uppercase font-black tracking-wider"><?= htmlspecialchars($user['role']) ?></span>
+                        <div class="hidden lg:flex items-center space-x-1.5 text-xs bg-white/15 backdrop-blur-md px-2.5 py-1.5 rounded-lg border border-white/25 text-white shadow-sm whitespace-nowrap flex-shrink-0">
+                            <span class="w-2 h-2 rounded-full bg-emerald-300 animate-pulse flex-shrink-0"></span>
+                            <span class="font-bold text-white max-w-[105px] xl:max-w-[130px] 2xl:max-w-none truncate" title="<?= htmlspecialchars($user['full_name']) ?>"><?= htmlspecialchars($user['full_name']) ?></span>
+                            <span class="text-[8px] 2xl:text-[9px] px-1.5 py-0.5 rounded bg-white text-[#087F8A] uppercase font-black tracking-wider flex-shrink-0"><?= htmlspecialchars($user['role']) ?></span>
                         </div>
-                        <button onclick="confirmResetData()" title="Reset data simulasi ke awal demo" class="px-3 py-1.5 rounded-lg bg-white/15 hover:bg-rose-900/50 text-white hover:text-rose-100 border border-white/25 hover:border-rose-400/40 text-xs font-bold shadow-sm transition-all flex items-center gap-1.5 whitespace-nowrap flex-shrink-0">
+                        <button onclick="confirmResetData()" title="Reset data simulasi ke awal demo" class="px-2.5 py-1.5 rounded-lg bg-white/15 hover:bg-rose-900/50 text-white hover:text-rose-100 border border-white/25 hover:border-rose-400/40 text-xs font-bold shadow-sm transition-all flex items-center gap-1.5 whitespace-nowrap flex-shrink-0">
                             <i class="fa-solid fa-rotate-left text-amber-300 text-xs"></i>
-                            <span class="hidden md:inline">Reset Demo</span>
+                            <span class="hidden 2xl:inline">Reset Demo</span>
                         </button>
                         <a href="logout.php" title="Keluar" class="p-2 rounded-lg bg-white/15 hover:bg-white/25 text-white text-xs font-semibold border border-white/25 shadow-sm transition-colors flex items-center justify-center flex-shrink-0">
                             <i class="fa-solid fa-arrow-right-from-bracket text-xs"></i>
                         </a>
                     <?php else: ?>
-                        <a href="login.php" class="px-3.5 py-1.5 rounded-lg bg-white text-[#087F8A] hover:bg-teal-50 font-extrabold text-xs shadow-md transition-all flex items-center gap-1.5 whitespace-nowrap">
+                        <a href="login.php" class="px-3 py-1.5 rounded-lg bg-white text-[#087F8A] hover:bg-teal-50 font-extrabold text-xs shadow-md transition-all flex items-center gap-1.5 whitespace-nowrap">
                             <i class="fa-solid fa-lock text-xs"></i>
                             <span>Masuk Portal</span>
                         </a>
