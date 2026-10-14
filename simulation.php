@@ -16,11 +16,30 @@ $selectedCargoId = $_GET['cargo_id'] ?? ($cargos[0]['id'] ?? '');
 $initialStage = (int)($_GET['stage'] ?? 0);
 
 $pageTitle = 'Simulasi 7-Tahap PoC — Air Cargo Data Transfer';
-$bodyClass = 'bg-[#F8FAFC] text-slate-800';
+$bodyClass = 'bg-batik-canvas text-slate-800';
 include __DIR__ . '/includes/header.php';
 ?>
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+<div class="relative w-full overflow-x-hidden min-h-screen">
+
+    <!-- SISI KIRI: Motif Batik InJourney HANYA di margin samping kiri (tidak masuk ke tengah) -->
+    <div class="fixed left-0 top-16 bottom-0 pointer-events-none select-none z-0 overflow-hidden hidden xl:block"
+         style="width: max(0px, calc((100vw - 1280px) / 2));" aria-hidden="true">
+        <img src="assets/img/injourney/pattern-green-BTZ3yksm.png" 
+             alt="" 
+             class="absolute top-6 left-0 w-[420px] max-w-none opacity-80 transform -scale-x-100">
+    </div>
+
+    <!-- SISI KANAN: Motif Batik InJourney HANYA di margin samping kanan (tidak masuk ke tengah) -->
+    <div class="fixed right-0 top-16 bottom-0 pointer-events-none select-none z-0 overflow-hidden hidden xl:block"
+         style="width: max(0px, calc((100vw - 1280px) / 2));" aria-hidden="true">
+        <img src="assets/img/injourney/pattern-green-BTZ3yksm.png" 
+             alt="" 
+             class="absolute top-6 right-0 w-[420px] max-w-none opacity-80">
+    </div>
+
+    <!-- KONTEN UTAMA SIMULASI (Tengah) -->
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
     
     <!-- Top Bar: Title & Cargo Selector (InJourney White Card) -->
     <div class="bg-white p-6 rounded-2xl border border-gray-200/90 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4">

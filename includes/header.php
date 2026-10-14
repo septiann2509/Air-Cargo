@@ -92,7 +92,7 @@ $companyShort   = 'AC';
         }
     </style>
 </head>
-<body class="<?= isset($bodyClass) ? $bodyClass : 'bg-[#F8FAFC] text-slate-800' ?> min-h-screen flex flex-col font-sans selection:bg-[#04AFBF] selection:text-white">
+<body class="<?= isset($bodyClass) ? $bodyClass : 'bg-batik-canvas text-slate-800' ?> min-h-screen flex flex-col font-sans selection:bg-[#04AFBF] selection:text-white">
 
     <!-- Top Navigation Bar (Warna Sesuai Referensi Gambar Klien: InJourney Teal Gradient) -->
     <header class="sticky top-0 z-50 text-white shadow-xl transition-all duration-300 border-b border-white/20" style="background: linear-gradient(to right, #0CA1AF, #087F8A, #014D54) !important;">

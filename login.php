@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $pageTitle = 'Masuk Portal Konsultansi';
-$bodyClass = 'bg-[#F8FAFC] text-slate-800';
+$bodyClass = 'bg-batik-canvas text-slate-800';
 include __DIR__ . '/includes/header.php';
 ?>
 

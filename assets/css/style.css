@@ -177,3 +177,12 @@ body {
         color: #111 !important;
     }
 }
+
+/* ==========================================================================
+   Batik Canvas (Clean InJourney Background)
+   ========================================================================== */
+.bg-batik-canvas {
+    background-color: #F8FAFC !important;
+}
+
+
