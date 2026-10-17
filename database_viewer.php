@@ -61,6 +61,14 @@ include __DIR__ . '/includes/header.php';
         </div>
 
         <div class="flex items-center space-x-2.5">
+            <a href="simulation_live.php" class="px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-[#0CA1AF] via-[#087F8A] to-[#014D54] hover:from-[#04AFBF] hover:to-[#087F8A] text-white text-xs font-extrabold shadow-md shadow-teal-500/20 transition-all flex items-center border border-teal-300/40">
+                <i class="fa-solid fa-gamepad mr-1.5 text-amber-300"></i>
+                <span>Simulasi Live</span>
+            </a>
+            <a href="cargo_input.php" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 hover:text-[#087F8A] text-xs font-bold border border-gray-300 shadow-sm transition-all flex items-center">
+                <i class="fa-solid fa-plus mr-1.5 text-[#087F8A]"></i>
+                <span>Input Kargo</span>
+            </a>
             <button onclick="confirmResetData()" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-600 hover:text-rose-600 text-xs font-bold border border-gray-300 shadow-sm transition-colors flex items-center">
                 <i class="fa-solid fa-rotate-left mr-1.5 text-rose-500"></i>
                 <span>Reset Demo State</span>

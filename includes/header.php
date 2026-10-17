@@ -127,7 +127,7 @@ $companyShort   = 'AC';
                     </a>
                     <!-- Simulasi 7-Tahap Dropdown (Alur Terpadu & 4 Dashboard Fitur Sistem) -->
                     <div class="relative group">
-                        <a href="simulation.php" class="px-2.5 2xl:px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap text-xs 2xl:text-sm font-bold <?= ($currentPage === 'simulation.php') ? 'bg-white text-[#087F8A] shadow-md font-extrabold' : 'text-white/85 hover:text-white hover:bg-white/15' ?>">
+                        <a href="simulation.php" class="px-2 2xl:px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap text-xs 2xl:text-sm font-bold <?= ($currentPage === 'simulation.php') ? 'bg-white text-[#087F8A] shadow-md font-extrabold' : 'text-white/85 hover:text-white hover:bg-white/15' ?>">
                             <i class="fa-solid fa-microchip text-xs <?= ($currentPage === 'simulation.php') ? 'text-[#087F8A]' : 'text-teal-200' ?>"></i>
                             <span>Simulasi 7-Tahap</span>
                             <span class="text-[8px] 2xl:text-[9px] px-1.5 py-0.2 rounded-full <?= ($currentPage === 'simulation.php') ? 'bg-teal-100 text-[#087F8A]' : 'bg-teal-400/25 text-teal-100 border border-teal-300/30' ?> font-bold hidden 2xl:inline-block">PoC</span>
@@ -175,9 +175,20 @@ $companyShort   = 'AC';
                             </div>
                         </div>
                     </div>
+                    <!-- Simulasi Live (Fitur Baru dari Tim) -->
+                    <a href="simulation_live.php" class="px-2 2xl:px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap text-xs 2xl:text-sm font-bold <?= ($currentPage === 'simulation_live.php') ? 'bg-white text-[#087F8A] shadow-md font-extrabold' : 'text-white/85 hover:text-white hover:bg-white/15' ?>">
+                        <i class="fa-solid fa-gamepad text-xs <?= ($currentPage === 'simulation_live.php') ? 'text-[#087F8A]' : 'text-teal-200' ?>"></i>
+                        <span>Simulasi Live</span>
+                        <span class="text-[8px] 2xl:text-[9px] px-1.5 py-0.2 rounded-full <?= ($currentPage === 'simulation_live.php') ? 'bg-teal-100 text-[#087F8A]' : 'bg-amber-400/30 text-amber-200 border border-amber-300/40' ?> font-bold hidden 2xl:inline-block">Live 3D</span>
+                    </a>
                     <a href="database_viewer.php" class="px-2.5 2xl:px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap text-xs 2xl:text-sm font-bold <?= ($currentPage === 'database_viewer.php') ? 'bg-white text-[#087F8A] shadow-md font-extrabold' : 'text-white/85 hover:text-white hover:bg-white/15' ?>">
                         <i class="fa-solid fa-database text-xs <?= ($currentPage === 'database_viewer.php') ? 'text-[#087F8A]' : 'text-teal-200' ?>"></i>
                         <span>Database Live</span>
+                    </a>
+                    <a href="cargo_input.php" class="px-2.5 2xl:px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap text-xs 2xl:text-sm font-bold <?= ($currentPage === 'cargo_input.php') ? 'bg-white text-[#087F8A] shadow-md font-extrabold' : 'text-white/85 hover:text-white hover:bg-white/15' ?>">
+                        <i class="fa-solid fa-truck-ramp-box text-xs <?= ($currentPage === 'cargo_input.php') ? 'text-[#087F8A]' : 'text-teal-200' ?>"></i>
+                        <span>Input Kargo</span>
+                        <span class="text-[8px] 2xl:text-[9px] px-1.5 py-0.2 rounded-full <?= ($currentPage === 'cargo_input.php') ? 'bg-teal-100 text-[#087F8A]' : 'bg-teal-400/25 text-teal-100 border border-teal-300/30' ?> font-bold hidden 2xl:inline-block">Simulasi</span>
                     </a>
                     <a href="layout_3d.php" class="px-2.5 2xl:px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap text-xs 2xl:text-sm font-bold <?= ($currentPage === 'layout_3d.php') ? 'bg-white text-[#087F8A] shadow-md font-extrabold' : 'text-white/85 hover:text-white hover:bg-white/15' ?>">
                         <i class="fa-solid fa-cubes text-xs <?= ($currentPage === 'layout_3d.php') ? 'text-[#087F8A]' : 'text-teal-200' ?>"></i>
@@ -232,7 +243,9 @@ $companyShort   = 'AC';
                     <a href="simulation.php?system=load_balance" class="py-1.5 px-2 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center gap-1"><i class="fa-solid fa-scale-balanced text-[10px]"></i> Load &amp; Balance</a>
                 </div>
             </div>
+            <a href="simulation_live.php" class="py-2.5 rounded-xl <?= ($currentPage === 'simulation_live.php') ? 'bg-white text-[#087F8A]' : 'text-white hover:bg-white/15' ?>">Simulasi Live (Input &amp; 3D)</a>
             <a href="database_viewer.php" class="py-2.5 rounded-xl <?= ($currentPage === 'database_viewer.php') ? 'bg-white text-[#087F8A]' : 'text-white hover:bg-white/15' ?>">Database Live</a>
+            <a href="cargo_input.php" class="py-2.5 rounded-xl <?= ($currentPage === 'cargo_input.php') ? 'bg-white text-[#087F8A]' : 'text-white hover:bg-white/15' ?>">Input Kargo (Simulasi 3D)</a>
             <a href="layout_3d.php" class="py-2.5 rounded-xl <?= ($currentPage === 'layout_3d.php') ? 'bg-white text-[#087F8A]' : 'text-white hover:bg-white/15' ?>">Denah 3D Terminal</a>
         </div>
         <div class="text-center text-xs text-white/80 space-y-1">
