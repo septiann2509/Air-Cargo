@@ -1233,16 +1233,34 @@ function updateTMSJsonPayload(assignedDock = null, customPlate = null) {
     const bookingInput = document.getElementById('input-tms-booking');
 
     const activeDock = assignedDock || (dockInput ? dockInput.value : 'DOCK-02');
-    const activePlate = customPlate || (plateInput ? plateInput.value : currentCargoData.truck_plate) || 'B 9482 XX';
+    const activePlate = customPlate || (plateInput ? plateInput.value : currentCargoData.truck_plate) || 'B 8888 KGO';
+
+    const driverInput = document.getElementById('input-tms-driver');
+    const transInput = document.getElementById('input-tms-transporter');
+    const bookingInput = document.getElementById('input-tms-booking');
+    const awbInput = document.getElementById('input-tms-awb');
+    const descInput = document.getElementById('input-tms-desc');
+    const commTypeInput = document.getElementById('input-tms-comm-type');
+    const piecesInput = document.getElementById('input-tms-pieces');
+    const weightInput = document.getElementById('input-tms-weight');
+    const shipperInput = document.getElementById('input-tms-shipper');
 
     const tmsJson = {
         "event_type": "TMS_TRUCK_GATE_CHECKIN",
         "truck_id": currentCargoData.truck_arrival_id || "TRK-INBOUND-01",
         "truck_plate": activePlate,
-        "driver_name": (driverInput ? driverInput.value : currentCargoData.driver_name) || "Suryadi Pratama",
-        "transporter": (transInput ? transInput.value : currentCargoData.transporter_company) || "PT Intermodal Logistik Sejahtera",
+        "driver_name": (driverInput ? driverInput.value : currentCargoData.driver_name) || "Bambang Pamungkas",
+        "transporter": (transInput ? transInput.value : currentCargoData.transporter_company) || "PT Angkasa Pura Logistik",
         "assigned_dock": activeDock,
         "booking_code": (bookingInput ? bookingInput.value : currentCargoData.booking_code) || "TAS-BOOK-9482",
+        "manifest_cargo": {
+            "e_awb_number": (awbInput ? awbInput.value : currentCargoData.awb_number) || "126-85258013",
+            "commodity": (descInput ? descInput.value : currentCargoData.description) || "Pakaian & Tekstil Premium Ekspor",
+            "commodity_type": (commTypeInput ? commTypeInput.value : currentCargoData.commodity_type) || "GENERAL_CARGO",
+            "pieces": parseInt(piecesInput ? piecesInput.value : currentCargoData.quantity || 50),
+            "declared_weight_kg": parseFloat(weightInput ? weightInput.value : currentCargoData.declared_weight_kg || 350.0),
+            "shipper": (shipperInput ? shipperInput.value : currentCargoData.shipper) || "PT Logistik Nusantara"
+        },
         "tas_booking_status": "CONFIRMED_VALID_TIMESLOT",
         "gate_barrier_status": "BARRIER_OPENED",
         "dock_allocation_check": {
@@ -1267,6 +1285,107 @@ function highlightSelectedDock(dockSlot, customPlate = null) {
     renderDockCards(dockSlot, customPlate);
 }
 
+function generateRandomAWBNumber() {
+    const awbInput = document.getElementById('input-tms-awb');
+    const newAwb = '126-' + Math.floor(10000000 + Math.random() * 90000000);
+    if (awbInput) {
+        awbInput.value = newAwb;
+        awbInput.classList.add('ring-2', 'ring-emerald-400');
+        setTimeout(() => awbInput.classList.remove('ring-2', 'ring-emerald-400'), 1000);
+    }
+    updateTMSJsonPayload();
+}
+
+function generateRandomCargoManifest() {
+    const cargoPresets = [
+        {
+            plate: 'B ' + Math.floor(1000 + Math.random() * 9000) + ' ' + String.fromCharCode(65 + Math.floor(Math.random() * 26)) + String.fromCharCode(65 + Math.floor(Math.random() * 26)),
+            driver: 'Hendra Gunawan',
+            transporter: 'PT Antar Lintas Nusa Logistics',
+            awb: '126-' + Math.floor(10000000 + Math.random() * 90000000),
+            desc: 'Komponen Semikonduktor & Perangkat IoT',
+            type: 'GENERAL_CARGO',
+            pieces: 42,
+            weight: 420.50,
+            shipper: 'PT Global Tech Microelectronics'
+        },
+        {
+            plate: 'B ' + Math.floor(1000 + Math.random() * 9000) + ' ' + String.fromCharCode(65 + Math.floor(Math.random() * 26)) + String.fromCharCode(65 + Math.floor(Math.random() * 26)),
+            driver: 'Agus Setiawan',
+            transporter: 'PT Bio Farma Express',
+            awb: '126-' + Math.floor(10000000 + Math.random() * 90000000),
+            desc: 'Vaksin & Obat-obatan Cold Chain (-20°C)',
+            type: 'PHARMA',
+            pieces: 18,
+            weight: 185.00,
+            shipper: 'PT Bio Farma Persero'
+        },
+        {
+            plate: 'B ' + Math.floor(1000 + Math.random() * 9000) + ' ' + String.fromCharCode(65 + Math.floor(Math.random() * 26)) + String.fromCharCode(65 + Math.floor(Math.random() * 26)),
+            driver: 'Rahmat Hidayat',
+            transporter: 'PT Fresh Indo Express',
+            awb: '126-' + Math.floor(10000000 + Math.random() * 90000000),
+            desc: 'Buah Mangga Harum Manis & Salak Ekspor',
+            type: 'PERISHABLE',
+            pieces: 60,
+            weight: 600.00,
+            shipper: 'Koperasi Agro Buah Nusantara'
+        },
+        {
+            plate: 'B ' + Math.floor(1000 + Math.random() * 9000) + ' ' + String.fromCharCode(65 + Math.floor(Math.random() * 26)) + String.fromCharCode(65 + Math.floor(Math.random() * 26)),
+            driver: 'Bambang Pamungkas',
+            transporter: 'PT Angkasa Pura Logistik',
+            awb: '126-' + Math.floor(10000000 + Math.random() * 90000000),
+            desc: 'Pakaian & Tekstil Premium Ekspor',
+            type: 'GENERAL_CARGO',
+            pieces: 50,
+            weight: 350.00,
+            shipper: 'PT Logistik Nusantara'
+        }
+    ];
+
+    const pick = cargoPresets[Math.floor(Math.random() * cargoPresets.length)];
+
+    const plateInput = document.getElementById('input-tms-plate');
+    const driverInput = document.getElementById('input-tms-driver');
+    const transInput = document.getElementById('input-tms-transporter');
+    const awbInput = document.getElementById('input-tms-awb');
+    const descInput = document.getElementById('input-tms-desc');
+    const commTypeInput = document.getElementById('input-tms-comm-type');
+    const piecesInput = document.getElementById('input-tms-pieces');
+    const weightInput = document.getElementById('input-tms-weight');
+    const shipperInput = document.getElementById('input-tms-shipper');
+    const bookingInput = document.getElementById('input-tms-booking');
+
+    if (plateInput) plateInput.value = pick.plate;
+    if (driverInput) driverInput.value = pick.driver;
+    if (transInput) transInput.value = pick.transporter;
+    if (awbInput) awbInput.value = pick.awb;
+    if (descInput) descInput.value = pick.desc;
+    if (commTypeInput) commTypeInput.value = pick.type;
+    if (piecesInput) piecesInput.value = pick.pieces;
+    if (weightInput) weightInput.value = pick.weight.toFixed(2);
+    if (shipperInput) shipperInput.value = pick.shipper;
+    if (bookingInput) bookingInput.value = 'TAS-BOOK-' + Math.floor(1000 + Math.random() * 9000);
+
+    const dockInput = document.getElementById('input-tms-dock');
+    const activeDock = dockInput ? dockInput.value : 'DOCK-02';
+    renderDockCards(activeDock, pick.plate);
+    updateTMSJsonPayload(activeDock, pick.plate);
+
+    Swal.fire({
+        toast: true,
+        position: 'top-end',
+        title: `Muatan baru di-generate: ${pick.desc} (${pick.awb})`,
+        icon: 'success',
+        showConfirmButton: false,
+        timer: 2000,
+        background: '#ffffff',
+        color: '#0D1C42',
+        customClass: { popup: 'rounded-xl shadow-lg border border-gray-200' }
+    });
+}
+
 function presetTMSTruckData() {
     const plateInput = document.getElementById('input-tms-plate');
     const driverInput = document.getElementById('input-tms-driver');
@@ -1274,21 +1393,33 @@ function presetTMSTruckData() {
     const dockInput = document.getElementById('input-tms-dock');
     const bookingInput = document.getElementById('input-tms-booking');
     const statusInput = document.getElementById('input-tms-status');
+    const awbInput = document.getElementById('input-tms-awb');
+    const descInput = document.getElementById('input-tms-desc');
+    const commTypeInput = document.getElementById('input-tms-comm-type');
+    const piecesInput = document.getElementById('input-tms-pieces');
+    const weightInput = document.getElementById('input-tms-weight');
+    const shipperInput = document.getElementById('input-tms-shipper');
 
-    if (plateInput) plateInput.value = 'B 9482 XX';
-    if (driverInput) driverInput.value = 'Suryadi Pratama';
-    if (transInput) transInput.value = 'PT Intermodal Logistik Sejahtera';
+    if (plateInput) plateInput.value = 'B 8888 KGO';
+    if (driverInput) driverInput.value = 'Bambang Pamungkas';
+    if (transInput) transInput.value = 'PT Angkasa Pura Logistik';
     if (dockInput) dockInput.value = 'DOCK-02';
-    if (bookingInput) bookingInput.value = 'TAS-BOOK-' + Math.floor(1000 + Math.random() * 9000);
+    if (bookingInput) bookingInput.value = 'TAS-BOOK-9482';
     if (statusInput) statusInput.value = 'ARRIVED';
+    if (awbInput) awbInput.value = '126-85258013';
+    if (descInput) descInput.value = 'Pakaian & Tekstil Premium Ekspor';
+    if (commTypeInput) commTypeInput.value = 'GENERAL_CARGO';
+    if (piecesInput) piecesInput.value = 50;
+    if (weightInput) weightInput.value = '350.00';
+    if (shipperInput) shipperInput.value = 'PT Logistik Nusantara';
 
-    renderDockCards('DOCK-02', 'B 9482 XX');
-    updateTMSJsonPayload('DOCK-02', 'B 9482 XX');
+    renderDockCards('DOCK-02', 'B 8888 KGO');
+    updateTMSJsonPayload('DOCK-02', 'B 8888 KGO');
 
     Swal.fire({
         toast: true,
         position: 'top-end',
-        title: 'Form diisi preset default TMS!',
+        title: 'Form diisi preset standar Bambang Pamungkas!',
         icon: 'info',
         showConfirmButton: false,
         timer: 1500,
@@ -1315,13 +1446,28 @@ function submitTMSCheckIn() {
     const dockInput = document.getElementById('input-tms-dock');
     const bookingInput = document.getElementById('input-tms-booking');
     const statusInput = document.getElementById('input-tms-status');
+    const awbInput = document.getElementById('input-tms-awb');
+    const descInput = document.getElementById('input-tms-desc');
+    const commTypeInput = document.getElementById('input-tms-comm-type');
+    const piecesInput = document.getElementById('input-tms-pieces');
+    const weightInput = document.getElementById('input-tms-weight');
+    const shipperInput = document.getElementById('input-tms-shipper');
+    const newCargoCheck = document.getElementById('input-tms-new-cargo');
 
-    const truckPlate = plateInput ? plateInput.value.trim().toUpperCase() : 'B 9482 XX';
-    const driverName = driverInput ? driverInput.value.trim() : 'Suryadi Pratama';
-    const transporter = transInput ? transInput.value.trim() : 'PT Intermodal Logistik Sejahtera';
+    const truckPlate = plateInput ? plateInput.value.trim().toUpperCase() : 'B 8888 KGO';
+    const driverName = driverInput ? driverInput.value.trim() : 'Bambang Pamungkas';
+    const transporter = transInput ? transInput.value.trim() : 'PT Angkasa Pura Logistik';
     const dockSlot = dockInput ? dockInput.value : 'DOCK-02';
     const bookingCode = bookingInput ? bookingInput.value.trim() : ('TAS-BOOK-' + Math.floor(1000 + Math.random() * 9000));
     const truckStatus = statusInput ? statusInput.value : 'ARRIVED';
+
+    const cargoAwb = awbInput ? awbInput.value.trim() : ('126-' + Math.floor(10000000 + Math.random() * 90000000));
+    const cargoDesc = descInput ? descInput.value.trim() : 'Pakaian & Tekstil Premium Ekspor';
+    const cargoType = commTypeInput ? commTypeInput.value : 'GENERAL_CARGO';
+    const cargoQty = piecesInput ? parseInt(piecesInput.value) : 50;
+    const cargoWeight = weightInput ? parseFloat(weightInput.value) : 350.00;
+    const cargoShipper = shipperInput ? shipperInput.value.trim() : 'PT Logistik Nusantara';
+    const createNewCargo = newCargoCheck ? newCargoCheck.checked : true;
 
     if (!truckPlate) {
         Swal.fire({
@@ -1345,6 +1491,17 @@ function submitTMSCheckIn() {
         return;
     }
 
+    if (!cargoAwb) {
+        Swal.fire({
+            title: 'Nomor e-AWB Wajib Diisi',
+            text: 'Silakan masukkan atau acak nomor e-AWB muatan kargo.',
+            icon: 'warning',
+            confirmButtonColor: '#087F8A'
+        });
+        if (awbInput) awbInput.focus();
+        return;
+    }
+
     // Validasi apakah dock slot yang dipilih sedang penuh oleh armada lain
     if (dockLiveState[dockSlot] && dockLiveState[dockSlot].occupied && dockLiveState[dockSlot].plate !== truckPlate) {
         Swal.fire({
@@ -1357,8 +1514,8 @@ function submitTMSCheckIn() {
     }
 
     Swal.fire({
-        title: 'Verifikasi Truk di Gate TMS...',
-        text: `Memverifikasi kedatangan armada ${truckPlate} di ${dockSlot}...`,
+        title: 'Verifikasi Truk & Muatan di Gate TMS...',
+        text: `Mendaftarkan kedatangan armada ${truckPlate} & muatan e-AWB ${cargoAwb} di ${dockSlot}...`,
         allowOutsideClick: false,
         didOpen: () => { Swal.showLoading(); },
         background: '#ffffff',
@@ -1372,7 +1529,14 @@ function submitTMSCheckIn() {
         transporter_company: transporter,
         dock_slot: dockSlot,
         booking_code: bookingCode,
-        status: truckStatus
+        status: truckStatus,
+        awb_number: cargoAwb,
+        description: cargoDesc,
+        commodity_type: cargoType,
+        quantity: cargoQty,
+        declared_weight_kg: cargoWeight,
+        shipper: cargoShipper,
+        create_new_cargo: createNewCargo
     };
 
     fetch('api/simulate.php', {
@@ -1390,6 +1554,7 @@ function submitTMSCheckIn() {
     .then(res => {
         if (res.success) {
             const truck = res.truck || truckPayload;
+            const cargo = res.cargo || currentCargoData;
 
             // Masukkan data baru ke baris pertama tabel antrean truk secara real-time
             const tbody = document.getElementById('tmsTruckArrivalsTbody');
@@ -1435,16 +1600,25 @@ function submitTMSCheckIn() {
             // Re-render dock cards
             renderDockCards(dockSlot, truckPlate);
 
-            // Update local state currentCargoData
-            currentCargoData.current_stage = 1;
-            currentCargoData.status = 'REGISTERED';
-            currentCargoData.truck_plate = truckPlate;
-            currentCargoData.driver_name = driverName;
-            currentCargoData.transporter_company = transporter;
-            currentCargoData.dock_slot = dockSlot;
-            currentCargoData.booking_code = bookingCode;
-            if (truck.id) {
-                currentCargoData.truck_arrival_id = truck.id;
+            // Update local state currentCargoData dengan data kargo terbaru
+            currentCargoData = cargo;
+            currentCargoId = cargo.id;
+
+            // Render Banner Kargo Aktif di atas halaman
+            renderCargoHeader(cargo);
+
+            // Perbarui Dropdown Pilih Kargo jika ID baru
+            const select = document.getElementById('cargoSelect');
+            if (select) {
+                let opt = select.querySelector(`option[value="${cargo.id}"]`);
+                if (!opt) {
+                    opt = document.createElement('option');
+                    opt.value = cargo.id;
+                    opt.className = 'bg-white text-slate-800';
+                    select.appendChild(opt);
+                }
+                opt.textContent = `${cargo.awb_number} • ${cargo.description} (Tahap 1)`;
+                select.value = cargo.id;
             }
 
             // Update JSON Inspector di kolom kanan
@@ -1454,47 +1628,53 @@ function submitTMSCheckIn() {
             if (stageBadge) stageBadge.textContent = `Tahap 1: REGISTERED`;
 
             Swal.fire({
-                title: 'Truk Berhasil Diverifikasi!',
+                title: 'Truk & Kargo Berhasil Didaftarkan!',
                 html: `
                     <div class="text-xs text-left p-3.5 rounded-xl bg-slate-50 border border-gray-200 space-y-1.5 mt-2">
                         <div class="flex justify-between items-center pb-1 border-b border-gray-200">
-                            <span class="text-slate-500 font-bold uppercase text-[10px]">Nomor Plat</span>
-                            <span class="text-[#0D1C42] font-mono font-black text-sm">${escapeHtml(truckPlate)}</span>
+                            <span class="text-slate-500 font-bold uppercase text-[10px]">Armada Truk</span>
+                            <span class="text-[#0D1C42] font-mono font-black text-sm">${escapeHtml(truckPlate)} (${escapeHtml(dockSlot)})</span>
                         </div>
                         <div class="flex justify-between items-center">
-                            <span class="text-slate-500 text-[11px]">Nama Supir:</span>
-                            <span class="font-bold text-slate-800">${escapeHtml(driverName)}</span>
+                            <span class="text-slate-500 text-[11px]">Nomor e-AWB:</span>
+                            <span class="font-mono font-bold text-[#087F8A]">${escapeHtml(cargo.awb_number)}</span>
                         </div>
                         <div class="flex justify-between items-center">
-                            <span class="text-slate-500 text-[11px]">Vendor Logistik:</span>
-                            <span class="text-slate-700">${escapeHtml(transporter)}</span>
+                            <span class="text-slate-500 text-[11px]">Primary Key (SSCC):</span>
+                            <span class="font-mono font-bold text-emerald-700">${escapeHtml(cargo.sscc)}</span>
                         </div>
                         <div class="flex justify-between items-center">
-                            <span class="text-slate-500 text-[11px]">Alokasi Dock:</span>
-                            <span class="font-bold text-[#087F8A] font-mono">${escapeHtml(dockSlot)}</span>
+                            <span class="text-slate-500 text-[11px]">Komoditas:</span>
+                            <span class="font-semibold text-slate-800">${escapeHtml(cargo.description)} (${cargo.quantity} koli)</span>
                         </div>
                         <div class="flex justify-between items-center">
-                            <span class="text-slate-500 text-[11px]">Kode Booking:</span>
-                            <span class="font-mono text-slate-600">${escapeHtml(bookingCode)}</span>
+                            <span class="text-slate-500 text-[11px]">Berat Deklarasi:</span>
+                            <span class="font-mono text-slate-700">${parseFloat(cargo.declared_weight_kg).toFixed(1)} kg</span>
                         </div>
                     </div>
-                    <p class="text-xs text-emerald-700 font-bold mt-3">
-                        <i class="fa-solid fa-circle-check mr-1 text-emerald-600"></i>
-                        Data masuk ke log antrean truk &amp; terhubung dengan kargo ${escapeHtml(currentCargoData.awb_number || '')}!
-                    </p>
+                    <div class="mt-3 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-left">
+                        <p class="text-emerald-800 font-bold">
+                            <i class="fa-solid fa-circle-check text-emerald-600 mr-1"></i>
+                            Kargo baru siap dipindai di CMS (Tahap 2) menggunakan format Ingest JSON!
+                        </p>
+                    </div>
                 `,
                 icon: 'success',
                 background: '#ffffff',
                 color: '#0D1C42',
                 confirmButtonColor: '#087F8A',
-                confirmButtonText: 'Lanjut ke CMS',
+                confirmButtonText: 'Lanjut ke Dashboard CMS (Tahap 2)',
                 showCancelButton: true,
                 cancelButtonText: 'Tetap di TMS',
                 cancelButtonColor: '#94a3b8',
                 customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
             }).then((result) => {
-                // Refresh stepper and timeline
-                initSimulation(currentCargoData.id, 1, result.isConfirmed ? 'cms' : 'tms');
+                if (result.isConfirmed) {
+                    switchSystemDashboard('cms');
+                    initSimulation(currentCargoData.id, 1, 'cms');
+                } else {
+                    renderTMSDashboard(currentCargoData);
+                }
             });
         } else {
             Swal.fire({
@@ -1537,7 +1717,6 @@ function renderTMSDashboard(c) {
     }
     const dockInput = document.getElementById('input-tms-dock');
     if (dockInput) {
-        // Jika dock kargo kosong atau sudah teralokasi, jika kargo punya dock sendiri gunakan, jika tidak default ke dock kosong
         let targetSlot = c.dock_slot || 'DOCK-02';
         if (dockLiveState[targetSlot] && dockLiveState[targetSlot].occupied && dockLiveState[targetSlot].plate !== c.truck_plate) {
             targetSlot = 'DOCK-02';
@@ -1549,11 +1728,37 @@ function renderTMSDashboard(c) {
         bookingInput.value = c.booking_code;
     }
 
+    // Sinkronisasi data muatan kargo ke input
+    const awbInput = document.getElementById('input-tms-awb');
+    if (awbInput && c.awb_number) {
+        awbInput.value = c.awb_number;
+    }
+    const descInput = document.getElementById('input-tms-desc');
+    if (descInput && c.description) {
+        descInput.value = c.description;
+    }
+    const commTypeInput = document.getElementById('input-tms-comm-type');
+    if (commTypeInput && c.commodity_type) {
+        commTypeInput.value = c.commodity_type;
+    }
+    const piecesInput = document.getElementById('input-tms-pieces');
+    if (piecesInput && c.quantity) {
+        piecesInput.value = c.quantity;
+    }
+    const weightInput = document.getElementById('input-tms-weight');
+    if (weightInput && c.declared_weight_kg) {
+        weightInput.value = parseFloat(c.declared_weight_kg).toFixed(2);
+    }
+    const shipperInput = document.getElementById('input-tms-shipper');
+    if (shipperInput && c.shipper) {
+        shipperInput.value = c.shipper;
+    }
+
     const stageBadge = document.getElementById('tms-cargo-stage-badge');
     if (stageBadge) stageBadge.textContent = `Tahap ${c.current_stage}: ${c.status}`;
 
     const activeDock = (dockInput ? dockInput.value : c.dock_slot) || 'DOCK-02';
-    const activePlate = (plateInput ? plateInput.value : c.truck_plate) || 'B 9482 XX';
+    const activePlate = (plateInput ? plateInput.value : c.truck_plate) || 'B 8888 KGO';
     renderDockCards(activeDock, activePlate);
     updateTMSJsonPayload(activeDock, activePlate);
 }

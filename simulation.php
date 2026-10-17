@@ -590,16 +590,20 @@ include __DIR__ . '/includes/header.php';
                             <div class="flex items-center space-x-2">
                                 <i class="fa-solid fa-id-card-clip text-[#087F8A] text-base"></i>
                                 <h3 class="text-xs font-bold text-[#0D1C42] uppercase tracking-wider">
-                                    Data Armada Truk Kargo Terpilih
+                                    Registrasi Kedatangan Truk &amp; Muatan Kargo (TMS)
                                 </h3>
                                 <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200 uppercase tracking-wide">
-                                    Input Staff Operasional
+                                    Input Staff Gate
                                 </span>
                             </div>
                             <div class="flex items-center space-x-2">
-                                <button type="button" onclick="presetTMSTruckData()" class="px-2.5 py-1 rounded-lg text-[10px] font-bold text-[#087F8A] bg-teal-50 hover:bg-teal-100 border border-teal-200 transition-all flex items-center gap-1 shadow-sm" title="Isi Preset Otomatis">
+                                <button type="button" onclick="generateRandomCargoManifest()" class="px-2.5 py-1 rounded-lg text-[10px] font-bold text-[#087F8A] bg-teal-50 hover:bg-teal-100 border border-teal-200 transition-all flex items-center gap-1 shadow-sm" title="Generate Kargo Baru Acak">
+                                    <i class="fa-solid fa-dice text-[10px]"></i>
+                                    <span>Acak Muatan Kargo</span>
+                                </button>
+                                <button type="button" onclick="presetTMSTruckData()" class="px-2.5 py-1 rounded-lg text-[10px] font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 transition-all flex items-center gap-1 shadow-sm" title="Isi Preset Standar">
                                     <i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i>
-                                    <span>Isi Preset Cepat</span>
+                                    <span>Preset Standar</span>
                                 </button>
                                 <span id="tms-cargo-stage-badge" class="text-[10px] font-mono text-[#087F8A] bg-teal-50 px-2.5 py-1 rounded-full border border-teal-200 font-bold">
                                     Tahap 1
@@ -607,75 +611,158 @@ include __DIR__ . '/includes/header.php';
                             </div>
                         </div>
 
-                        <!-- Truck Input Form Grid (Dapat diinput sendiri oleh staff) -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 mb-5 text-xs">
-                            
-                            <!-- Input 1: Nomor Plat Polisi -->
-                            <div class="p-3.5 rounded-xl bg-slate-50 border border-gray-200 focus-within:border-[#0CA1AF] focus-within:bg-teal-50/20 transition-all">
-                                <label for="input-tms-plate" class="text-[10px] text-slate-500 block uppercase font-bold tracking-wider mb-1">
-                                    <i class="fa-solid fa-car text-[#087F8A] mr-1"></i> Nomor Plat Polisi
-                                </label>
-                                <input type="text" id="input-tms-plate" oninput="handlePlateInput(this.value)" class="w-full bg-white border border-gray-300 focus:border-[#087F8A] focus:ring-1 focus:ring-[#087F8A] rounded-lg px-3 py-1.5 text-xs font-mono font-black text-[#0D1C42] uppercase focus:outline-none transition-all shadow-sm" placeholder="Contoh: B 9482 XX" value="B 9482 XX">
+                        <!-- SECTION A: Data Armada Truk -->
+                        <div class="mb-4">
+                            <div class="flex items-center space-x-2 mb-2.5">
+                                <span class="w-1.5 h-3.5 bg-[#087F8A] rounded-full"></span>
+                                <h4 class="text-[11px] font-bold uppercase tracking-wider text-slate-700">
+                                    A. Data Armada Truk &amp; Alokasi Dock (Gate TAS)
+                                </h4>
                             </div>
-
-                            <!-- Input 2: Nama Supir Terdaftar -->
-                            <div class="p-3.5 rounded-xl bg-slate-50 border border-gray-200 focus-within:border-[#0CA1AF] focus-within:bg-teal-50/20 transition-all">
-                                <label for="input-tms-driver" class="text-[10px] text-slate-500 block uppercase font-bold tracking-wider mb-1">
-                                    <i class="fa-solid fa-user text-[#087F8A] mr-1"></i> Nama Supir Terdaftar
-                                </label>
-                                <input type="text" id="input-tms-driver" class="w-full bg-white border border-gray-300 focus:border-[#087F8A] focus:ring-1 focus:ring-[#087F8A] rounded-lg px-3 py-1.5 text-xs font-bold text-slate-800 focus:outline-none transition-all shadow-sm" placeholder="Contoh: Suryadi Pratama" value="Suryadi Pratama">
-                            </div>
-
-                            <!-- Input 3: Vendor Transportasi -->
-                            <div class="p-3.5 rounded-xl bg-slate-50 border border-gray-200 focus-within:border-[#0CA1AF] focus-within:bg-teal-50/20 transition-all">
-                                <label for="input-tms-transporter" class="text-[10px] text-slate-500 block uppercase font-bold tracking-wider mb-1">
-                                    <i class="fa-solid fa-building text-[#087F8A] mr-1"></i> Vendor Transportasi
-                                </label>
-                                <input type="text" id="input-tms-transporter" class="w-full bg-white border border-gray-300 focus:border-[#087F8A] focus:ring-1 focus:ring-[#087F8A] rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-800 focus:outline-none transition-all shadow-sm" placeholder="Contoh: PT Intermodal Logistik Sejahtera" value="PT Intermodal Logistik Sejahtera">
-                            </div>
-
-                            <!-- Input 4: Alokasi Dock Unloading -->
-                            <div class="p-3.5 rounded-xl bg-slate-50 border border-gray-200 focus-within:border-[#0CA1AF] focus-within:bg-teal-50/20 transition-all">
-                                <div class="flex items-center justify-between mb-1">
-                                    <label for="input-tms-dock" class="text-[10px] text-slate-500 block uppercase font-bold tracking-wider">
-                                        <i class="fa-solid fa-warehouse text-[#087F8A] mr-1"></i> Alokasi Dock Unloading
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+                                <!-- Input 1: Nomor Plat Polisi -->
+                                <div class="p-3 rounded-xl bg-slate-50 border border-gray-200 focus-within:border-[#0CA1AF] focus-within:bg-teal-50/20 transition-all">
+                                    <label for="input-tms-plate" class="text-[10px] text-slate-500 block uppercase font-bold tracking-wider mb-1">
+                                        <i class="fa-solid fa-car text-[#087F8A] mr-1"></i> Nomor Plat Polisi
                                     </label>
-                                    <span class="text-[9px] font-bold text-slate-400">Pilih / Klik Kartu</span>
+                                    <input type="text" id="input-tms-plate" oninput="handlePlateInput(this.value)" class="w-full bg-white border border-gray-300 focus:border-[#087F8A] focus:ring-1 focus:ring-[#087F8A] rounded-lg px-2.5 py-1.5 text-xs font-mono font-black text-[#0D1C42] uppercase focus:outline-none transition-all shadow-sm" placeholder="Contoh: B 8888 KGO" value="B 8888 KGO">
                                 </div>
-                                <select id="input-tms-dock" onchange="handleDockSelectChange(this.value)" class="w-full bg-white border border-gray-300 focus:border-[#087F8A] focus:ring-1 focus:ring-[#087F8A] rounded-lg px-3 py-1.5 text-xs font-mono font-bold text-[#087F8A] focus:outline-none cursor-pointer transition-all shadow-sm">
-                                    <option value="DOCK-01" disabled class="text-rose-600 bg-rose-50 font-semibold">DOCK-01 (PENUH - B 9182 KXA Sedang Bongkar)</option>
-                                    <option value="DOCK-02" selected class="text-emerald-700 font-bold">DOCK-02 (KOSONG - Siap Digunakan)</option>
-                                    <option value="DOCK-03" disabled class="text-rose-600 bg-rose-50 font-semibold">DOCK-03 (PENUH - B 4412 PQL Sedang Bongkar)</option>
-                                    <option value="DOCK-04" class="text-emerald-700 font-bold">DOCK-04 (KOSONG - Siap Digunakan)</option>
-                                </select>
-                            </div>
 
-                            <!-- Input 5: Kode Booking TAS -->
-                            <div class="p-3.5 rounded-xl bg-slate-50 border border-gray-200 focus-within:border-[#0CA1AF] focus-within:bg-teal-50/20 transition-all">
-                                <div class="flex items-center justify-between mb-1">
-                                    <label for="input-tms-booking" class="text-[10px] text-slate-500 block uppercase font-bold tracking-wider">
-                                        <i class="fa-solid fa-barcode text-[#087F8A] mr-1"></i> Kode Booking TAS
+                                <!-- Input 2: Nama Supir Terdaftar -->
+                                <div class="p-3 rounded-xl bg-slate-50 border border-gray-200 focus-within:border-[#0CA1AF] focus-within:bg-teal-50/20 transition-all">
+                                    <label for="input-tms-driver" class="text-[10px] text-slate-500 block uppercase font-bold tracking-wider mb-1">
+                                        <i class="fa-solid fa-user text-[#087F8A] mr-1"></i> Nama Supir Terdaftar
                                     </label>
-                                    <button type="button" onclick="generateRandomTASBooking()" class="text-[9px] text-[#087F8A] hover:underline font-bold flex items-center gap-1" title="Generate Kode Acak">
-                                        <i class="fa-solid fa-dice text-[10px]"></i> Acak
-                                    </button>
+                                    <input type="text" id="input-tms-driver" class="w-full bg-white border border-gray-300 focus:border-[#087F8A] focus:ring-1 focus:ring-[#087F8A] rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-800 focus:outline-none transition-all shadow-sm" placeholder="Contoh: Bambang Pamungkas" value="Bambang Pamungkas">
                                 </div>
-                                <input type="text" id="input-tms-booking" class="w-full bg-white border border-gray-300 focus:border-[#087F8A] focus:ring-1 focus:ring-[#087F8A] rounded-lg px-3 py-1.5 text-xs font-mono font-bold text-[#087F8A] focus:outline-none transition-all shadow-sm" placeholder="Contoh: TAS-BOOK-9482" value="TAS-BOOK-9482">
-                            </div>
 
-                            <!-- Input 6: Status TAS Gate -->
-                            <div class="p-3.5 rounded-xl bg-slate-50 border border-gray-200 focus-within:border-[#0CA1AF] focus-within:bg-teal-50/20 transition-all">
-                                <label for="input-tms-status" class="text-[10px] text-slate-500 block uppercase font-bold tracking-wider mb-1">
-                                    <i class="fa-solid fa-shield text-[#087F8A] mr-1"></i> Status TAS Gate
+                                <!-- Input 3: Vendor Transportasi -->
+                                <div class="p-3 rounded-xl bg-slate-50 border border-gray-200 focus-within:border-[#0CA1AF] focus-within:bg-teal-50/20 transition-all">
+                                    <label for="input-tms-transporter" class="text-[10px] text-slate-500 block uppercase font-bold tracking-wider mb-1">
+                                        <i class="fa-solid fa-building text-[#087F8A] mr-1"></i> Vendor Transportasi
+                                    </label>
+                                    <input type="text" id="input-tms-transporter" class="w-full bg-white border border-gray-300 focus:border-[#087F8A] focus:ring-1 focus:ring-[#087F8A] rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-800 focus:outline-none transition-all shadow-sm" placeholder="Contoh: PT Angkasa Pura Logistik" value="PT Angkasa Pura Logistik">
+                                </div>
+
+                                <!-- Input 4: Alokasi Dock Unloading -->
+                                <div class="p-3 rounded-xl bg-slate-50 border border-gray-200 focus-within:border-[#0CA1AF] focus-within:bg-teal-50/20 transition-all">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <label for="input-tms-dock" class="text-[10px] text-slate-500 block uppercase font-bold tracking-wider">
+                                            <i class="fa-solid fa-warehouse text-[#087F8A] mr-1"></i> Alokasi Dock Unloading
+                                        </label>
+                                        <span class="text-[9px] font-bold text-slate-400">Pilih / Klik Kartu</span>
+                                    </div>
+                                    <select id="input-tms-dock" onchange="handleDockSelectChange(this.value)" class="w-full bg-white border border-gray-300 focus:border-[#087F8A] focus:ring-1 focus:ring-[#087F8A] rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold text-[#087F8A] focus:outline-none cursor-pointer transition-all shadow-sm">
+                                        <option value="DOCK-01" disabled class="text-rose-600 bg-rose-50 font-semibold">DOCK-01 (PENUH - B 9182 KXA Sedang Bongkar)</option>
+                                        <option value="DOCK-02" selected class="text-emerald-700 font-bold">DOCK-02 (KOSONG - Siap Digunakan)</option>
+                                        <option value="DOCK-03" disabled class="text-rose-600 bg-rose-50 font-semibold">DOCK-03 (PENUH - B 4412 PQL Sedang Bongkar)</option>
+                                        <option value="DOCK-04" class="text-emerald-700 font-bold">DOCK-04 (KOSONG - Siap Digunakan)</option>
+                                    </select>
+                                </div>
+
+                                <!-- Input 5: Kode Booking TAS -->
+                                <div class="p-3 rounded-xl bg-slate-50 border border-gray-200 focus-within:border-[#0CA1AF] focus-within:bg-teal-50/20 transition-all">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <label for="input-tms-booking" class="text-[10px] text-slate-500 block uppercase font-bold tracking-wider">
+                                            <i class="fa-solid fa-barcode text-[#087F8A] mr-1"></i> Kode Booking TAS
+                                        </label>
+                                        <button type="button" onclick="generateRandomTASBooking()" class="text-[9px] text-[#087F8A] hover:underline font-bold flex items-center gap-1" title="Generate Kode Acak">
+                                            <i class="fa-solid fa-dice text-[10px]"></i> Acak
+                                        </button>
+                                    </div>
+                                    <input type="text" id="input-tms-booking" class="w-full bg-white border border-gray-300 focus:border-[#087F8A] focus:ring-1 focus:ring-[#087F8A] rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold text-[#087F8A] focus:outline-none transition-all shadow-sm" placeholder="Contoh: TAS-BOOK-9482" value="TAS-BOOK-9482">
+                                </div>
+
+                                <!-- Input 6: Status TAS Gate -->
+                                <div class="p-3 rounded-xl bg-slate-50 border border-gray-200 focus-within:border-[#0CA1AF] focus-within:bg-teal-50/20 transition-all">
+                                    <label for="input-tms-status" class="text-[10px] text-slate-500 block uppercase font-bold tracking-wider mb-1">
+                                        <i class="fa-solid fa-shield text-[#087F8A] mr-1"></i> Status TAS Gate
+                                    </label>
+                                    <select id="input-tms-status" class="w-full bg-white border border-gray-300 focus:border-[#087F8A] focus:ring-1 focus:ring-[#087F8A] rounded-lg px-2.5 py-1.5 text-xs font-extrabold text-teal-800 focus:outline-none cursor-pointer transition-all shadow-sm">
+                                        <option value="ARRIVED" selected>ARRIVED (Tiba di Gerbang)</option>
+                                        <option value="SCHEDULED">SCHEDULED (Terjadwal)</option>
+                                        <option value="UNLOADING">UNLOADING (Sedang Bongkar)</option>
+                                        <option value="COMPLETED">COMPLETED (Selesai Bongkar)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SECTION B: Data Muatan Kargo yang Diangkut Truk (Manifest / Delivery Order) -->
+                        <div class="mb-5 pt-3 border-t border-gray-100">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-2.5 gap-2">
+                                <div class="flex items-center space-x-2">
+                                    <span class="w-1.5 h-3.5 bg-emerald-600 rounded-full"></span>
+                                    <h4 class="text-[11px] font-bold uppercase tracking-wider text-slate-700">
+                                        B. Data Muatan Kargo yang Diangkut Truk (Manifest / Delivery Order)
+                                    </h4>
+                                </div>
+                                <label class="flex items-center space-x-1.5 text-[11px] font-bold text-[#087F8A] cursor-pointer">
+                                    <input type="checkbox" id="input-tms-new-cargo" checked class="rounded border-gray-300 text-[#087F8A] focus:ring-[#087F8A]">
+                                    <span>Buat Kargo Baru (Generate SSCC-18 Otomatis)</span>
                                 </label>
-                                <select id="input-tms-status" class="w-full bg-white border border-gray-300 focus:border-[#087F8A] focus:ring-1 focus:ring-[#087F8A] rounded-lg px-3 py-1.5 text-xs font-extrabold text-teal-800 focus:outline-none cursor-pointer transition-all shadow-sm">
-                                    <option value="ARRIVED" selected>ARRIVED (Tiba di Gerbang)</option>
-                                    <option value="SCHEDULED">SCHEDULED (Terjadwal)</option>
-                                    <option value="UNLOADING">UNLOADING (Sedang Bongkar)</option>
-                                    <option value="COMPLETED">COMPLETED (Selesai Bongkar)</option>
-                                </select>
                             </div>
 
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+                                <!-- Input 7: Nomor Air Waybill (e-AWB) -->
+                                <div class="p-3 rounded-xl bg-emerald-50/50 border border-emerald-200/90 focus-within:border-[#0CA1AF] transition-all">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <label for="input-tms-awb" class="text-[10px] text-emerald-800 block uppercase font-bold tracking-wider">
+                                            <i class="fa-solid fa-file-invoice text-emerald-600 mr-1"></i> Nomor e-AWB Kargo
+                                        </label>
+                                        <button type="button" onclick="generateRandomAWBNumber()" class="text-[9px] text-[#087F8A] hover:underline font-bold flex items-center gap-1" title="Generate AWB Baru">
+                                            <i class="fa-solid fa-dice text-[10px]"></i> Acak AWB
+                                        </button>
+                                    </div>
+                                    <input type="text" id="input-tms-awb" class="w-full bg-white border border-emerald-300 focus:border-[#087F8A] focus:ring-1 focus:ring-[#087F8A] rounded-lg px-2.5 py-1.5 text-xs font-mono font-black text-[#0D1C42] focus:outline-none transition-all shadow-sm" placeholder="Contoh: 126-85258013" value="126-85258013">
+                                </div>
+
+                                <!-- Input 8: Komoditas / Deskripsi Barang -->
+                                <div class="p-3 rounded-xl bg-slate-50 border border-gray-200 focus-within:border-[#0CA1AF] focus-within:bg-teal-50/20 transition-all">
+                                    <label for="input-tms-desc" class="text-[10px] text-slate-500 block uppercase font-bold tracking-wider mb-1">
+                                        <i class="fa-solid fa-box-open text-[#087F8A] mr-1"></i> Deskripsi Komoditas
+                                    </label>
+                                    <input type="text" id="input-tms-desc" class="w-full bg-white border border-gray-300 focus:border-[#087F8A] focus:ring-1 focus:ring-[#087F8A] rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-800 focus:outline-none transition-all shadow-sm" placeholder="Contoh: Pakaian & Tekstil Premium Ekspor" value="Pakaian & Tekstil Premium Ekspor">
+                                </div>
+
+                                <!-- Input 9: Kategori Komoditas (IATA Type) -->
+                                <div class="p-3 rounded-xl bg-slate-50 border border-gray-200 focus-within:border-[#0CA1AF] focus-within:bg-teal-50/20 transition-all">
+                                    <label for="input-tms-comm-type" class="text-[10px] text-slate-500 block uppercase font-bold tracking-wider mb-1">
+                                        <i class="fa-solid fa-tags text-[#087F8A] mr-1"></i> Kategori IATA
+                                    </label>
+                                    <select id="input-tms-comm-type" class="w-full bg-white border border-gray-300 focus:border-[#087F8A] focus:ring-1 focus:ring-[#087F8A] rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-800 focus:outline-none cursor-pointer transition-all shadow-sm">
+                                        <option value="GENERAL_CARGO" selected>GENERAL_CARGO (Umum / Garmen)</option>
+                                        <option value="PHARMA">PHARMA (Farmasi &amp; Vaksin)</option>
+                                        <option value="PERISHABLE">PERISHABLE (Makanan / Buah Segar)</option>
+                                        <option value="VALUABLE">VALUABLE (Barang Berharga)</option>
+                                        <option value="DANGEROUS_GOODS">DANGEROUS_GOODS (DG)</option>
+                                    </select>
+                                </div>
+
+                                <!-- Input 10: Jumlah Koli (Pieces) -->
+                                <div class="p-3 rounded-xl bg-slate-50 border border-gray-200 focus-within:border-[#0CA1AF] focus-within:bg-teal-50/20 transition-all">
+                                    <label for="input-tms-pieces" class="text-[10px] text-slate-500 block uppercase font-bold tracking-wider mb-1">
+                                        <i class="fa-solid fa-boxes-stacked text-[#087F8A] mr-1"></i> Jumlah Koli (Pcs)
+                                    </label>
+                                    <input type="number" id="input-tms-pieces" min="1" max="1000" class="w-full bg-white border border-gray-300 focus:border-[#087F8A] focus:ring-1 focus:ring-[#087F8A] rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold text-slate-800 focus:outline-none transition-all shadow-sm" value="50">
+                                </div>
+
+                                <!-- Input 11: Berat Muatan Deklarasi (Kg) -->
+                                <div class="p-3 rounded-xl bg-slate-50 border border-gray-200 focus-within:border-[#0CA1AF] focus-within:bg-teal-50/20 transition-all">
+                                    <label for="input-tms-weight" class="text-[10px] text-slate-500 block uppercase font-bold tracking-wider mb-1">
+                                        <i class="fa-solid fa-weight-hanging text-[#087F8A] mr-1"></i> Berat Bruto Muatan (Kg)
+                                    </label>
+                                    <input type="number" id="input-tms-weight" min="1" step="0.5" class="w-full bg-white border border-gray-300 focus:border-[#087F8A] focus:ring-1 focus:ring-[#087F8A] rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold text-[#0D1C42] focus:outline-none transition-all shadow-sm" value="350.00">
+                                </div>
+
+                                <!-- Input 12: Shipper / Pengirim -->
+                                <div class="p-3 rounded-xl bg-slate-50 border border-gray-200 focus-within:border-[#0CA1AF] focus-within:bg-teal-50/20 transition-all">
+                                    <label for="input-tms-shipper" class="text-[10px] text-slate-500 block uppercase font-bold tracking-wider mb-1">
+                                        <i class="fa-solid fa-paper-plane text-[#087F8A] mr-1"></i> Shipper / Pengirim
+                                    </label>
+                                    <input type="text" id="input-tms-shipper" class="w-full bg-white border border-gray-300 focus:border-[#087F8A] focus:ring-1 focus:ring-[#087F8A] rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-800 focus:outline-none transition-all shadow-sm" placeholder="Contoh: PT Logistik Nusantara" value="PT Logistik Nusantara">
+                                </div>
+                            </div>
                         </div>
 
                         <!-- TMS Action Buttons -->
