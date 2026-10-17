@@ -823,8 +823,9 @@ $companyShort   = 'AC';
             <!-- Article 1 -->
             <div class="bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-xl transition-all flex flex-col justify-between group">
                 <div class="relative h-48 overflow-hidden bg-slate-800">
-                    <img src="https://injourneyairports.id/news/uploads/news/img_20260906_112331.jpg_20260915_091815_7de0d580.jpeg" alt="Bandara Soekarno Hatta" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                    <span class="absolute top-4 left-4 px-3 py-1 rounded-full bg-[#087F8A] text-white text-[10px] font-bold uppercase tracking-wider">
+                    <img src="assets/img/news_cargo_airside.jpg" alt="Fasilitas Sisi Udara dan Landside Kargo Bandara" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none"></div>
+                    <span class="absolute top-4 left-4 px-3 py-1 rounded-full bg-[#087F8A] text-white text-[10px] font-bold uppercase tracking-wider shadow-sm">
                         Operasional Bandara
                     </span>
                 </div>
@@ -839,7 +840,7 @@ $companyShort   = 'AC';
                         </p>
                     </div>
                     <div class="pt-4 border-t border-gray-100">
-                        <a href="simulation.php" class="text-xs font-bold text-[#087F8A] flex items-center gap-1.5">
+                        <a href="simulation.php" class="text-xs font-bold text-[#087F8A] flex items-center gap-1.5 group-hover:text-[#0CA1AF]">
                             <span>Simulasikan Alur Kargo</span>
                             <i class="fa-solid fa-chevron-right text-[10px]"></i>
                         </a>
@@ -849,12 +850,10 @@ $companyShort   = 'AC';
 
             <!-- Article 2 -->
             <div class="bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-xl transition-all flex flex-col justify-between group">
-                <div class="relative h-48 overflow-hidden bg-[#014D54] flex items-center justify-center p-6 text-white text-center">
-                    <div class="space-y-2">
-                        <i class="fa-solid fa-qrcode text-4xl text-[#0CA1AF]"></i>
-                        <span class="block text-xs font-bold text-teal-200 uppercase tracking-widest">Standar Internasional</span>
-                    </div>
-                    <span class="absolute top-4 left-4 px-3 py-1 rounded-full bg-[#04AFBF] text-white text-[10px] font-bold uppercase tracking-wider">
+                <div class="relative h-48 overflow-hidden bg-slate-800">
+                    <img src="assets/img/news_gs1_barcode.jpg" alt="Penerapan SSCC dan AIDC Barcode Kargo" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none"></div>
+                    <span class="absolute top-4 left-4 px-3 py-1 rounded-full bg-[#04AFBF] text-white text-[10px] font-bold uppercase tracking-wider shadow-sm">
                         GS1 Standard
                     </span>
                 </div>
@@ -869,7 +868,7 @@ $companyShort   = 'AC';
                         </p>
                     </div>
                     <div class="pt-4 border-t border-gray-100">
-                        <a href="database_viewer.php" class="text-xs font-bold text-[#087F8A] flex items-center gap-1.5">
+                        <a href="database_viewer.php" class="text-xs font-bold text-[#087F8A] flex items-center gap-1.5 group-hover:text-[#0CA1AF]">
                             <span>Lihat Database SSCC Live</span>
                             <i class="fa-solid fa-chevron-right text-[10px]"></i>
                         </a>
@@ -879,12 +878,10 @@ $companyShort   = 'AC';
 
             <!-- Article 3 -->
             <div class="bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-xl transition-all flex flex-col justify-between group">
-                <div class="relative h-48 overflow-hidden bg-[#0D1C42] flex items-center justify-center p-6 text-white text-center">
-                    <div class="space-y-2">
-                        <i class="fa-solid fa-scale-balanced text-4xl text-amber-400"></i>
-                        <span class="block text-xs font-bold text-amber-200 uppercase tracking-widest">Aviation Safety</span>
-                    </div>
-                    <span class="absolute top-4 left-4 px-3 py-1 rounded-full bg-amber-600 text-white text-[10px] font-bold uppercase tracking-wider">
+                <div class="relative h-48 overflow-hidden bg-slate-800">
+                    <img src="assets/img/news_uld_aircraft.jpg" alt="Pemuatan ULD dan Keseimbangan Pesawat" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none"></div>
+                    <span class="absolute top-4 left-4 px-3 py-1 rounded-full bg-amber-600 text-white text-[10px] font-bold uppercase tracking-wider shadow-sm">
                         ICAO &bull; CSD
                     </span>
                 </div>
@@ -899,7 +896,7 @@ $companyShort   = 'AC';
                         </p>
                     </div>
                     <div class="pt-4 border-t border-gray-100">
-                        <a href="simulation.php" class="text-xs font-bold text-[#087F8A] flex items-center gap-1.5">
+                        <a href="simulation.php" class="text-xs font-bold text-[#087F8A] flex items-center gap-1.5 group-hover:text-[#0CA1AF]">
                             <span>Uji Penimbangan Smart Scale</span>
                             <i class="fa-solid fa-chevron-right text-[10px]"></i>
                         </a>
