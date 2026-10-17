@@ -949,32 +949,361 @@ function switchSystemDashboard(systemKey, updateUrl = true) {
     }
 }
 
+function escapeHtml(text) {
+    if (text === null || text === undefined) return '';
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function generateRandomTASBooking() {
+    const randomNum = Math.floor(1000 + Math.random() * 9000);
+    const code = `TAS-BOOK-${randomNum}`;
+    const el = document.getElementById('input-tms-booking');
+    if (el) el.value = code;
+}
+
+function highlightSelectedDock(dockSlot, customPlate = null) {
+    const docks = ['DOCK-01', 'DOCK-02', 'DOCK-03', 'DOCK-04'];
+    const currentPlate = customPlate || document.getElementById('input-tms-plate')?.value.trim() || 'B 9482 XX';
+
+    docks.forEach(d => {
+        const card = document.getElementById(`dock-card-${d}`);
+        const icon = document.getElementById(`dock-icon-${d}`);
+        const plate = document.getElementById(`dock-plate-${d}`);
+        const status = document.getElementById(`dock-status-${d}`);
+        if (!card) return;
+
+        const titleSpan = card.querySelector('span:first-child');
+
+        if (d === dockSlot) {
+            card.className = 'p-3.5 rounded-xl border border-emerald-300 bg-emerald-50/50 text-center transition-all shadow-sm ring-1 ring-emerald-400/40';
+            if (titleSpan) titleSpan.className = 'text-[10px] font-bold text-emerald-700 block uppercase font-mono';
+            if (icon) {
+                icon.className = 'my-2 text-2xl text-emerald-600 animate-bounce';
+                icon.innerHTML = '<i class="fa-solid fa-truck"></i>';
+                setTimeout(() => { if (icon) icon.classList.remove('animate-bounce'); }, 1500);
+            }
+            if (plate) {
+                plate.className = 'text-xs font-bold text-[#0D1C42] block font-mono';
+                plate.textContent = currentPlate || 'B 9482 XX';
+            }
+            if (status) {
+                status.className = 'text-[9px] text-emerald-700 font-bold block mt-0.5';
+                status.textContent = 'Alokasi Bongkar Aktif';
+            }
+        } else {
+            card.className = 'p-3.5 rounded-xl border border-gray-200 bg-slate-50 text-center transition-all';
+            if (titleSpan) titleSpan.className = 'text-[10px] font-bold text-slate-500 block uppercase font-mono';
+            if (icon) {
+                icon.className = 'my-2 text-2xl text-slate-300';
+                icon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+            }
+            if (plate) {
+                plate.className = 'text-xs font-bold text-slate-400 block font-mono';
+                plate.textContent = 'KOSONG';
+            }
+            if (status) {
+                status.className = 'text-[9px] text-slate-400 font-medium block mt-0.5';
+                status.textContent = 'Standby Slot';
+            }
+        }
+    });
+}
+
+function presetTMSTruckData() {
+    const plateInput = document.getElementById('input-tms-plate');
+    const driverInput = document.getElementById('input-tms-driver');
+    const transInput = document.getElementById('input-tms-transporter');
+    const dockInput = document.getElementById('input-tms-dock');
+    const bookingInput = document.getElementById('input-tms-booking');
+    const statusInput = document.getElementById('input-tms-status');
+
+    if (plateInput) plateInput.value = 'B 9482 XX';
+    if (driverInput) driverInput.value = 'Suryadi Pratama';
+    if (transInput) transInput.value = 'PT Intermodal Logistik Sejahtera';
+    if (dockInput) {
+        dockInput.value = 'DOCK-03';
+        highlightSelectedDock('DOCK-03', 'B 9482 XX');
+    }
+    if (bookingInput) bookingInput.value = 'TAS-BOOK-' + Math.floor(1000 + Math.random() * 9000);
+    if (statusInput) statusInput.value = 'ARRIVED';
+
+    Swal.fire({
+        toast: true,
+        position: 'top-end',
+        title: 'Form diisi preset default TMS!',
+        icon: 'info',
+        showConfirmButton: false,
+        timer: 1500,
+        background: '#ffffff',
+        color: '#0D1C42',
+        customClass: { popup: 'rounded-xl shadow-lg border border-gray-200' }
+    });
+}
+
+function submitTMSCheckIn() {
+    if (!currentCargoData) {
+        Swal.fire({
+            title: 'Kargo Tidak Ditemukan',
+            text: 'Data kargo aktif belum dimuat. Silakan muat ulang halaman.',
+            icon: 'error',
+            confirmButtonColor: '#087F8A'
+        });
+        return;
+    }
+
+    const plateInput = document.getElementById('input-tms-plate');
+    const driverInput = document.getElementById('input-tms-driver');
+    const transInput = document.getElementById('input-tms-transporter');
+    const dockInput = document.getElementById('input-tms-dock');
+    const bookingInput = document.getElementById('input-tms-booking');
+    const statusInput = document.getElementById('input-tms-status');
+
+    const truckPlate = plateInput ? plateInput.value.trim().toUpperCase() : 'B 9482 XX';
+    const driverName = driverInput ? driverInput.value.trim() : 'Suryadi Pratama';
+    const transporter = transInput ? transInput.value.trim() : 'PT Intermodal Logistik Sejahtera';
+    const dockSlot = dockInput ? dockInput.value : 'DOCK-03';
+    const bookingCode = bookingInput ? bookingInput.value.trim() : ('TAS-BOOK-' + Math.floor(1000 + Math.random() * 9000));
+    const truckStatus = statusInput ? statusInput.value : 'ARRIVED';
+
+    if (!truckPlate) {
+        Swal.fire({
+            title: 'Nomor Plat Wajib Diisi',
+            text: 'Silakan masukkan nomor plat truk kargo sebelum verifikasi.',
+            icon: 'warning',
+            confirmButtonColor: '#087F8A'
+        });
+        if (plateInput) plateInput.focus();
+        return;
+    }
+
+    if (!driverName) {
+        Swal.fire({
+            title: 'Nama Supir Wajib Diisi',
+            text: 'Silakan masukkan nama supir kargo sebelum verifikasi.',
+            icon: 'warning',
+            confirmButtonColor: '#087F8A'
+        });
+        if (driverInput) driverInput.focus();
+        return;
+    }
+
+    Swal.fire({
+        title: 'Verifikasi Truk di Gate TMS...',
+        text: `Memverifikasi kedatangan armada ${truckPlate} di ${dockSlot}...`,
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); },
+        background: '#ffffff',
+        color: '#0D1C42',
+        customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
+    });
+
+    const truckPayload = {
+        truck_plate: truckPlate,
+        driver_name: driverName,
+        transporter_company: transporter,
+        dock_slot: dockSlot,
+        booking_code: bookingCode,
+        status: truckStatus
+    };
+
+    fetch('api/simulate.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            cargo_id: currentCargoData.id,
+            stage: 1,
+            action: 'advance',
+            avsec_decision: 'CLEARED',
+            truck_data: truckPayload
+        })
+    })
+    .then(r => r.json())
+    .then(res => {
+        if (res.success) {
+            const truck = res.truck || truckPayload;
+
+            // Masukkan data baru ke baris pertama tabel antrean truk secara real-time
+            const tbody = document.getElementById('tmsTruckArrivalsTbody');
+            if (tbody) {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50/70 transition-colors bg-emerald-50/60 font-medium animate-pulse';
+                tr.innerHTML = `
+                    <td class="py-2.5 px-3 font-mono font-bold text-[#0D1C42]">${escapeHtml(truck.truck_plate)}</td>
+                    <td class="py-2.5 px-3 font-medium text-slate-800">${escapeHtml(truck.driver_name)}</td>
+                    <td class="py-2.5 px-3 text-slate-500">${escapeHtml(truck.transporter_company)}</td>
+                    <td class="py-2.5 px-3 font-mono font-bold text-[#087F8A]">${escapeHtml(truck.dock_slot)}</td>
+                    <td class="py-2.5 px-3 font-mono text-[11px] text-slate-500">${escapeHtml(truck.booking_code)}</td>
+                    <td class="py-2.5 px-3">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                            ${escapeHtml(truck.status)}
+                        </span>
+                    </td>
+                `;
+                tbody.insertBefore(tr, tbody.firstChild);
+
+                setTimeout(() => {
+                    tr.classList.remove('bg-emerald-50/60', 'animate-pulse');
+                }, 3000);
+            }
+
+            // Update badge total armada
+            const countBadge = document.getElementById('tms-truck-count-badge');
+            if (countBadge && tbody) {
+                const totalRows = tbody.querySelectorAll('tr').length;
+                countBadge.textContent = `${totalRows} Armada`;
+            }
+
+            // Highlight dock slot yang dipilih
+            highlightSelectedDock(dockSlot, truckPlate);
+
+            // Update local state currentCargoData
+            currentCargoData.current_stage = 1;
+            currentCargoData.status = 'REGISTERED';
+            currentCargoData.truck_plate = truckPlate;
+            currentCargoData.driver_name = driverName;
+            currentCargoData.transporter_company = transporter;
+            currentCargoData.dock_slot = dockSlot;
+            currentCargoData.booking_code = bookingCode;
+            if (truck.id) {
+                currentCargoData.truck_arrival_id = truck.id;
+            }
+
+            // Update JSON Inspector di kolom kanan
+            const tmsJson = {
+                "event_type": "TMS_TRUCK_GATE_CHECKIN",
+                "truck_id": truck.id || "TRK-INBOUND-01",
+                "truck_plate": truckPlate,
+                "driver_name": driverName,
+                "transporter": transporter,
+                "assigned_dock": dockSlot,
+                "booking_code": bookingCode,
+                "tas_booking_status": "CONFIRMED_VALID_TIMESLOT",
+                "gate_barrier_status": "BARRIER_OPENED",
+                "hardware_specs": {
+                    "rfid_gate_reader": "TMS UHF Long-Range RFID Reader (902-928 MHz)",
+                    "barrier_gate": "High-Speed Boom Barrier (1.2s opening speed)",
+                    "dock_leveler": "Hydraulic Pit Leveler 10-Ton Capacity"
+                },
+                "status": "CHECKIN_VERIFIED_SUCCESS",
+                "timestamp": new Date().toISOString()
+            };
+            const tmsDisp = document.getElementById('tmsPayloadDisplay');
+            if (tmsDisp) tmsDisp.textContent = JSON.stringify(tmsJson, null, 2);
+
+            const stageBadge = document.getElementById('tms-cargo-stage-badge');
+            if (stageBadge) stageBadge.textContent = `Tahap 1: REGISTERED`;
+
+            Swal.fire({
+                title: 'Truk Berhasil Diverifikasi!',
+                html: `
+                    <div class="text-xs text-left p-3.5 rounded-xl bg-slate-50 border border-gray-200 space-y-1.5 mt-2">
+                        <div class="flex justify-between items-center pb-1 border-b border-gray-200">
+                            <span class="text-slate-500 font-bold uppercase text-[10px]">Nomor Plat</span>
+                            <span class="text-[#0D1C42] font-mono font-black text-sm">${escapeHtml(truckPlate)}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-500 text-[11px]">Nama Supir:</span>
+                            <span class="font-bold text-slate-800">${escapeHtml(driverName)}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-500 text-[11px]">Vendor Logistik:</span>
+                            <span class="text-slate-700">${escapeHtml(transporter)}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-500 text-[11px]">Alokasi Dock:</span>
+                            <span class="font-bold text-[#087F8A] font-mono">${escapeHtml(dockSlot)}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-500 text-[11px]">Kode Booking:</span>
+                            <span class="font-mono text-slate-600">${escapeHtml(bookingCode)}</span>
+                        </div>
+                    </div>
+                    <p class="text-xs text-emerald-700 font-bold mt-3">
+                        <i class="fa-solid fa-circle-check mr-1 text-emerald-600"></i>
+                        Data masuk ke log antrean truk &amp; terhubung dengan kargo ${escapeHtml(currentCargoData.awb_number || '')}!
+                    </p>
+                `,
+                icon: 'success',
+                background: '#ffffff',
+                color: '#0D1C42',
+                confirmButtonColor: '#087F8A',
+                confirmButtonText: 'Lanjut ke CMS',
+                showCancelButton: true,
+                cancelButtonText: 'Tetap di TMS',
+                cancelButtonColor: '#94a3b8',
+                customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
+            }).then((result) => {
+                // Refresh stepper and timeline
+                initSimulation(currentCargoData.id, 1, result.isConfirmed ? 'cms' : 'tms');
+            });
+        } else {
+            Swal.fire({
+                title: 'Gagal Verifikasi!',
+                text: res.message || 'Terjadi kesalahan sistem TMS.',
+                icon: 'error',
+                background: '#ffffff',
+                color: '#0D1C42',
+                confirmButtonColor: '#087F8A'
+            });
+        }
+    })
+    .catch(err => {
+        Swal.fire({
+            title: 'Error Sistem',
+            text: 'Gagal memproses kedatangan truk: ' + err,
+            icon: 'error',
+            background: '#ffffff',
+            color: '#0D1C42',
+            confirmButtonColor: '#087F8A'
+        });
+    });
+}
+
 function renderTMSDashboard(c) {
     if (!c) return;
-    const plateEl = document.getElementById('tms-truck-plate');
-    if (plateEl) plateEl.textContent = c.truck_plate || 'B 9482 KXT';
-    const driverEl = document.getElementById('tms-truck-driver');
-    if (driverEl) driverEl.textContent = c.driver_name || 'Supir Terdaftar';
-    const transEl = document.getElementById('tms-truck-transporter');
-    if (transEl) transEl.textContent = c.transporter_company || 'PT Antar Lintas Logistik';
-    const dockEl = document.getElementById('tms-truck-dock');
-    if (dockEl) dockEl.textContent = c.dock_slot || 'DOCK-01';
-    const bookEl = document.getElementById('tms-truck-booking');
-    if (bookEl) bookEl.textContent = c.booking_code || 'TAS-BOOK-9482';
+
+    // Sinkronisasi data kargo ke input jika tersedia
+    const plateInput = document.getElementById('input-tms-plate');
+    if (plateInput && c.truck_plate) {
+        plateInput.value = c.truck_plate;
+    }
+    const driverInput = document.getElementById('input-tms-driver');
+    if (driverInput && c.driver_name) {
+        driverInput.value = c.driver_name;
+    }
+    const transInput = document.getElementById('input-tms-transporter');
+    if (transInput && c.transporter_company) {
+        transInput.value = c.transporter_company;
+    }
+    const dockInput = document.getElementById('input-tms-dock');
+    if (dockInput && c.dock_slot) {
+        dockInput.value = c.dock_slot;
+    }
+    const bookingInput = document.getElementById('input-tms-booking');
+    if (bookingInput && c.booking_code) {
+        bookingInput.value = c.booking_code;
+    }
+
     const stageBadge = document.getElementById('tms-cargo-stage-badge');
     if (stageBadge) stageBadge.textContent = `Tahap ${c.current_stage}: ${c.status}`;
 
-    const dock1Plate = document.getElementById('tms-dock1-plate');
-    if (dock1Plate) dock1Plate.textContent = c.truck_plate || 'B 9482 KXT';
+    const activeDock = (dockInput ? dockInput.value : c.dock_slot) || 'DOCK-03';
+    const activePlate = (plateInput ? plateInput.value : c.truck_plate) || 'B 9482 XX';
+    highlightSelectedDock(activeDock, activePlate);
 
     const tmsJson = {
         "event_type": "TMS_TRUCK_GATE_CHECKIN",
         "truck_id": c.truck_arrival_id || "TRK-INBOUND-01",
-        "truck_plate": c.truck_plate || "B 9482 KXT",
-        "driver_name": c.driver_name || "Supir Terdaftar",
-        "transporter": c.transporter_company || "PT Antar Lintas Logistik",
-        "assigned_dock": c.dock_slot || "DOCK-01",
-        "booking_code": c.booking_code || "TAS-BOOK-9482",
+        "truck_plate": activePlate,
+        "driver_name": (driverInput ? driverInput.value : c.driver_name) || "Suryadi Pratama",
+        "transporter": (transInput ? transInput.value : c.transporter_company) || "PT Intermodal Logistik Sejahtera",
+        "assigned_dock": activeDock,
+        "booking_code": (bookingInput ? bookingInput.value : c.booking_code) || "TAS-BOOK-9482",
         "tas_booking_status": "CONFIRMED_VALID_TIMESLOT",
         "gate_barrier_status": "BARRIER_OPENED",
         "hardware_specs": {

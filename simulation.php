@@ -511,82 +511,139 @@ include __DIR__ . '/includes/header.php';
                         </div>
 
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                            <div class="p-3.5 rounded-xl border border-emerald-300 bg-emerald-50/40 text-center relative overflow-hidden">
-                                <span class="text-[10px] font-bold text-emerald-700 block uppercase font-mono">DOCK 01</span>
-                                <div class="my-2 text-2xl text-emerald-600"><i class="fa-solid fa-truck"></i></div>
-                                <span class="text-xs font-bold text-[#0D1C42] block" id="tms-dock1-plate">B 9482 KXT</span>
-                                <span class="text-[9px] text-emerald-700 font-medium block mt-0.5">Bongkar Pallet SSCC</span>
+                            <div id="dock-card-DOCK-01" class="p-3.5 rounded-xl border border-gray-200 bg-slate-50 text-center transition-all">
+                                <span class="text-[10px] font-bold text-slate-500 block uppercase font-mono">DOCK 01</span>
+                                <div id="dock-icon-DOCK-01" class="my-2 text-2xl text-slate-300"><i class="fa-solid fa-circle-check"></i></div>
+                                <span id="dock-plate-DOCK-01" class="text-xs font-bold text-slate-400 block font-mono">KOSONG</span>
+                                <span id="dock-status-DOCK-01" class="text-[9px] text-slate-400 font-medium block mt-0.5">Standby Slot</span>
                             </div>
-                            <div class="p-3.5 rounded-xl border border-gray-200 bg-slate-50 text-center">
+                            <div id="dock-card-DOCK-02" class="p-3.5 rounded-xl border border-gray-200 bg-slate-50 text-center transition-all">
                                 <span class="text-[10px] font-bold text-slate-500 block uppercase font-mono">DOCK 02</span>
-                                <div class="my-2 text-2xl text-slate-300"><i class="fa-solid fa-circle-check"></i></div>
-                                <span class="text-xs font-bold text-slate-400 block">KOSONG</span>
-                                <span class="text-[9px] text-slate-400 font-medium block mt-0.5">Standby Slot</span>
+                                <div id="dock-icon-DOCK-02" class="my-2 text-2xl text-slate-300"><i class="fa-solid fa-circle-check"></i></div>
+                                <span id="dock-plate-DOCK-02" class="text-xs font-bold text-slate-400 block font-mono">KOSONG</span>
+                                <span id="dock-status-DOCK-02" class="text-[9px] text-slate-400 font-medium block mt-0.5">Standby Slot</span>
                             </div>
-                            <div class="p-3.5 rounded-xl border border-teal-200 bg-teal-50/30 text-center">
-                                <span class="text-[10px] font-bold text-[#087F8A] block uppercase font-mono">DOCK 03</span>
-                                <div class="my-2 text-2xl text-[#087F8A]"><i class="fa-solid fa-clock"></i></div>
-                                <span class="text-xs font-bold text-[#0D1C42] block">B 9123 PO</span>
-                                <span class="text-[9px] text-[#087F8A] font-medium block mt-0.5">Terjadwal (TAS Slot)</span>
+                            <div id="dock-card-DOCK-03" class="p-3.5 rounded-xl border border-emerald-300 bg-emerald-50/50 text-center transition-all shadow-sm">
+                                <span class="text-[10px] font-bold text-emerald-700 block uppercase font-mono">DOCK 03</span>
+                                <div id="dock-icon-DOCK-03" class="my-2 text-2xl text-emerald-600"><i class="fa-solid fa-truck"></i></div>
+                                <span id="dock-plate-DOCK-03" class="text-xs font-bold text-[#0D1C42] block font-mono">B 9482 XX</span>
+                                <span id="dock-status-DOCK-03" class="text-[9px] text-emerald-700 font-bold block mt-0.5">Bongkar Pallet SSCC</span>
                             </div>
-                            <div class="p-3.5 rounded-xl border border-gray-200 bg-slate-50 text-center">
+                            <div id="dock-card-DOCK-04" class="p-3.5 rounded-xl border border-gray-200 bg-slate-50 text-center transition-all">
                                 <span class="text-[10px] font-bold text-slate-500 block uppercase font-mono">DOCK 04</span>
-                                <div class="my-2 text-2xl text-slate-300"><i class="fa-solid fa-circle-check"></i></div>
-                                <span class="text-xs font-bold text-slate-400 block">KOSONG</span>
-                                <span class="text-[9px] text-slate-400 font-medium block mt-0.5">Standby Slot</span>
+                                <div id="dock-icon-DOCK-04" class="my-2 text-2xl text-slate-300"><i class="fa-solid fa-circle-check"></i></div>
+                                <span id="dock-plate-DOCK-04" class="text-xs font-bold text-slate-400 block font-mono">KOSONG</span>
+                                <span id="dock-status-DOCK-04" class="text-[9px] text-slate-400 font-medium block mt-0.5">Standby Slot</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Active Cargo's Truck Check-In & Action Console -->
-                    <div class="bg-white p-6 rounded-2xl border border-gray-200/90 shadow-sm">
-                        <div class="flex items-center justify-between pb-3 mb-4 border-b border-gray-100">
-                            <h3 class="text-xs font-bold text-[#0D1C42] uppercase tracking-wider flex items-center">
-                                <i class="fa-solid fa-id-card-clip text-[#087F8A] mr-2 text-sm"></i>
-                                Data Armada Truk Kargo Terpilih
-                            </h3>
-                            <span id="tms-cargo-stage-badge" class="text-[10px] font-mono text-[#087F8A] bg-teal-50 px-2.5 py-1 rounded-full border border-teal-200 font-bold">
-                                Tahap 1
-                            </span>
-                        </div>
-
-                        <!-- Truck Detail Grid -->
-                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-5 text-xs">
-                            <div class="p-3 rounded-xl bg-slate-50 border border-gray-200">
-                                <span class="text-[10px] text-slate-400 block uppercase font-bold">Nomor Plat Polisi</span>
-                                <span id="tms-truck-plate" class="text-sm font-mono font-extrabold text-[#0D1C42] block mt-0.5">-</span>
+                    <!-- Active Cargo's Truck Check-In & Action Console (Input Mandiri Staff) -->
+                    <div class="bg-white p-6 rounded-2xl border border-gray-200/90 shadow-sm relative overflow-hidden">
+                        
+                        <!-- Header with Input Badge & Quick Preset Button -->
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 mb-4 border-b border-gray-100 gap-2">
+                            <div class="flex items-center space-x-2">
+                                <i class="fa-solid fa-id-card-clip text-[#087F8A] text-base"></i>
+                                <h3 class="text-xs font-bold text-[#0D1C42] uppercase tracking-wider">
+                                    Data Armada Truk Kargo Terpilih
+                                </h3>
+                                <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200 uppercase tracking-wide">
+                                    Input Staff Operasional
+                                </span>
                             </div>
-                            <div class="p-3 rounded-xl bg-slate-50 border border-gray-200">
-                                <span class="text-[10px] text-slate-400 block uppercase font-bold">Nama Supir Terdaftar</span>
-                                <span id="tms-truck-driver" class="font-bold text-slate-800 block mt-0.5">-</span>
-                            </div>
-                            <div class="p-3 rounded-xl bg-slate-50 border border-gray-200">
-                                <span class="text-[10px] text-slate-400 block uppercase font-bold">Vendor Transportasi</span>
-                                <span id="tms-truck-transporter" class="font-bold text-slate-800 block mt-0.5">-</span>
-                            </div>
-                            <div class="p-3 rounded-xl bg-slate-50 border border-gray-200">
-                                <span class="text-[10px] text-slate-400 block uppercase font-bold">Alokasi Dock Unloading</span>
-                                <span id="tms-truck-dock" class="font-mono font-bold text-emerald-700 block mt-0.5">-</span>
-                            </div>
-                            <div class="p-3 rounded-xl bg-slate-50 border border-gray-200">
-                                <span class="text-[10px] text-slate-400 block uppercase font-bold">Kode Booking TAS</span>
-                                <span id="tms-truck-booking" class="font-mono font-bold text-[#087F8A] block mt-0.5">-</span>
-                            </div>
-                            <div class="p-3 rounded-xl bg-slate-50 border border-gray-200">
-                                <span class="text-[10px] text-slate-400 block uppercase font-bold">Status TAS Gate</span>
-                                <span id="tms-truck-status" class="inline-block mt-0.5 px-2.5 py-0.5 rounded-full font-bold text-[10px] bg-teal-50 text-[#087F8A] border border-teal-200">
-                                    ARRIVED
+                            <div class="flex items-center space-x-2">
+                                <button type="button" onclick="presetTMSTruckData()" class="px-2.5 py-1 rounded-lg text-[10px] font-bold text-[#087F8A] bg-teal-50 hover:bg-teal-100 border border-teal-200 transition-all flex items-center gap-1 shadow-sm" title="Isi Preset Otomatis">
+                                    <i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i>
+                                    <span>Isi Preset Cepat</span>
+                                </button>
+                                <span id="tms-cargo-stage-badge" class="text-[10px] font-mono text-[#087F8A] bg-teal-50 px-2.5 py-1 rounded-full border border-teal-200 font-bold">
+                                    Tahap 1
                                 </span>
                             </div>
                         </div>
 
-                        <!-- TMS Interactive Triggers -->
-                        <div class="pt-2 flex flex-wrap items-center gap-3">
-                            <button onclick="executeStageAction(1, 'CLEARED')" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-bold text-xs shadow-md shadow-teal-500/25 transition-all flex items-center transform hover:-translate-y-0.5">
-                                <i class="fa-solid fa-truck mr-2"></i>
-                                <span>Verifikasi Kedatangan Truk di Gate (Tahap 1)</span>
-                            </button>
-                            <button onclick="switchSystemDashboard('cms')" class="px-4 py-2.5 rounded-xl bg-teal-50 hover:bg-teal-100 text-[#087F8A] text-xs font-bold border border-teal-200 shadow-sm transition-all flex items-center">
+                        <!-- Truck Input Form Grid (Dapat diinput sendiri oleh staff) -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 mb-5 text-xs">
+                            
+                            <!-- Input 1: Nomor Plat Polisi -->
+                            <div class="p-3.5 rounded-xl bg-slate-50 border border-gray-200 focus-within:border-[#0CA1AF] focus-within:bg-teal-50/20 transition-all">
+                                <label for="input-tms-plate" class="text-[10px] text-slate-500 block uppercase font-bold tracking-wider mb-1">
+                                    <i class="fa-solid fa-car text-[#087F8A] mr-1"></i> Nomor Plat Polisi
+                                </label>
+                                <input type="text" id="input-tms-plate" oninput="highlightSelectedDock(document.getElementById('input-tms-dock').value, this.value)" class="w-full bg-white border border-gray-300 focus:border-[#087F8A] focus:ring-1 focus:ring-[#087F8A] rounded-lg px-3 py-1.5 text-xs font-mono font-black text-[#0D1C42] uppercase focus:outline-none transition-all shadow-sm" placeholder="Contoh: B 9482 XX" value="B 9482 XX">
+                            </div>
+
+                            <!-- Input 2: Nama Supir Terdaftar -->
+                            <div class="p-3.5 rounded-xl bg-slate-50 border border-gray-200 focus-within:border-[#0CA1AF] focus-within:bg-teal-50/20 transition-all">
+                                <label for="input-tms-driver" class="text-[10px] text-slate-500 block uppercase font-bold tracking-wider mb-1">
+                                    <i class="fa-solid fa-user text-[#087F8A] mr-1"></i> Nama Supir Terdaftar
+                                </label>
+                                <input type="text" id="input-tms-driver" class="w-full bg-white border border-gray-300 focus:border-[#087F8A] focus:ring-1 focus:ring-[#087F8A] rounded-lg px-3 py-1.5 text-xs font-bold text-slate-800 focus:outline-none transition-all shadow-sm" placeholder="Contoh: Suryadi Pratama" value="Suryadi Pratama">
+                            </div>
+
+                            <!-- Input 3: Vendor Transportasi -->
+                            <div class="p-3.5 rounded-xl bg-slate-50 border border-gray-200 focus-within:border-[#0CA1AF] focus-within:bg-teal-50/20 transition-all">
+                                <label for="input-tms-transporter" class="text-[10px] text-slate-500 block uppercase font-bold tracking-wider mb-1">
+                                    <i class="fa-solid fa-building text-[#087F8A] mr-1"></i> Vendor Transportasi
+                                </label>
+                                <input type="text" id="input-tms-transporter" class="w-full bg-white border border-gray-300 focus:border-[#087F8A] focus:ring-1 focus:ring-[#087F8A] rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-800 focus:outline-none transition-all shadow-sm" placeholder="Contoh: PT Intermodal Logistik Sejahtera" value="PT Intermodal Logistik Sejahtera">
+                            </div>
+
+                            <!-- Input 4: Alokasi Dock Unloading -->
+                            <div class="p-3.5 rounded-xl bg-slate-50 border border-gray-200 focus-within:border-[#0CA1AF] focus-within:bg-teal-50/20 transition-all">
+                                <label for="input-tms-dock" class="text-[10px] text-slate-500 block uppercase font-bold tracking-wider mb-1">
+                                    <i class="fa-solid fa-warehouse text-[#087F8A] mr-1"></i> Alokasi Dock Unloading
+                                </label>
+                                <select id="input-tms-dock" onchange="highlightSelectedDock(this.value, document.getElementById('input-tms-plate').value)" class="w-full bg-white border border-gray-300 focus:border-[#087F8A] focus:ring-1 focus:ring-[#087F8A] rounded-lg px-3 py-1.5 text-xs font-mono font-bold text-emerald-700 focus:outline-none cursor-pointer transition-all shadow-sm">
+                                    <option value="DOCK-01">DOCK-01 (Hydraulic Leveler)</option>
+                                    <option value="DOCK-02">DOCK-02 (Hydraulic Leveler)</option>
+                                    <option value="DOCK-03" selected>DOCK-03 (Hydraulic Leveler)</option>
+                                    <option value="DOCK-04">DOCK-04 (Hydraulic Leveler)</option>
+                                </select>
+                            </div>
+
+                            <!-- Input 5: Kode Booking TAS -->
+                            <div class="p-3.5 rounded-xl bg-slate-50 border border-gray-200 focus-within:border-[#0CA1AF] focus-within:bg-teal-50/20 transition-all">
+                                <div class="flex items-center justify-between mb-1">
+                                    <label for="input-tms-booking" class="text-[10px] text-slate-500 block uppercase font-bold tracking-wider">
+                                        <i class="fa-solid fa-barcode text-[#087F8A] mr-1"></i> Kode Booking TAS
+                                    </label>
+                                    <button type="button" onclick="generateRandomTASBooking()" class="text-[9px] text-[#087F8A] hover:underline font-bold flex items-center gap-1" title="Generate Kode Acak">
+                                        <i class="fa-solid fa-dice text-[10px]"></i> Acak
+                                    </button>
+                                </div>
+                                <input type="text" id="input-tms-booking" class="w-full bg-white border border-gray-300 focus:border-[#087F8A] focus:ring-1 focus:ring-[#087F8A] rounded-lg px-3 py-1.5 text-xs font-mono font-bold text-[#087F8A] focus:outline-none transition-all shadow-sm" placeholder="Contoh: TAS-BOOK-9482" value="TAS-BOOK-9482">
+                            </div>
+
+                            <!-- Input 6: Status TAS Gate -->
+                            <div class="p-3.5 rounded-xl bg-slate-50 border border-gray-200 focus-within:border-[#0CA1AF] focus-within:bg-teal-50/20 transition-all">
+                                <label for="input-tms-status" class="text-[10px] text-slate-500 block uppercase font-bold tracking-wider mb-1">
+                                    <i class="fa-solid fa-shield text-[#087F8A] mr-1"></i> Status TAS Gate
+                                </label>
+                                <select id="input-tms-status" class="w-full bg-white border border-gray-300 focus:border-[#087F8A] focus:ring-1 focus:ring-[#087F8A] rounded-lg px-3 py-1.5 text-xs font-extrabold text-teal-800 focus:outline-none cursor-pointer transition-all shadow-sm">
+                                    <option value="ARRIVED" selected>ARRIVED (Tiba di Gerbang)</option>
+                                    <option value="SCHEDULED">SCHEDULED (Terjadwal)</option>
+                                    <option value="UNLOADING">UNLOADING (Sedang Bongkar)</option>
+                                    <option value="COMPLETED">COMPLETED (Selesai Bongkar)</option>
+                                </select>
+                            </div>
+
+                        </div>
+
+                        <!-- TMS Action Buttons -->
+                        <div class="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100">
+                            <div class="flex flex-wrap items-center gap-2.5">
+                                <button type="button" onclick="submitTMSCheckIn()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-bold text-xs shadow-md shadow-teal-500/25 transition-all flex items-center transform hover:-translate-y-0.5">
+                                    <i class="fa-solid fa-truck mr-2"></i>
+                                    <span>Verifikasi Kedatangan Truk di Gate (Tahap 1)</span>
+                                </button>
+                                <button type="button" onclick="presetTMSTruckData()" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-600 hover:text-[#087F8A] text-xs font-bold border border-gray-300 shadow-sm transition-colors flex items-center">
+                                    <i class="fa-solid fa-rotate-left mr-1.5 text-xs"></i>
+                                    <span>Reset Form</span>
+                                </button>
+                            </div>
+                            <button type="button" onclick="switchSystemDashboard('cms')" class="px-4 py-2.5 rounded-xl bg-teal-50 hover:bg-teal-100 text-[#087F8A] text-xs font-bold border border-teal-200 shadow-sm transition-all flex items-center">
                                 <span>Lanjut ke Dashboard CMS (Tahap 2 &amp; 3)</span>
                                 <i class="fa-solid fa-arrow-right ml-1.5 text-xs"></i>
                             </button>
@@ -600,7 +657,7 @@ include __DIR__ . '/includes/header.php';
                                 <i class="fa-solid fa-list-check text-[#087F8A] mr-2 text-sm"></i>
                                 Log Antrean Kedatangan Truk (Database: truck_arrivals)
                             </h3>
-                            <span class="text-[10px] font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-gray-200 font-bold"><?= count($trucks) ?> Armada</span>
+                            <span id="tms-truck-count-badge" class="text-[10px] font-mono text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full border border-gray-200 font-bold"><?= count($trucks) ?> Armada</span>
                         </div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-left text-xs">
@@ -614,7 +671,7 @@ include __DIR__ . '/includes/header.php';
                                         <th class="py-2.5 px-3">Status</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-gray-100 text-slate-700">
+                                <tbody id="tmsTruckArrivalsTbody" class="divide-y divide-gray-100 text-slate-700">
                                     <?php foreach ($trucks as $trk): ?>
                                         <tr class="hover:bg-slate-50/70 transition-colors">
                                             <td class="py-2 px-3 font-mono font-bold text-[#0D1C42]"><?= htmlspecialchars($trk['truck_plate']) ?></td>

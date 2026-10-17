@@ -47,8 +47,9 @@ try {
         // Jalankan single stage tertentu
         $suspectParam = ($actionType === 'force_suspect') ? 'SUSPECT' : ($input['avsec_decision'] ?? 'CLEARED');
         $stageToRun = ($targetStage > 0) ? $targetStage : ($cargo['current_stage'] + 1);
+        $truckData = $input['truck_data'] ?? null;
         
-        $res = executeStage($db, $cargoId, $stageToRun, $suspectParam);
+        $res = executeStage($db, $cargoId, $stageToRun, $suspectParam, $truckData);
         jsonResponse($res);
     }
 
@@ -59,7 +60,7 @@ try {
 /**
  * Eksekutor Tiap Tahapan Simulasi
  */
-function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED') {
+function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $truckData = null) {
     $stmt = $db->prepare("SELECT * FROM cargo_shipments WHERE id = ?");
     $stmt->execute([$cargoId]);
     $cargo = $stmt->fetch();
@@ -81,28 +82,51 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED') {
     try {
         switch ($stage) {
             case 1: // TAHAP 1: Kedatangan Truk & Booking Slot (TMS / TAS Gate)
+                // Ambil data input dari staff atau gunakan data default
+                $truckPlate = !empty($truckData['truck_plate']) ? trim($truckData['truck_plate']) : 'B 9482 XX';
+                $driverName = !empty($truckData['driver_name']) ? trim($truckData['driver_name']) : 'Suryadi Pratama';
+                $transporter = !empty($truckData['transporter_company']) ? trim($truckData['transporter_company']) : 'PT Intermodal Logistik Sejahtera';
+                $dockSlot = !empty($truckData['dock_slot']) ? trim($truckData['dock_slot']) : 'DOCK-03';
+                $bookingCode = !empty($truckData['booking_code']) ? trim($truckData['booking_code']) : ('TAS-SLOT-' . rand(1000, 9999));
+                $truckStatus = !empty($truckData['status']) ? trim($truckData['status']) : 'ARRIVED';
+
+                // Buat record baru di tabel truck_arrivals
+                $truckId = 'TRK-' . date('Ymd') . '-' . rand(100, 999);
+                $stmtInsertTruck = $db->prepare("
+                    INSERT INTO truck_arrivals (id, truck_plate, driver_name, transporter_company, dock_slot, booking_code, arrival_time, status)
+                    VALUES (?, ?, ?, ?, ?, ?, NOW(), ?)
+                ");
+                $stmtInsertTruck->execute([
+                    $truckId, $truckPlate, $driverName, $transporter, $dockSlot, $bookingCode, $truckStatus
+                ]);
+
+                // Hubungkan ke cargo_shipments
                 $update = $db->prepare("
                     UPDATE cargo_shipments 
-                    SET current_stage = 1, status = 'REGISTERED' 
+                    SET current_stage = 1, status = 'REGISTERED', truck_arrival_id = ?
                     WHERE id = ?
                 ");
-                $update->execute([$cargoId]);
+                $update->execute([$truckId, $cargoId]);
 
-                if (!empty($cargo['truck_arrival_id'])) {
-                    $db->prepare("
-                        UPDATE truck_arrivals 
-                        SET status = 'ARRIVED' 
-                        WHERE id = ?
-                    ")->execute([$cargo['truck_arrival_id']]);
-                }
+                $newTruckRecord = [
+                    'id' => $truckId,
+                    'truck_plate' => $truckPlate,
+                    'driver_name' => $driverName,
+                    'transporter_company' => $transporter,
+                    'dock_slot' => $dockSlot,
+                    'booking_code' => $bookingCode,
+                    'arrival_time' => date('Y-m-d H:i:s'),
+                    'status' => $truckStatus
+                ];
 
                 $jsonPayload = [
                     "event_type" => "TMS_TRUCK_GATE_CHECKIN",
-                    "truck_id" => $cargo['truck_arrival_id'] ?? 'TRK-INBOUND-01',
-                    "truck_plate" => $cargo['truck_plate'] ?? 'B 9482 KXT',
-                    "driver_name" => $cargo['driver_name'] ?? 'Supir Terdaftar',
-                    "transporter" => $cargo['transporter_company'] ?? 'PT Antar Lintas Logistik',
-                    "assigned_dock" => $cargo['dock_slot'] ?? 'DOCK-04',
+                    "truck_id" => $truckId,
+                    "truck_plate" => $truckPlate,
+                    "driver_name" => $driverName,
+                    "transporter" => $transporter,
+                    "assigned_dock" => $dockSlot,
+                    "booking_code" => $bookingCode,
                     "tas_booking_status" => "CONFIRMED_VALID_TIMESLOT",
                     "gate_barrier_status" => "BARRIER_OPENED",
                     "hardware_specs" => [
@@ -115,7 +139,7 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED') {
 
                 $responsePayload = [
                     "status" => "200_OK",
-                    "message" => "Truk berhasil diverifikasi di gerbang TAS & diarahkan ke " . ($cargo['dock_slot'] ?? 'DOCK-04'),
+                    "message" => "Truk " . $truckPlate . " berhasil diverifikasi di gerbang TAS & dialokasikan ke " . $dockSlot,
                     "tms_pass_token" => "TAS-TOKEN-" . strtoupper(bin2hex(random_bytes(4))),
                     "next_stage" => "UNLOAD_TO_RFID_GATE_CONVEYOR"
                 ];
@@ -462,12 +486,16 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED') {
         }
 
         $db->commit();
-        return [
+        $res = [
             'success' => true,
             'message' => 'Tahap ' . $stage . ' berhasil diproses',
             'stage' => $stage,
             'cargo_id' => $cargoId
         ];
+        if (isset($newTruckRecord)) {
+            $res['truck'] = $newTruckRecord;
+        }
+        return $res;
 
     } catch (Exception $e) {
         $db->rollBack();
