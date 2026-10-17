@@ -607,6 +607,53 @@ include __DIR__ . '/includes/header.php';
                             </div>
                         </div>
 
+                        <!-- Quick Preset Truck Selector (Beda Truk -> Otomatis Beda Kargo & Beda JSON) -->
+                        <div class="mb-4 p-3 bg-slate-50/90 rounded-xl border border-gray-200">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-2 mb-2 border-b border-gray-200/80 gap-1">
+                                <span class="text-[10px] font-bold text-slate-600 uppercase tracking-wider flex items-center">
+                                    <i class="fa-solid fa-truck-fast text-[#087F8A] mr-1.5 text-xs"></i>
+                                    Pilih Armada Truk (Otomatis Generate Muatan &amp; JSON Spesifik di CMS):
+                                </span>
+                                <span class="text-[9px] text-[#087F8A] font-bold bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
+                                    Simulasi Multi-Armada
+                                </span>
+                            </div>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                <button type="button" onclick="selectTruckPreset('B 8888 KGO')" class="p-2.5 rounded-xl bg-white hover:bg-teal-50/60 border border-gray-200 hover:border-teal-300 text-left transition-all shadow-xs group cursor-pointer">
+                                    <div class="flex items-center justify-between">
+                                        <span class="font-mono font-bold text-[#0D1C42] text-xs group-hover:text-[#087F8A]">B 8888 KGO</span>
+                                        <span class="text-[8.5px] px-1.5 py-0.2 rounded font-bold bg-teal-50 text-[#087F8A]">Truk 1</span>
+                                    </div>
+                                    <div class="text-[10px] text-slate-700 font-semibold truncate mt-0.5">Tekstil Ekspor</div>
+                                    <div class="text-[9px] text-slate-400">50 Koli &bull; 350 kg</div>
+                                </button>
+                                <button type="button" onclick="selectTruckPreset('B 9182 KXA')" class="p-2.5 rounded-xl bg-white hover:bg-teal-50/60 border border-gray-200 hover:border-teal-300 text-left transition-all shadow-xs group cursor-pointer">
+                                    <div class="flex items-center justify-between">
+                                        <span class="font-mono font-bold text-[#0D1C42] text-xs group-hover:text-[#087F8A]">B 9182 KXA</span>
+                                        <span class="text-[8.5px] px-1.5 py-0.2 rounded font-bold bg-emerald-50 text-emerald-700">Truk 2</span>
+                                    </div>
+                                    <div class="text-[10px] text-slate-700 font-semibold truncate mt-0.5">Farmasi &amp; Vaksin</div>
+                                    <div class="text-[9px] text-slate-400">30 Koli &bull; 185 kg</div>
+                                </button>
+                                <button type="button" onclick="selectTruckPreset('B 4412 PQL')" class="p-2.5 rounded-xl bg-white hover:bg-teal-50/60 border border-gray-200 hover:border-teal-300 text-left transition-all shadow-xs group cursor-pointer">
+                                    <div class="flex items-center justify-between">
+                                        <span class="font-mono font-bold text-[#0D1C42] text-xs group-hover:text-[#087F8A]">B 4412 PQL</span>
+                                        <span class="text-[8.5px] px-1.5 py-0.2 rounded font-bold bg-blue-50 text-blue-700">Truk 3</span>
+                                    </div>
+                                    <div class="text-[10px] text-slate-700 font-semibold truncate mt-0.5">Komponen Chip</div>
+                                    <div class="text-[9px] text-slate-400">60 Koli &bull; 420 kg</div>
+                                </button>
+                                <button type="button" onclick="selectTruckPreset('B 7777 WXY')" class="p-2.5 rounded-xl bg-white hover:bg-teal-50/60 border border-gray-200 hover:border-teal-300 text-left transition-all shadow-xs group cursor-pointer">
+                                    <div class="flex items-center justify-between">
+                                        <span class="font-mono font-bold text-[#0D1C42] text-xs group-hover:text-[#087F8A]">B 7777 WXY</span>
+                                        <span class="text-[8.5px] px-1.5 py-0.2 rounded font-bold bg-amber-50 text-amber-700">Truk 4</span>
+                                    </div>
+                                    <div class="text-[10px] text-slate-700 font-semibold truncate mt-0.5">Buah Segar (Perishable)</div>
+                                    <div class="text-[9px] text-slate-400">45 Koli &bull; 260 kg</div>
+                                </button>
+                            </div>
+                        </div>
+
                         <!-- Truck Input Form Grid (Dapat diinput sendiri oleh staff) -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 mb-5 text-xs">
                             
@@ -1153,35 +1200,41 @@ include __DIR__ . '/includes/header.php';
                 <!-- Left Column: Dual-View Console & CSD Certificate (7 cols) -->
                 <div class="lg:col-span-7 space-y-6">
                     
-                    <!-- Dual-View Visual Screening Console -->
+                    <!-- AVSEC X-Ray Screening Stream Console (Menggantikan Hardware Fisik dengan Data JSON) -->
                     <div class="bg-white p-6 rounded-2xl border border-gray-200/90 shadow-sm">
-                        <div class="flex items-center justify-between pb-3 mb-4 border-b border-gray-100">
-                            <h3 class="text-xs font-bold text-[#0D1C42] uppercase tracking-wider flex items-center">
-                                <i class="fa-solid fa-x-ray text-[#087F8A] mr-2 text-sm"></i>
-                                Visual Konsol Sinar-X Dual-View (320kV Spectrum)
-                            </h3>
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 mb-4 border-b border-gray-100 gap-2">
+                            <div class="flex items-center space-x-2">
+                                <i class="fa-solid fa-shield-halved text-[#087F8A] text-base"></i>
+                                <h3 class="text-xs font-bold text-[#0D1C42] uppercase tracking-wider">
+                                    Pemeriksaan Keamanan AVSEC (Data Stream JSON &amp; Sertifikasi CSD)
+                                </h3>
+                            </div>
                             <span id="avsec-status-indicator" class="text-[10px] font-mono px-3 py-1 rounded-full font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                                 STATUS: CLEARED
                             </span>
                         </div>
 
-                        <!-- Density Color Spectrum Indicator -->
-                        <div class="grid grid-cols-3 gap-2 mb-4 text-[11px] text-center">
-                            <div class="p-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-900">
-                                <span class="font-bold block text-xs">Organik (Oranye)</span>
-                                <span class="text-[9px] text-amber-700">Makanan, Tekstil, Farmasi (Z=7-8)</span>
+                        <!-- Dark JSON Stream Console for AVSEC -->
+                        <div class="p-4 rounded-xl bg-[#0A1628] border border-slate-800 mb-5 shadow-inner relative overflow-hidden">
+                            <div class="flex items-center justify-between pb-2.5 mb-2.5 border-b border-slate-800 text-xs font-mono">
+                                <div class="flex items-center space-x-2">
+                                    <span class="flex h-2.5 w-2.5 relative">
+                                        <span id="avsec-json-indicator-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                        <span id="avsec-json-indicator-dot" class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                                    </span>
+                                    <span class="text-slate-200 font-bold text-[11px] tracking-wide">STREAM: AVSEC_XRAY_SECURITY_EVALUATION.json</span>
+                                    <span class="text-[10px] text-teal-400 bg-teal-950/60 px-1.5 py-0.5 rounded border border-teal-800/60">ICAO Annex 17 / JSON</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span id="avsec-json-status-tag" class="text-[10px] font-mono text-emerald-300 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/80">LIVE SCREENING ACTIVE</span>
+                                </div>
                             </div>
-                            <div class="p-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-900">
-                                <span class="font-bold block text-xs">Campuran (Hijau)</span>
-                                <span class="text-[9px] text-emerald-700">Aluminium, Kaca, Baterai Ringan</span>
-                            </div>
-                            <div class="p-2 rounded-lg bg-blue-50 border border-blue-200 text-blue-900">
-                                <span class="font-bold block text-xs">Anorganik (Biru)</span>
-                                <span class="text-[9px] text-blue-700">Baja, Tembaga, Kepadatan Tinggi (Z>18)</span>
-                            </div>
+
+                            <!-- JSON Raw Viewer for AVSEC -->
+                            <pre id="avsec-json-stream-display" class="font-mono text-[11px] leading-relaxed text-emerald-400 bg-[#060D1A] p-3.5 rounded-xl border border-slate-800/90 overflow-x-auto max-h-56 scrollbar-thin select-all"><code>// Memuat stream data keamanan AVSEC...</code></pre>
                         </div>
 
-                        <!-- Interactive CSD Certificate Card / Suspect Vault Warning -->
+                        <!-- Interactive CSD Certificate Card (Ditampilkan saat CLEARED) -->
                         <div id="avsec-certificate-wrap" class="p-5 rounded-2xl border border-emerald-300 bg-emerald-50/50 shadow-sm mb-5">
                             <div class="flex items-start justify-between">
                                 <div class="flex items-center space-x-3">
@@ -1200,19 +1253,41 @@ include __DIR__ . '/includes/header.php';
                             </div>
                             <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4 pt-3 border-t border-emerald-200/80 text-[11px] text-slate-700">
                                 <div><span class="text-slate-400 block text-[9px] font-bold">PETUGAS SCREENER:</span> <strong id="avsec-inspector-id">AVSEC-OPR-07</strong></div>
-                                <div><span class="text-slate-400 block text-[9px] font-bold">METODE SCREENING:</span> <strong>XRY (Dual-View)</strong></div>
+                                <div><span class="text-slate-400 block text-[9px] font-bold">METODE SCREENING:</span> <strong>XRY (Dual-View 320kV)</strong></div>
                                 <div><span class="text-slate-400 block text-[9px] font-bold">WAKTU CLEARANCE:</span> <strong id="avsec-clearance-time">LIVE VALIDATED</strong></div>
                             </div>
                         </div>
 
-                        <!-- Suspect Warning Box (Hidden by default, shown when SUSPECT) -->
-                        <div id="avsec-suspect-warning-wrap" class="p-5 rounded-2xl border-2 border-rose-400 bg-rose-50 shadow-md mb-5 hidden animate-pulse">
-                            <div class="flex items-center space-x-3 text-rose-700">
-                                <i class="fa-solid fa-triangle-exclamation text-3xl"></i>
+                        <!-- Suspect Warning & Ruang Khusus Karantina Box (Ditampilkan saat SUSPECT) -->
+                        <div id="avsec-suspect-warning-wrap" class="p-5 rounded-2xl border-2 border-rose-400 bg-rose-50 shadow-md mb-5 hidden">
+                            <div class="flex items-start space-x-3 text-rose-700 mb-3">
+                                <i class="fa-solid fa-triangle-exclamation text-3xl mt-0.5 animate-bounce"></i>
                                 <div>
-                                    <h4 class="text-sm font-black text-rose-800">PERINGATAN AVSEC: KARGO DITAHAN DI RUANG KARANTINA</h4>
-                                    <p class="text-xs text-rose-600 mt-0.5">Terdeteksi anomali kepadatan tinggi mencurigakan. Diverter spur aktif, kargo terkunci otomatis!</p>
+                                    <h4 class="text-sm font-black text-rose-800">PERINGATAN AVSEC: KARGO DIKUNCI DI RUANG KHUSUS KARANTINA</h4>
+                                    <p class="text-xs text-rose-600 mt-0.5">Terdeteksi anomali kepadatan tinggi (Z &gt; 20). Kargo diisolasi otomatis di ruang karantina dan dilarang masuk apron!</p>
                                 </div>
+                            </div>
+                            
+                            <div class="p-3 bg-white/90 rounded-xl border border-rose-200 text-xs text-slate-700 mb-3 space-y-1">
+                                <div class="font-bold text-rose-800 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-shield text-rose-600"></i>
+                                    <span>SOP Penanganan Khusus Ruang Karantina:</span>
+                                </div>
+                                <p class="text-[11.5px] text-slate-600">
+                                    Silakan tentukan tindak lanjut kargo: lakukan <strong>pemeriksaan fisik sekunder</strong> untuk me-release jika aman, atau <strong>tolak kargo</strong> untuk dikembalikan ke truk pengangkut asal.
+                                </p>
+                            </div>
+
+                            <!-- Tombol Penanganan Khusus Karantina -->
+                            <div class="flex flex-wrap items-center gap-2.5">
+                                <button type="button" onclick="executeStageAction(4, 'RELEASE')" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition-all flex items-center">
+                                    <i class="fa-solid fa-user-shield mr-1.5"></i>
+                                    <span>Pemeriksaan Fisik Sekunder (Hand Search / ETD) &rarr; Rilis CLEARED</span>
+                                </button>
+                                <button type="button" onclick="executeStageAction(4, 'RETURN_TO_TRUCK')" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-black text-white font-bold text-xs shadow-sm transition-all flex items-center">
+                                    <i class="fa-solid fa-truck-arrow-right mr-1.5"></i>
+                                    <span>Tolak &amp; Kembalikan Barang ke Truk Semula</span>
+                                </button>
                             </div>
                         </div>
 
@@ -1224,7 +1299,7 @@ include __DIR__ . '/includes/header.php';
                             </button>
                             <button onclick="executeStageAction(4, 'SUSPECT')" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-bold text-xs shadow-md shadow-rose-500/25 transition-all flex items-center transform hover:-translate-y-0.5">
                                 <i class="fa-solid fa-triangle-exclamation mr-1.5"></i>
-                                <span>Simulasi Temuan Bahaya (SUSPECT)</span>
+                                <span>Simulasi Temuan Bahaya (SUSPECT &amp; Masuk Karantina)</span>
                             </button>
                         </div>
                     </div>
@@ -1413,46 +1488,68 @@ include __DIR__ . '/includes/header.php';
                 <!-- Left Column: Workstation & Controls (7 cols) -->
                 <div class="lg:col-span-7 space-y-6">
                     
-                    <!-- Smart Floor Scale & ULD Build-Up Workstation Card -->
+                    <!-- Smart Floor Scale & ULD Build-Up Workstation Card (Menggantikan Timbangan Fisik dengan Data JSON) -->
                     <div class="bg-white p-6 rounded-2xl border border-gray-200/90 shadow-sm">
-                        <div class="flex items-center justify-between pb-3 mb-4 border-b border-gray-100">
-                            <h3 class="text-xs font-bold text-[#0D1C42] uppercase tracking-wider flex items-center">
-                                <i class="fa-solid fa-boxes-packing text-[#087F8A] mr-2 text-sm"></i>
-                                Penimbangan Smart Scale, ULD Consolidation, &amp; Flight Loading
-                            </h3>
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 mb-4 border-b border-gray-100 gap-2">
+                            <div class="flex items-center space-x-2">
+                                <i class="fa-solid fa-scale-balanced text-[#087F8A] text-base"></i>
+                                <h3 class="text-xs font-bold text-[#0D1C42] uppercase tracking-wider">
+                                    Penimbangan Smart Scale, ULD Consolidation, &amp; Parameter Muat Pesawat
+                                </h3>
+                            </div>
                             <span class="text-[10px] font-mono text-[#087F8A] bg-teal-50 px-2 py-0.5 rounded border border-teal-200 font-bold">Tahap 5, 6, &amp; 7</span>
                         </div>
 
-                        <!-- 3-Col Visual Cards: Scale, ULD, and CoG -->
+                        <!-- Dark JSON Stream Console for Smart Scale -->
+                        <div class="p-4 rounded-xl bg-[#0A1628] border border-slate-800 mb-5 shadow-inner relative overflow-hidden">
+                            <div class="flex items-center justify-between pb-2.5 mb-2.5 border-b border-slate-800 text-xs font-mono">
+                                <div class="flex items-center space-x-2">
+                                    <span class="flex h-2.5 w-2.5 relative">
+                                        <span id="lb-json-indicator-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
+                                        <span id="lb-json-indicator-dot" class="relative inline-flex rounded-full h-2.5 w-2.5 bg-teal-500"></span>
+                                    </span>
+                                    <span class="text-slate-200 font-bold text-[11px] tracking-wide">STREAM: SMART_SCALE_WEIGHT_ACQUISITION.json</span>
+                                    <span class="text-[10px] text-teal-400 bg-teal-950/60 px-1.5 py-0.5 rounded border border-teal-800/60">OIML R76 / TCP</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span id="lb-json-status-tag" class="text-[10px] font-mono text-teal-300 bg-teal-950/60 px-2 py-0.5 rounded border border-teal-800/80">SCALE SYNC ACTIVE</span>
+                                </div>
+                            </div>
+
+                            <!-- JSON Raw Viewer for Scale & Weight -->
+                            <pre id="lb-json-stream-display" class="font-mono text-[11px] leading-relaxed text-emerald-400 bg-[#060D1A] p-3.5 rounded-xl border border-slate-800/90 overflow-x-auto max-h-56 scrollbar-thin select-all"><code>// Memuat stream penimbangan Smart Floor Scale...</code></pre>
+                        </div>
+
+                        <!-- 3-Col Visual Cards: Parameter & Kriteria Batas Berat -->
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
                             
-                            <!-- Scale Visual -->
-                            <div class="p-4 rounded-xl bg-[#0D1C42] text-white text-center shadow-md">
-                                <span class="text-[9px] uppercase tracking-wider text-teal-300 font-bold block">15T Smart Floor Scale</span>
-                                <div id="lb-scale-weight" class="text-2xl font-black font-mono text-amber-400 my-1">- KG</div>
-                                <span class="text-[9px] text-emerald-400 font-mono">Load Cell IP68 &bull; &plusmn;1kg</span>
-                                <div class="mt-2 text-[10px] text-slate-300 border-t border-slate-700 pt-1.5">
-                                    Deklarasi: <strong id="lb-scale-declared" class="text-white">-</strong>
-                                </div>
-                            </div>
-
-                            <!-- ULD Container Visual -->
-                            <div class="p-4 rounded-xl bg-teal-50/60 border border-teal-200 text-center shadow-sm">
-                                <span class="text-[9px] uppercase tracking-wider text-[#087F8A] font-bold block">Kontainer Pesawat ULD</span>
-                                <div id="lb-uld-code" class="text-base font-black font-mono text-[#0D1C42] my-1 truncate">AKE-12345-GA</div>
-                                <span class="text-[10px] font-semibold text-[#087F8A] block">Tipe AKE &bull; Komp: AFT-LOWER-1</span>
-                                <div class="mt-2 text-[10px] text-slate-600 border-t border-teal-200/60 pt-1.5">
-                                    Maks: <strong class="text-[#0D1C42]">1588.0 kg</strong>
-                                </div>
-                            </div>
-
-                            <!-- Center of Gravity (CoG) Visual -->
+                            <!-- Scale Visual: Toleransi -->
                             <div class="p-4 rounded-xl bg-slate-50 border border-gray-200 text-center shadow-sm">
-                                <span class="text-[9px] uppercase tracking-wider text-slate-500 font-bold block">Center of Gravity (CoG)</span>
-                                <div class="text-2xl font-black font-mono text-emerald-600 my-1">28.4%</div>
-                                <span class="text-[9px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Optimal Flight Trim</span>
+                                <span class="text-[9px] uppercase tracking-wider text-slate-500 font-bold block">Toleransi Timbangan</span>
+                                <div id="lb-scale-weight" class="text-2xl font-black font-mono text-[#0D1C42] my-1">- KG</div>
+                                <span class="text-[9px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Batas Toleransi &plusmn;5%</span>
+                                <div class="mt-2 text-[10px] text-slate-600 border-t border-gray-200 pt-1.5">
+                                    Deklarasi e-AWB: <strong id="lb-scale-declared" class="text-[#0D1C42]">-</strong>
+                                </div>
+                            </div>
+
+                            <!-- ULD Container Visual: Max Berat ULD -->
+                            <div class="p-4 rounded-xl bg-teal-50/60 border border-teal-200 text-center shadow-sm">
+                                <span class="text-[9px] uppercase tracking-wider text-[#087F8A] font-bold block">Batas Beban Kontainer ULD</span>
+                                <div id="lb-uld-code" class="text-base font-black font-mono text-[#0D1C42] my-1 truncate">AKE-12345-GA</div>
+                                <span class="text-[10px] font-bold text-[#087F8A] block">Batas Maks: 1.588 kg (AKE)</span>
+                                <div class="mt-2 text-[10px] text-slate-600 border-t border-teal-200/60 pt-1.5">
+                                    Status: <strong class="text-emerald-700 font-bold">Layak Dimuat</strong>
+                                </div>
+                            </div>
+
+                            <!-- Aircraft Limit & Center of Gravity (CoG) Visual -->
+                            <div class="p-4 rounded-xl bg-slate-50 border border-gray-200 text-center shadow-sm">
+                                <span class="text-[9px] uppercase tracking-wider text-slate-500 font-bold block">Batas Muatan Pesawat &amp; Trim</span>
+                                <div class="text-2xl font-black font-mono text-emerald-600 my-1">18.500 KG</div>
+                                <span class="text-[9px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Boeing 737-800F (GA-707)</span>
                                 <div class="mt-2 text-[10px] text-slate-500 border-t border-gray-200 pt-1.5">
-                                    Batas Aman: 18% - 34% MAC
+                                    CoG: <strong>28.4% MAC (Trim Optimal)</strong>
                                 </div>
                             </div>
 

@@ -402,20 +402,20 @@ function renderStageActionButtons(stage) {
         if (c.status === 'CLEARED') {
             // Status kargo sudah CLEARED: Tonjolkan tombol lanjut ke Tahap 5
             container.innerHTML = `
-                <button onclick="selectStageView(5)" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-bold text-xs shadow-md shadow-teal-500/25 transition-all flex items-center transform hover:-translate-y-0.5 animate-pulse">
+                <button onclick="selectStageView(5)" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-bold text-xs shadow-md shadow-teal-500/25 transition-all flex items-center transform hover:-translate-y-0.5 animate-pulse cursor-pointer">
                     <i class="fa-solid fa-scale-balanced mr-2 text-sm"></i>
                     <span>Lihat &amp; Lanjut ke Tahap 5 (Penimbangan Smart Scale)</span>
                     <i class="fa-solid fa-arrow-right ml-2 text-xs"></i>
                 </button>
-                <button onclick="executeStageAction(4, 'CLEARED')" class="px-3.5 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold border border-emerald-300 shadow-sm transition-all flex items-center">
+                <button onclick="executeStageAction(4, 'CLEARED')" class="px-3.5 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold border border-emerald-300 shadow-sm transition-all flex items-center cursor-pointer">
                     <i class="fa-solid fa-rotate mr-1.5 text-xs text-emerald-600"></i>
                     <span>Simulasi Ulang Lolos (CLEARED)</span>
                 </button>
-                <button onclick="executeStageAction(4, 'SUSPECT')" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-rose-50 text-rose-700 hover:text-rose-800 text-xs font-bold border border-rose-300 shadow-sm transition-all flex items-center">
+                <button onclick="executeStageAction(4, 'SUSPECT')" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-rose-50 text-rose-700 hover:text-rose-800 text-xs font-bold border border-rose-300 shadow-sm transition-all flex items-center cursor-pointer">
                     <i class="fa-solid fa-triangle-exclamation mr-1.5 text-xs text-rose-500"></i>
                     <span>Simulasi Temuan Bahaya (SUSPECT)</span>
                 </button>
-                <button onclick="selectStageView(3)" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-600 hover:text-[#087F8A] text-xs font-bold border border-gray-300 shadow-sm transition-colors flex items-center">
+                <button onclick="selectStageView(3)" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-600 hover:text-[#087F8A] text-xs font-bold border border-gray-300 shadow-sm transition-colors flex items-center cursor-pointer">
                     <i class="fa-solid fa-arrow-left mr-1.5 text-xs"></i>
                     <span>Lihat Tahap 3</span>
                 </button>
@@ -424,41 +424,56 @@ function renderStageActionButtons(stage) {
         } else if (c.status === 'SUSPECT') {
             container.innerHTML = `
                 <div class="w-full mb-2 p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center justify-between">
-                    <span class="font-bold"><i class="fa-solid fa-triangle-exclamation mr-1.5 text-rose-600"></i> Kargo Berstatus SUSPECT — Ditahan di Ruang Karantina</span>
-                    <span class="text-[10px] bg-rose-200/60 px-2 py-0.5 rounded font-mono font-bold">HOLD</span>
+                    <span class="font-bold"><i class="fa-solid fa-triangle-exclamation mr-1.5 text-rose-600 animate-pulse"></i> Kargo Berstatus SUSPECT — Dikunci di Ruang Khusus Karantina AVSEC</span>
+                    <span class="text-[10px] bg-rose-200/80 px-2 py-0.5 rounded font-mono font-bold text-rose-800">VAULT LOCKOUT</span>
                 </div>
-                <button onclick="executeStageAction(4, 'CLEARED')" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-500/20 transition-all flex items-center transform hover:-translate-y-0.5">
-                    <i class="fa-solid fa-shield-halved mr-1.5"></i>
-                    <span>Verifikasi Ulang &amp; Loloskan (CLEARED)</span>
+                <button onclick="executeStageAction(4, 'RELEASE')" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-500/20 transition-all flex items-center transform hover:-translate-y-0.5 cursor-pointer">
+                    <i class="fa-solid fa-user-shield mr-1.5"></i>
+                    <span>Pemeriksaan Fisik Sekunder (ETD) &rarr; Rilis CLEARED</span>
                 </button>
-                <button onclick="selectStageView(5)" class="px-4 py-2.5 rounded-xl bg-white hover:bg-teal-50 text-[#0D1C42] hover:text-[#087F8A] text-xs font-bold border border-teal-300 shadow-sm transition-all flex items-center">
-                    <i class="fa-solid fa-scale-balanced mr-1.5 text-xs text-[#087F8A]"></i>
-                    <span>Lihat Tahap 5</span>
-                    <i class="fa-solid fa-arrow-right ml-1.5 text-xs text-[#087F8A]"></i>
+                <button onclick="executeStageAction(4, 'RETURN_TO_TRUCK')" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-black text-white font-bold text-xs shadow-md shadow-slate-900/20 transition-all flex items-center transform hover:-translate-y-0.5 cursor-pointer">
+                    <i class="fa-solid fa-truck-arrow-right mr-1.5 text-amber-400"></i>
+                    <span>Tolak &amp; Kembalikan Kargo ke Truk Semula</span>
                 </button>
-                <button onclick="selectStageView(3)" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-600 hover:text-[#087F8A] text-xs font-bold border border-gray-300 shadow-sm transition-colors flex items-center">
+                <button onclick="selectStageView(3)" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-600 hover:text-[#087F8A] text-xs font-bold border border-gray-300 shadow-sm transition-colors flex items-center cursor-pointer">
                     <i class="fa-solid fa-arrow-left mr-1.5 text-xs"></i>
                     <span>Lihat Tahap 3</span>
+                </button>
+            `;
+            return;
+        } else if (c.status === 'RETURNED_TO_TRUCK') {
+            container.innerHTML = `
+                <div class="w-full mb-2 p-2.5 rounded-xl bg-slate-100 border border-slate-300 text-slate-800 text-xs flex items-center justify-between">
+                    <span class="font-bold"><i class="fa-solid fa-truck-arrow-right mr-1.5 text-slate-600"></i> Kargo Ditolak di AVSEC &amp; Telah Dikembalikan ke Armada Truk Semula (${escapeHtml(c.truck_plate || 'Truk')})</span>
+                    <span class="text-[10px] bg-slate-200 px-2 py-0.5 rounded font-mono font-bold text-slate-700">EXPELLED</span>
+                </div>
+                <button onclick="switchSystemDashboard('tms'); selectStageView(1);" class="px-4 py-2.5 rounded-xl bg-[#087F8A] hover:bg-[#0CA1AF] text-white font-bold text-xs shadow-md shadow-teal-500/25 transition-all flex items-center cursor-pointer">
+                    <i class="fa-solid fa-truck mr-1.5"></i>
+                    <span>Kembali ke TMS &amp; Verifikasi Armada Baru</span>
+                </button>
+                <button onclick="executeStageAction(4, 'CLEARED')" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-emerald-50 text-emerald-800 text-xs font-bold border border-emerald-300 shadow-sm transition-all flex items-center cursor-pointer">
+                    <i class="fa-solid fa-rotate mr-1.5 text-xs text-emerald-600"></i>
+                    <span>Simulasi Ulang Lolos (CLEARED)</span>
                 </button>
             `;
             return;
         } else {
             // Belum screening X-Ray
             container.innerHTML = `
-                <button onclick="executeStageAction(4, 'CLEARED')" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-500/20 transition-all flex items-center transform hover:-translate-y-0.5">
+                <button onclick="executeStageAction(4, 'CLEARED')" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-500/20 transition-all flex items-center transform hover:-translate-y-0.5 cursor-pointer">
                     <i class="fa-solid fa-shield-halved mr-1.5"></i>
                     <span>Simulasi Loloskan X-Ray (CLEARED)</span>
                 </button>
-                <button onclick="executeStageAction(4, 'SUSPECT')" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-bold text-xs shadow-md shadow-rose-500/20 transition-all flex items-center transform hover:-translate-y-0.5">
+                <button onclick="executeStageAction(4, 'SUSPECT')" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-bold text-xs shadow-md shadow-rose-500/20 transition-all flex items-center transform hover:-translate-y-0.5 cursor-pointer">
                     <i class="fa-solid fa-triangle-exclamation mr-1.5"></i>
                     <span>Simulasi Temuan Bahaya (SUSPECT)</span>
                 </button>
-                <button onclick="selectStageView(5)" class="px-4 py-2.5 rounded-xl bg-white hover:bg-teal-50 text-[#0D1C42] hover:text-[#087F8A] text-xs font-bold border border-teal-300 shadow-sm transition-all flex items-center transform hover:-translate-y-0.5">
+                <button onclick="selectStageView(5)" class="px-4 py-2.5 rounded-xl bg-white hover:bg-teal-50 text-[#0D1C42] hover:text-[#087F8A] text-xs font-bold border border-teal-300 shadow-sm transition-all flex items-center transform hover:-translate-y-0.5 cursor-pointer">
                     <i class="fa-solid fa-scale-balanced mr-1.5 text-xs text-[#087F8A]"></i>
                     <span>Lihat Tahap 5</span>
                     <i class="fa-solid fa-arrow-right ml-1.5 text-xs text-[#087F8A]"></i>
                 </button>
-                <button onclick="selectStageView(3)" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-600 hover:text-[#087F8A] text-xs font-bold border border-gray-300 shadow-sm transition-colors flex items-center">
+                <button onclick="selectStageView(3)" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-600 hover:text-[#087F8A] text-xs font-bold border border-gray-300 shadow-sm transition-colors flex items-center cursor-pointer">
                     <i class="fa-solid fa-arrow-left mr-1.5 text-xs"></i>
                     <span>Lihat Tahap 3</span>
                 </button>
@@ -471,7 +486,7 @@ function renderStageActionButtons(stage) {
     let btnText = `Jalankan Tahap ${stage}`;
     let btnIcon = 'fa-play';
     if (stage === 1) { btnText = 'Daftarkan Truk di Dock (TMS)'; btnIcon = 'fa-truck'; }
-    else if (stage === 2) { btnText = 'Pindai Tag RFID & Baca SSCC'; btnIcon = 'fa-barcode'; }
+    else if (stage === 2) { btnText = 'Pindai Tag RFID & Ingest JSON'; btnIcon = 'fa-code'; }
     else if (stage === 3) { btnText = 'Verifikasi e-AWB di CMS'; btnIcon = 'fa-laptop-code'; }
     else if (stage === 5) { btnText = 'Timbang di Smart Floor Scale'; btnIcon = 'fa-scale-balanced'; }
     else if (stage === 6) { btnText = 'Alokasikan ke ULD & Cek CoG'; btnIcon = 'fa-boxes-packing'; }
@@ -480,18 +495,18 @@ function renderStageActionButtons(stage) {
     const disabledAttr = (stage > currentCargoStage + 1 && c.status !== 'SUSPECT') ? 'disabled style="opacity:0.45;cursor:not-allowed;"' : '';
 
     container.innerHTML = `
-        <button onclick="executeStageAction(${stage}, 'CLEARED')" ${disabledAttr} class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-bold text-xs shadow-md shadow-teal-500/25 transition-all flex items-center transform hover:-translate-y-0.5">
+        <button onclick="executeStageAction(${stage}, 'CLEARED')" ${disabledAttr} class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-bold text-xs shadow-md shadow-teal-500/25 transition-all flex items-center transform hover:-translate-y-0.5 cursor-pointer">
             <i class="fa-solid ${btnIcon} mr-2"></i>
             <span>${btnText}</span>
         </button>
         ${stage < 7 ? `
-            <button onclick="selectStageView(${stage + 1})" class="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-[#0D1C42] hover:text-[#087F8A] text-xs font-bold border border-gray-300 shadow-sm transition-colors flex items-center">
+            <button onclick="selectStageView(${stage + 1})" class="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-[#0D1C42] hover:text-[#087F8A] text-xs font-bold border border-gray-300 shadow-sm transition-colors flex items-center cursor-pointer">
                 <span>Lihat Tahap ${stage + 1}</span>
                 <i class="fa-solid fa-arrow-right ml-1.5 text-xs"></i>
             </button>
         ` : ''}
         ${stage > 1 ? `
-            <button onclick="selectStageView(${stage - 1})" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-600 hover:text-[#087F8A] text-xs font-bold border border-gray-300 shadow-sm transition-colors flex items-center">
+            <button onclick="selectStageView(${stage - 1})" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-600 hover:text-[#087F8A] text-xs font-bold border border-gray-300 shadow-sm transition-colors flex items-center cursor-pointer">
                 <i class="fa-solid fa-arrow-left mr-1.5 text-xs"></i>
                 <span>Lihat Tahap ${stage - 1}</span>
             </button>
@@ -502,9 +517,84 @@ function renderStageActionButtons(stage) {
 function executeStageAction(stage, avsecDecision) {
     if (!currentCargoData) return;
 
+    // Aksi Khusus AVSEC: Kembalikan Barang ke Truk Semula
+    if (stage === 4 && avsecDecision === 'RETURN_TO_TRUCK') {
+        Swal.fire({
+            title: 'Tolak & Kembalikan Kargo ke Truk?',
+            html: `
+                <div class="text-xs text-left p-3.5 rounded-xl bg-slate-50 border border-gray-200 space-y-2 mt-2">
+                    <p class="font-bold text-rose-700"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Penolakan Kargo di AVSEC Gate:</p>
+                    <p class="text-slate-600 leading-relaxed">
+                        Kargo dengan nomor e-AWB <strong>${escapeHtml(currentCargoData.awb_number)}</strong> akan ditolak, dikeluarkan dari ruang karantina, dan <strong>dikembalikan ke armada truk semula (${escapeHtml(currentCargoData.truck_plate || 'Truk Pengangkut')})</strong>.
+                    </p>
+                    <p class="text-slate-500 text-[11px]">
+                        Status manifes penerbangan kargo ini akan dibatalkan otomatis dan log audit keamanan akan dicatat.
+                    </p>
+                </div>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#0f172a',
+            cancelButtonColor: '#94a3b8',
+            confirmButtonText: 'Ya, Kembalikan ke Truk',
+            cancelButtonText: 'Batal',
+            background: '#ffffff',
+            color: '#0D1C42',
+            customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
+        }).then(result => {
+            if (result.isConfirmed) {
+                doExecuteStageAction(stage, 'RETURN_TO_TRUCK');
+            }
+        });
+        return;
+    }
+
+    // Aksi Khusus AVSEC: Pemeriksaan Fisik Sekunder (Hand Search / ETD)
+    if (stage === 4 && avsecDecision === 'RELEASE') {
+        Swal.fire({
+            title: 'Pemeriksaan Fisik Sekunder',
+            html: `
+                <div class="text-xs text-left p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 space-y-2 mt-2">
+                    <p class="font-bold text-emerald-800"><i class="fa-solid fa-user-shield mr-1"></i> SOP Ruang Khusus Karantina AVSEC:</p>
+                    <p class="text-[11.5px] text-emerald-800 leading-relaxed">
+                        Petugas AVSEC bersertifikat melakukan pemeriksaan manual (Hand Search) dan deteksi jejak bahan peledak (Explosive Trace Detector / ETD) pada kargo <strong>${escapeHtml(currentCargoData.awb_number)}</strong> di dalam ruang karantina.
+                    </p>
+                    <p class="text-[11px] text-emerald-700">
+                        Jika hasil bersih, kargo dirilis dari status SUSPECT menjadi <strong>CLEARED</strong> dan sertifikat CSD digital resmi diterbitkan.
+                    </p>
+                </div>
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#059669',
+            cancelButtonColor: '#94a3b8',
+            confirmButtonText: 'Verifikasi & Rilis (CLEARED)',
+            cancelButtonText: 'Batal',
+            background: '#ffffff',
+            color: '#0D1C42',
+            customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
+        }).then(result => {
+            if (result.isConfirmed) {
+                doExecuteStageAction(stage, 'RELEASE');
+            }
+        });
+        return;
+    }
+
+    doExecuteStageAction(stage, avsecDecision);
+}
+
+function doExecuteStageAction(stage, avsecDecision) {
+    let actionParam = 'advance';
+    if (avsecDecision === 'SUSPECT') actionParam = 'force_suspect';
+
+    let loadingTitle = `Memproses Tahap ${stage}...`;
+    if (avsecDecision === 'RELEASE') loadingTitle = 'Pemeriksaan Fisik Sekunder di Karantina...';
+    if (avsecDecision === 'RETURN_TO_TRUCK') loadingTitle = 'Mengembalikan Kargo ke Truk Semula...';
+
     Swal.fire({
-        title: `Memproses Tahap ${stage}...`,
-        text: 'Mengirim JSON payload ke sistem...',
+        title: loadingTitle,
+        text: 'Mengirimkan instruksi ke sistem...',
         allowOutsideClick: false,
         didOpen: () => { Swal.showLoading(); },
         background: '#ffffff',
@@ -518,26 +608,42 @@ function executeStageAction(stage, avsecDecision) {
         body: JSON.stringify({
             cargo_id: currentCargoData.id,
             stage: stage,
-            action: (avsecDecision === 'SUSPECT') ? 'force_suspect' : 'advance',
+            action: actionParam,
             avsec_decision: avsecDecision
         })
     })
     .then(r => r.json())
     .then(res => {
         if (res.success) {
+            if (res.cargo) {
+                currentCargoData = res.cargo;
+                renderCargoHeader(currentCargoData);
+            }
+
+            let iconType = 'success';
+            let btnColor = '#087F8A';
+            if (avsecDecision === 'SUSPECT') {
+                iconType = 'warning';
+                btnColor = '#e11d48';
+            } else if (avsecDecision === 'RETURN_TO_TRUCK') {
+                iconType = 'info';
+                btnColor = '#0f172a';
+            }
+
             Swal.fire({
                 title: 'Tahap Berhasil Diproses!',
                 text: res.message,
-                icon: (avsecDecision === 'SUSPECT') ? 'warning' : 'success',
+                icon: iconType,
                 background: '#ffffff',
                 color: '#0D1C42',
-                confirmButtonColor: (avsecDecision === 'SUSPECT') ? '#e11d48' : '#087F8A',
+                confirmButtonColor: btnColor,
                 customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
             }).then(() => {
-                // Maju otomatis ke tahap berikutnya setelah sukses
                 let nextView = stage;
-                if (avsecDecision === 'CLEARED' && stage < 7) {
+                if ((avsecDecision === 'CLEARED' || avsecDecision === 'RELEASE') && stage < 7) {
                     nextView = stage + 1;
+                } else if (avsecDecision === 'RETURN_TO_TRUCK') {
+                    nextView = 1;
                 }
                 initSimulation(currentCargoData.id, nextView, currentSystemDashboard);
             });
@@ -1267,35 +1373,77 @@ function highlightSelectedDock(dockSlot, customPlate = null) {
     renderDockCards(dockSlot, customPlate);
 }
 
-function presetTMSTruckData() {
+// Pilih Preset Truk Cepat (Menghasilkan kargo dan JSON berbeda secara otomatis)
+function selectTruckPreset(plate) {
+    const presets = {
+        'B 8888 KGO': {
+            driver: 'Bambang Pamungkas',
+            transporter: 'PT Angkasa Pura Logistik',
+            dock: 'DOCK-02',
+            booking: 'TAS-SLOT-8821',
+            desc: 'Tekstil & Garmen Ekspor (50 koli, 350 kg)'
+        },
+        'B 9182 KXA': {
+            driver: 'Ahmad Dahlan',
+            transporter: 'PT Bio Farma Express',
+            dock: 'DOCK-02',
+            booking: 'TAS-SLOT-9182',
+            desc: 'Farmasi & Vaksin (30 koli, 185 kg)'
+        },
+        'B 4412 PQL': {
+            driver: 'Hendra Gunawan',
+            transporter: 'PT Sat Nusapersada Cargo',
+            dock: 'DOCK-04',
+            booking: 'TAS-SLOT-4412',
+            desc: 'Elektronik & Semikonduktor (60 koli, 420 kg)'
+        },
+        'B 7777 WXY': {
+            driver: 'Made Suardana',
+            transporter: 'PT Bali Fresh Logistik',
+            dock: 'DOCK-04',
+            booking: 'TAS-SLOT-7777',
+            desc: 'Buah Segar Perishable (45 koli, 260 kg)'
+        }
+    };
+    const p = presets[plate] || {
+        driver: 'Suryadi Pratama',
+        transporter: 'PT Intermodal Logistik Sejahtera',
+        dock: 'DOCK-02',
+        booking: 'TAS-SLOT-' + Math.floor(1000 + Math.random() * 9000),
+        desc: 'Muatan Kargo Terjadwal'
+    };
+
     const plateInput = document.getElementById('input-tms-plate');
     const driverInput = document.getElementById('input-tms-driver');
     const transInput = document.getElementById('input-tms-transporter');
     const dockInput = document.getElementById('input-tms-dock');
     const bookingInput = document.getElementById('input-tms-booking');
-    const statusInput = document.getElementById('input-tms-status');
 
-    if (plateInput) plateInput.value = 'B 9482 XX';
-    if (driverInput) driverInput.value = 'Suryadi Pratama';
-    if (transInput) transInput.value = 'PT Intermodal Logistik Sejahtera';
-    if (dockInput) dockInput.value = 'DOCK-02';
-    if (bookingInput) bookingInput.value = 'TAS-BOOK-' + Math.floor(1000 + Math.random() * 9000);
-    if (statusInput) statusInput.value = 'ARRIVED';
+    if (plateInput) plateInput.value = plate;
+    if (driverInput) driverInput.value = p.driver;
+    if (transInput) transInput.value = p.transporter;
+    if (dockInput) dockInput.value = p.dock;
+    if (bookingInput) bookingInput.value = p.booking;
 
-    renderDockCards('DOCK-02', 'B 9482 XX');
-    updateTMSJsonPayload('DOCK-02', 'B 9482 XX');
+    renderDockCards(p.dock, plate);
+    updateTMSJsonPayload(p.dock, plate);
 
     Swal.fire({
         toast: true,
         position: 'top-end',
-        title: 'Form diisi preset default TMS!',
+        title: `Armada ${plate} Dipilih!`,
+        text: `${p.desc} | ${p.transporter}`,
         icon: 'info',
         showConfirmButton: false,
-        timer: 1500,
+        timer: 1800,
         background: '#ffffff',
         color: '#0D1C42',
         customClass: { popup: 'rounded-xl shadow-lg border border-gray-200' }
     });
+}
+
+function presetTMSTruckData() {
+    selectTruckPreset('B 8888 KGO');
 }
 
 function submitTMSCheckIn() {
@@ -1316,9 +1464,9 @@ function submitTMSCheckIn() {
     const bookingInput = document.getElementById('input-tms-booking');
     const statusInput = document.getElementById('input-tms-status');
 
-    const truckPlate = plateInput ? plateInput.value.trim().toUpperCase() : 'B 9482 XX';
-    const driverName = driverInput ? driverInput.value.trim() : 'Suryadi Pratama';
-    const transporter = transInput ? transInput.value.trim() : 'PT Intermodal Logistik Sejahtera';
+    const truckPlate = plateInput ? plateInput.value.trim().toUpperCase() : 'B 8888 KGO';
+    const driverName = driverInput ? driverInput.value.trim() : 'Bambang Pamungkas';
+    const transporter = transInput ? transInput.value.trim() : 'PT Angkasa Pura Logistik';
     const dockSlot = dockInput ? dockInput.value : 'DOCK-02';
     const bookingCode = bookingInput ? bookingInput.value.trim() : ('TAS-BOOK-' + Math.floor(1000 + Math.random() * 9000));
     const truckStatus = statusInput ? statusInput.value : 'ARRIVED';
@@ -1435,16 +1583,21 @@ function submitTMSCheckIn() {
             // Re-render dock cards
             renderDockCards(dockSlot, truckPlate);
 
-            // Update local state currentCargoData
-            currentCargoData.current_stage = 1;
-            currentCargoData.status = 'REGISTERED';
-            currentCargoData.truck_plate = truckPlate;
-            currentCargoData.driver_name = driverName;
-            currentCargoData.transporter_company = transporter;
-            currentCargoData.dock_slot = dockSlot;
-            currentCargoData.booking_code = bookingCode;
-            if (truck.id) {
-                currentCargoData.truck_arrival_id = truck.id;
+            // Update local state currentCargoData dengan data muatan spesifik truk dari backend
+            if (res.cargo) {
+                currentCargoData = res.cargo;
+                renderCargoHeader(currentCargoData);
+            } else {
+                currentCargoData.current_stage = 1;
+                currentCargoData.status = 'REGISTERED';
+                currentCargoData.truck_plate = truckPlate;
+                currentCargoData.driver_name = driverName;
+                currentCargoData.transporter_company = transporter;
+                currentCargoData.dock_slot = dockSlot;
+                currentCargoData.booking_code = bookingCode;
+                if (truck.id) {
+                    currentCargoData.truck_arrival_id = truck.id;
+                }
             }
 
             // Update JSON Inspector di kolom kanan
@@ -1454,40 +1607,44 @@ function submitTMSCheckIn() {
             if (stageBadge) stageBadge.textContent = `Tahap 1: REGISTERED`;
 
             Swal.fire({
-                title: 'Truk Berhasil Diverifikasi!',
+                title: 'Truk Berhasil Diverifikasi di TMS!',
                 html: `
                     <div class="text-xs text-left p-3.5 rounded-xl bg-slate-50 border border-gray-200 space-y-1.5 mt-2">
-                        <div class="flex justify-between items-center pb-1 border-b border-gray-200">
-                            <span class="text-slate-500 font-bold uppercase text-[10px]">Nomor Plat</span>
-                            <span class="text-[#0D1C42] font-mono font-black text-sm">${escapeHtml(truckPlate)}</span>
+                        <div class="flex justify-between items-center pb-1.5 border-b border-gray-200">
+                            <span class="text-slate-500 font-bold uppercase text-[10px]">Armada &amp; Dock</span>
+                            <span class="text-[#0D1C42] font-mono font-black text-sm">${escapeHtml(truckPlate)} (${escapeHtml(dockSlot)})</span>
                         </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-slate-500 text-[11px]">Nama Supir:</span>
+                        <div class="flex justify-between items-center text-[11px]">
+                            <span class="text-slate-500">Nama Supir:</span>
                             <span class="font-bold text-slate-800">${escapeHtml(driverName)}</span>
                         </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-slate-500 text-[11px]">Vendor Logistik:</span>
+                        <div class="flex justify-between items-center text-[11px]">
+                            <span class="text-slate-500">Vendor Logistik:</span>
                             <span class="text-slate-700">${escapeHtml(transporter)}</span>
                         </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-slate-500 text-[11px]">Alokasi Dock:</span>
-                            <span class="font-bold text-[#087F8A] font-mono">${escapeHtml(dockSlot)}</span>
+                        <div class="flex justify-between items-center text-[11px] pt-1 border-t border-dashed border-gray-200">
+                            <span class="text-[#087F8A] font-bold">e-AWB Baru:</span>
+                            <span class="font-mono font-black text-[#0D1C42]">${escapeHtml(currentCargoData.awb_number || '')}</span>
                         </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-slate-500 text-[11px]">Kode Booking:</span>
-                            <span class="font-mono text-slate-600">${escapeHtml(bookingCode)}</span>
+                        <div class="flex justify-between items-center text-[11px]">
+                            <span class="text-slate-500">Muatan Kargo:</span>
+                            <span class="font-bold text-emerald-700 truncate max-w-[200px]">${escapeHtml(currentCargoData.description || '')} (${escapeHtml(currentCargoData.quantity || '0')} Koli)</span>
+                        </div>
+                        <div class="flex justify-between items-center text-[11px]">
+                            <span class="text-slate-500">Kunci GS1 SSCC:</span>
+                            <span class="font-mono text-[#087F8A] font-bold text-[10.5px]">${escapeHtml(currentCargoData.sscc || '')}</span>
                         </div>
                     </div>
                     <p class="text-xs text-emerald-700 font-bold mt-3">
                         <i class="fa-solid fa-circle-check mr-1 text-emerald-600"></i>
-                        Data masuk ke log antrean truk &amp; terhubung dengan kargo ${escapeHtml(currentCargoData.awb_number || '')}!
+                        Data kargo telah disinkronkan! Sistem siap meng-generate stream JSON spesifik di CMS (Tahap 2).
                     </p>
                 `,
                 icon: 'success',
                 background: '#ffffff',
                 color: '#0D1C42',
                 confirmButtonColor: '#087F8A',
-                confirmButtonText: 'Lanjut ke CMS',
+                confirmButtonText: 'Lanjut ke CMS (Tahap 2 &amp; 3)',
                 showCancelButton: true,
                 cancelButtonText: 'Tetap di TMS',
                 cancelButtonColor: '#94a3b8',
@@ -1593,8 +1750,13 @@ function executeStage2Scan() {
     .then(r => r.json())
     .then(res => {
         if (res.success) {
-            currentCargoData.current_stage = 2;
-            currentCargoData.status = 'SCANNED';
+            if (res.cargo) {
+                currentCargoData = res.cargo;
+                renderCargoHeader(currentCargoData);
+            } else {
+                currentCargoData.current_stage = 2;
+                currentCargoData.status = 'SCANNED';
+            }
 
             const payloadResult = {
                 event_type: "AIDC_INBOUND_INGEST",
@@ -1605,8 +1767,8 @@ function executeStage2Scan() {
                     sscc: currentCargoData.sscc || "3899123450007509019",
                     gtin: currentCargoData.gtin || "08997193267836",
                     batch_no: currentCargoData.batch_no || "LOT-GEN-1538",
-                    gross_weight_kg: parseFloat(currentCargoData.gross_weight || currentCargoData.chargeable_weight || 354.0),
-                    pieces: parseInt(currentCargoData.quantity || currentCargoData.pieces || 50),
+                    gross_weight_kg: parseFloat(currentCargoData.declared_weight_kg || 350.0),
+                    pieces: parseInt(currentCargoData.quantity || 50),
                     commodity: currentCargoData.description || "Pakaian & Tekstil Premium Ekspor",
                     truck_plate: currentCargoData.truck_plate || "B 8888 KGO",
                     dock_slot: currentCargoData.dock_slot || "DOCK-02"
@@ -1723,8 +1885,13 @@ function executeStage3Validate() {
     .then(r => r.json())
     .then(res => {
         if (res.success) {
-            currentCargoData.current_stage = 3;
-            currentCargoData.status = 'REGISTERED';
+            if (res.cargo) {
+                currentCargoData = res.cargo;
+                renderCargoHeader(currentCargoData);
+            } else {
+                currentCargoData.current_stage = 3;
+                currentCargoData.status = 'REGISTERED';
+            }
 
             // Masukkan kargo ke antrean CMS di bawahnya secara real-time!
             const tbody = document.getElementById('cmsCargoQueueTbody');
@@ -1845,71 +2012,70 @@ function renderCMSDashboard(c) {
 
     const stage = parseInt(c.current_stage || 1);
 
-    const scanPayload = {
-        event_type: "AIDC_INBOUND_INGEST",
-        device_id: "EDGE-AIDC-SCANNER-01",
-        scan_protocol: "GS1_DIGITAL_LINK_JSON",
-        timestamp: new Date().toISOString(),
-        cargo_data: {
-            sscc: c.sscc || "3899123450007509019",
-            gtin: c.gtin || "08997193267836",
-            batch_no: c.batch_no || "LOT-GEN-1538",
-            weight_kg: parseFloat(c.actual_weight_kg || c.declared_weight_kg || c.gross_weight || 354.0),
-            pieces: parseInt(c.quantity || c.pieces || 50),
-            commodity: c.description || "Pakaian & Tekstil Premium Ekspor",
-            truck_plate: c.truck_plate || "B 8888 KGO",
-            dock_slot: c.dock_slot || "DOCK-02"
-        },
-        signal_metrics: {
-            carrier_freq_mhz: 865.7,
-            rssi_dbm: -41.5,
-            read_confidence: "99.98%"
-        },
-        status: stage >= 2 ? "PAYLOAD_VERIFIED_SUCCESS" : "AWAITING_INGESTION"
-    };
-
-    // KASUS 1: BELUM INGEST DATA JSON (Stage < 2)
+    // KASUS 1: BARU TIBA DARI TMS, MUATAN TRUK SIAP DI-INGEST KE CMS (Stage < 2)
     if (stage < 2) {
+        const readyPayload = {
+            "event_type": "AIDC_INBOUND_INGEST_STREAM",
+            "protocol": "GS1_DIGITAL_LINK_JSON / REST_MQTT",
+            "device_id": "EDGE-AIDC-GATEWAY-01",
+            "timestamp": new Date().toISOString(),
+            "origin_truck_gate": {
+                "truck_plate": c.truck_plate || "B 8888 KGO",
+                "driver_name": c.driver_name || "Bambang Pamungkas",
+                "transporter": c.transporter_company || "PT Angkasa Pura Logistik",
+                "dock_slot": c.dock_slot || "DOCK-02",
+                "booking_code": c.booking_code || "TAS-SLOT-8821"
+            },
+            "cargo_identifiers": {
+                "sscc_18": c.sscc || "3899123450007509019",
+                "gtin_14": c.gtin || "08997193267836",
+                "batch_no": c.batch_no || "LOT-GEN-1538",
+                "expiry_date": c.expiry_date || "2027-12-31"
+            },
+            "cargo_specifications": {
+                "awb_number": c.awb_number,
+                "commodity": c.description,
+                "commodity_type": c.commodity_type,
+                "pieces": parseInt(c.quantity || 50),
+                "declared_weight_kg": parseFloat(c.declared_weight_kg || 350.0)
+            },
+            "ingest_status": "READY_FOR_CMS_INGESTION",
+            "instruction": `Klik tombol 'Kirim / Ingest Payload JSON' untuk memindai muatan armada ${c.truck_plate || 'Truk'} ke CMS.`
+        };
+
         if (jsonDisplay) {
-            const standbyJson = {
-                status: "STANDBY_WAITING_PAYLOAD",
-                source: "EDGE-AIDC-GATEWAY-01",
-                protocol: "REST_JSON / GS1_EPC_GEN2",
-                message: "// Menunggu transmisi payload JSON pemindaian dari gerbang kargo inbound...",
-                sample_expected_schema: {
-                    sscc: "18-digit GS1 SSCC Primary Key",
-                    gtin: "14-digit Global Trade Item Number",
-                    batch_no: "Batch / Production Lot",
-                    weight_kg: "Float",
-                    pieces: "Integer"
-                }
-            };
-            jsonDisplay.textContent = JSON.stringify(standbyJson, null, 2);
+            jsonDisplay.textContent = JSON.stringify(readyPayload, null, 2);
         }
         if (jsonStatusTag) {
-            jsonStatusTag.className = "text-[10px] font-mono text-amber-300 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-800/80";
-            jsonStatusTag.textContent = "STANDBY - WAITING JSON INGEST";
+            jsonStatusTag.className = "text-[10px] font-mono text-teal-300 bg-teal-950/60 px-2 py-0.5 rounded border border-teal-800/80";
+            jsonStatusTag.textContent = "PAYLOAD READY - TRUCK ARRIVED";
         }
         if (jsonPing) {
-            jsonPing.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75";
+            jsonPing.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75";
         }
         if (jsonDot) {
-            jsonDot.className = "relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500";
+            jsonDot.className = "relative inline-flex rounded-full h-2.5 w-2.5 bg-teal-500";
         }
         if (ssccEl) {
-            ssccEl.className = 'text-slate-400 font-semibold bg-slate-800/80 px-2.5 py-0.5 rounded border border-slate-700 font-mono italic text-[11px]';
-            ssccEl.textContent = '[ Menunggu Ingest JSON ]';
+            ssccEl.className = 'text-teal-300 font-bold bg-teal-950/80 px-2.5 py-0.5 rounded border border-teal-700 font-mono text-[11px]';
+            ssccEl.textContent = c.sscc || '[ Menunggu Ingest JSON ]';
         }
         if (badgeEl) {
-            badgeEl.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 uppercase tracking-wide';
-            badgeEl.innerHTML = '<i class="fa-solid fa-hourglass-start mr-1"></i>Menunggu Ingest JSON';
+            badgeEl.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-teal-50 text-[#087F8A] border border-teal-200 uppercase tracking-wide';
+            badgeEl.innerHTML = `<i class="fa-solid fa-truck-ramp-box mr-1"></i>Muatan Truk ${escapeHtml(c.truck_plate || '')} Siap Dipindai`;
         }
-        if (pillStrip) pillStrip.classList.add('hidden');
+        if (pillStrip) {
+            pillStrip.classList.remove('hidden');
+            const gGtin = document.getElementById('cms-gs1-gtin');
+            if (gGtin) gGtin.textContent = c.gtin || '-';
+            const gBatch = document.getElementById('cms-gs1-batch');
+            if (gBatch) gBatch.textContent = c.batch_no || '-';
+        }
 
         if (scanBtn) {
             scanBtn.className = 'px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-bold text-xs shadow-md shadow-teal-500/25 transition-all flex items-center transform hover:-translate-y-0.5 cursor-pointer animate-pulse';
         }
-        if (scanText) scanText.textContent = 'Kirim / Ingest Payload JSON (Tahap 2)';
+        if (scanText) scanText.textContent = `Kirim / Ingest Payload JSON ${c.truck_plate || 'Truk'} (Tahap 2)`;
 
         if (valBtn) {
             valBtn.className = 'px-5 py-2.5 rounded-xl bg-slate-100 text-slate-400 text-xs font-bold border border-gray-200 cursor-not-allowed shadow-none flex items-center transition-all opacity-70';
@@ -1923,6 +2089,32 @@ function renderCMSDashboard(c) {
     }
     // KASUS 2: SUDAH INGEST DATA JSON, SIAP VALIDASI E-AWB (Stage == 2)
     else if (stage === 2) {
+        const scanPayload = {
+            "event_type": "AIDC_INBOUND_INGEST_STREAM",
+            "device_id": "EDGE-AIDC-SCANNER-01",
+            "scan_protocol": "GS1_DIGITAL_LINK_JSON",
+            "timestamp": new Date().toISOString(),
+            "origin_truck": {
+                "truck_plate": c.truck_plate || "B 8888 KGO",
+                "dock_slot": c.dock_slot || "DOCK-02"
+            },
+            "cargo_data": {
+                "sscc_18": c.sscc || "3899123450007509019",
+                "gtin_14": c.gtin || "08997193267836",
+                "batch_no": c.batch_no || "LOT-GEN-1538",
+                "weight_kg": parseFloat(c.actual_weight_kg || c.declared_weight_kg || 354.0),
+                "pieces": parseInt(c.quantity || 50),
+                "commodity": c.description || "Pakaian & Tekstil Premium Ekspor",
+                "awb_number": c.awb_number
+            },
+            "signal_metrics": {
+                "carrier_freq_mhz": 865.7,
+                "rssi_dbm": -41.5,
+                "read_confidence": "99.98%"
+            },
+            "status": "HTTP_200_PAYLOAD_VERIFIED_SUCCESS"
+        };
+
         if (jsonDisplay) {
             jsonDisplay.textContent = JSON.stringify(scanPayload, null, 2);
         }
@@ -1947,9 +2139,9 @@ function renderCMSDashboard(c) {
         if (pillStrip) {
             pillStrip.classList.remove('hidden');
             const gGtin = document.getElementById('cms-gs1-gtin');
-            if (gGtin) gGtin.textContent = c.gtin || '08997193267836';
+            if (gGtin) gGtin.textContent = c.gtin || '-';
             const gBatch = document.getElementById('cms-gs1-batch');
-            if (gBatch) gBatch.textContent = c.batch_no || 'LOT-GEN-1538';
+            if (gBatch) gBatch.textContent = c.batch_no || '-';
         }
 
         if (scanBtn) {
@@ -1970,9 +2162,26 @@ function renderCMSDashboard(c) {
     }
     // KASUS 3: SUDAH TAHAP 3 ATAU LEBIH (Stage >= 3)
     else {
+        const processedPayload = {
+            "event_type": "CMS_EAWB_REGISTRATION",
+            "timestamp": new Date().toISOString(),
+            "registration_status": "EAWB_MATCHED_AND_REGISTERED",
+            "e_awb_number": c.awb_number,
+            "matched_sscc": c.sscc,
+            "truck_origin": c.truck_plate || "B 8888 KGO",
+            "cargo_details": {
+                "commodity": c.description,
+                "commodity_type": c.commodity_type,
+                "pieces": parseInt(c.quantity),
+                "declared_weight_kg": parseFloat(c.declared_weight_kg),
+                "shipper": c.shipper,
+                "consignee": c.consignee
+            },
+            "internal_routing": "LANE_02_AVSEC_XRAY_SCREENING"
+        };
+
         if (jsonDisplay) {
-            scanPayload.status = "INGESTED_AND_EAWB_MATCHED";
-            jsonDisplay.textContent = JSON.stringify(scanPayload, null, 2);
+            jsonDisplay.textContent = JSON.stringify(processedPayload, null, 2);
         }
         if (jsonStatusTag) {
             jsonStatusTag.className = "text-[10px] font-mono text-teal-300 bg-teal-950/60 px-2 py-0.5 rounded border border-teal-800/80";
@@ -1992,9 +2201,9 @@ function renderCMSDashboard(c) {
         if (pillStrip) {
             pillStrip.classList.remove('hidden');
             const gGtin = document.getElementById('cms-gs1-gtin');
-            if (gGtin) gGtin.textContent = c.gtin || '08997193267836';
+            if (gGtin) gGtin.textContent = c.gtin || '-';
             const gBatch = document.getElementById('cms-gs1-batch');
-            if (gBatch) gBatch.textContent = c.batch_no || 'LOT-GEN-1538';
+            if (gBatch) gBatch.textContent = c.batch_no || '-';
         }
 
         if (scanBtn) {
@@ -2017,10 +2226,12 @@ function renderCMSDashboard(c) {
         "event_type": "CMS_AIDC_AND_AWB_MATCHING",
         "ingest_source": "AIDC Inbound Edge JSON Gateway",
         "ingest_format": "JSON_GS1_EPC_GEN2",
-        "json_ingest_status": (stage >= 2) ? "PAYLOAD_INGESTED_SUCCESS" : "AWAITING_INGESTION",
+        "json_ingest_status": (stage >= 2) ? "PAYLOAD_INGESTED_SUCCESS" : "READY_AWAITING_INGESTION",
         "gs1_sscc_18": (stage >= 2) ? c.sscc : null,
         "e_awb_number": c.awb_number,
         "shipment": {
+            "truck_origin": c.truck_plate || "B 8888 KGO",
+            "driver_name": c.driver_name || "Bambang Pamungkas",
             "shipper": c.shipper,
             "consignee": c.consignee,
             "commodity": c.description,
@@ -2047,86 +2258,174 @@ function renderAVSECDashboard(c) {
     const csdNum = document.getElementById('avsec-csd-number');
     const inspId = document.getElementById('avsec-inspector-id');
     const clearTime = document.getElementById('avsec-clearance-time');
+    const jsonDisplay = document.getElementById('avsec-json-stream-display');
+    const statusTag = document.getElementById('avsec-json-status-tag');
+    const pingEl = document.getElementById('avsec-json-indicator-ping');
+    const dotEl = document.getElementById('avsec-json-indicator-dot');
 
-    const isSuspect = c.status === 'SUSPECT';
+    const isSuspect = (c.status === 'SUSPECT');
+    const isReturned = (c.status === 'RETURNED_TO_TRUCK');
+    const isCleared = (c.status === 'CLEARED' || (parseInt(c.current_stage || 1) >= 4 && !isSuspect && !isReturned));
 
     if (isSuspect) {
         if (certWrap) certWrap.classList.add('hidden');
         if (warnWrap) warnWrap.classList.remove('hidden');
         if (statusInd) {
-            statusInd.textContent = 'STATUS: SUSPECT (DITAHAN)';
+            statusInd.textContent = 'STATUS: SUSPECT (DITAHAN DI RUANG KARANTINA)';
             statusInd.className = 'text-[10px] font-mono px-3 py-1 rounded-full font-bold bg-rose-50 text-rose-700 border border-rose-300 animate-pulse';
         }
-    } else {
+        if (statusTag) {
+            statusTag.className = "text-[10px] font-mono text-rose-300 bg-rose-950/60 px-2 py-0.5 rounded border border-rose-800/80";
+            statusTag.textContent = "ANOMALY DETECTED - QUARANTINE LOCKOUT";
+        }
+        if (pingEl) pingEl.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75";
+        if (dotEl) dotEl.className = "relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500";
+    } else if (isReturned) {
+        if (certWrap) certWrap.classList.add('hidden');
+        if (warnWrap) warnWrap.classList.add('hidden');
+        if (statusInd) {
+            statusInd.textContent = `STATUS: DITOLAK (DIKEMBALIKAN KE TRUK ${c.truck_plate || ''})`;
+            statusInd.className = 'text-[10px] font-mono px-3 py-1 rounded-full font-bold bg-slate-100 text-slate-800 border border-slate-300';
+        }
+        if (statusTag) {
+            statusTag.className = "text-[10px] font-mono text-slate-300 bg-slate-900 px-2 py-0.5 rounded border border-slate-700";
+            statusTag.textContent = "CARGO REJECTED & EXPELLED";
+        }
+        if (pingEl) pingEl.className = "hidden";
+        if (dotEl) dotEl.className = "relative inline-flex rounded-full h-2.5 w-2.5 bg-slate-500";
+    } else if (isCleared) {
         if (certWrap) certWrap.classList.remove('hidden');
         if (warnWrap) warnWrap.classList.add('hidden');
         if (statusInd) {
-            statusInd.textContent = (c.current_stage >= 4) ? 'STATUS: CLEARED (LOLOS)' : 'STATUS: MENUNGGU SCREENING';
-            statusInd.className = (c.current_stage >= 4)
-                ? 'text-[10px] font-mono px-3 py-1 rounded-full font-bold bg-emerald-50 text-emerald-700 border border-emerald-200'
-                : 'text-[10px] font-mono px-3 py-1 rounded-full font-bold bg-teal-50 text-[#087F8A] border border-teal-200';
+            statusInd.textContent = 'STATUS: CLEARED (LOLOS - CSD TERBIT)';
+            statusInd.className = 'text-[10px] font-mono px-3 py-1 rounded-full font-bold bg-emerald-50 text-emerald-700 border border-emerald-200';
         }
-        if (csdNum) csdNum.textContent = c.csd_number || (`CSD-ID-${c.awb_number.replace(/[^0-9]/g, '')}-77`);
+        if (statusTag) {
+            statusTag.className = "text-[10px] font-mono text-emerald-300 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/80";
+            statusTag.textContent = "CLEARANCE VALIDATED - CSD ISSUED";
+        }
+        if (pingEl) pingEl.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75";
+        if (dotEl) dotEl.className = "relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500";
+        if (csdNum) csdNum.textContent = c.csd_number || (`CSD-ID-${(c.awb_number || '20261017').replace(/[^0-9]/g, '')}-77`);
         if (inspId) inspId.textContent = c.inspector_id || 'AVSEC-OPR-07';
         if (clearTime) clearTime.textContent = c.check_time || 'CLEARANCE VALIDATED';
+    } else {
+        if (certWrap) certWrap.classList.add('hidden');
+        if (warnWrap) warnWrap.classList.add('hidden');
+        if (statusInd) {
+            statusInd.textContent = 'STATUS: MENUNGGU SCREENING X-RAY';
+            statusInd.className = 'text-[10px] font-mono px-3 py-1 rounded-full font-bold bg-amber-50 text-amber-700 border border-amber-200';
+        }
+        if (statusTag) {
+            statusTag.className = "text-[10px] font-mono text-amber-300 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-800/80";
+            statusTag.textContent = "STANDBY - AWAITING X-RAY CONVEYOR";
+        }
+        if (pingEl) pingEl.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75";
+        if (dotEl) dotEl.className = "relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500";
     }
 
     const avsecJson = {
-        "event_type": "SECURITY_SCREENING_EVALUATION",
-        "cargo_id": c.id,
-        "awb_number": c.awb_number,
-        "scanner": "Dual-View High-Energy X-Ray (180x180cm, 320kV)",
-        "penetration_steel_mm": 80,
-        "screening_decision": isSuspect ? "SUSPECT" : "CLEARED",
-        "csd_certificate": isSuspect ? null : (c.csd_number || `CSD-ID-${c.awb_number.replace(/[^0-9]/g, '')}-77`),
-        "inspector_id": c.inspector_id || "AVSEC-OPR-07",
-        "density_spectrum": isSuspect ? "HIGH_DENSITY_ANOMALY (Z > 20)" : "NORMAL_ORGANIC_MIXED (Z 7-14)",
-        "quarantine_lockout": isSuspect,
-        "timestamp": new Date().toISOString()
+        "event_type": "AVSEC_XRAY_SECURITY_EVALUATION",
+        "protocol": "ICAO_ANNEX_17_AVSEC_STREAM",
+        "timestamp": new Date().toISOString(),
+        "cargo_identity": {
+            "awb_number": c.awb_number,
+            "sscc": c.sscc,
+            "commodity": c.description,
+            "commodity_class": c.commodity_type,
+            "pieces": parseInt(c.quantity),
+            "declared_weight_kg": parseFloat(c.declared_weight_kg),
+            "truck_origin": c.truck_plate || "B 8888 KGO",
+            "driver_name": c.driver_name || "Bambang Pamungkas"
+        },
+        "virtual_scanner_sensor": {
+            "device": "Dual-View High-Energy X-Ray (180x180cm, 320kV)",
+            "penetration_steel_mm": 80,
+            "density_spectrum_Z": isSuspect ? "HIGH_DENSITY_ANOMALY (Z > 20)" : "NORMAL_ORGANIC_MIXED (Z 7-14)",
+            "effective_atomic_number": isSuspect ? 24.8 : 7.6
+        },
+        "evaluation_outcome": {
+            "screening_decision": isSuspect ? "SUSPECT (BLOCKED)" : (isReturned ? "RETURNED_TO_TRUCK (EXPELLED)" : (isCleared ? "CLEARED (PASSED)" : "PENDING_EVALUATION")),
+            "quarantine_vault_lockout": isSuspect,
+            "csd_certificate": isCleared ? (c.csd_number || `CSD-ID-${(c.awb_number || '20261017').replace(/[^0-9]/g, '')}-77`) : null,
+            "inspector_badge": c.inspector_id || "AVSEC-OPR-07",
+            "special_treatment_action": isSuspect ? "SECONDARY_PHYSICAL_ETD_OR_REJECT" : (isReturned ? "EXPELLED_TO_ORIGINAL_TRUCK" : (isCleared ? "PROCEED_TO_SMART_SCALE" : "AWAITING_XRAY"))
+        }
     };
+
+    if (jsonDisplay) jsonDisplay.textContent = JSON.stringify(avsecJson, null, 2);
     const avsecDisp = document.getElementById('avsecPayloadDisplay');
     if (avsecDisp) avsecDisp.textContent = JSON.stringify(avsecJson, null, 2);
 }
 
 function renderLoadBalanceDashboard(c) {
     if (!c) return;
-    const wt = c.actual_weight_kg ? parseFloat(c.actual_weight_kg).toFixed(1) : parseFloat(c.declared_weight_kg).toFixed(1);
+    const declaredWt = parseFloat(c.declared_weight_kg || 350.0);
+    const actualWt = c.actual_weight_kg ? parseFloat(c.actual_weight_kg) : (parseInt(c.current_stage || 1) >= 5 ? declaredWt + 4.0 : 0.0);
+    const displayWt = actualWt > 0 ? actualWt : declaredWt;
+    const diff = displayWt - declaredWt;
+    const diffPercent = ((diff / declaredWt) * 100).toFixed(2);
+    const isWithinTolerance = Math.abs(diff / declaredWt) <= 0.05;
+
     const scaleWt = document.getElementById('lb-scale-weight');
-    if (scaleWt) scaleWt.textContent = `${wt} KG`;
+    if (scaleWt) scaleWt.textContent = `${displayWt.toFixed(1)} KG`;
     const scaleDec = document.getElementById('lb-scale-declared');
-    if (scaleDec) scaleDec.textContent = `${parseFloat(c.declared_weight_kg).toFixed(1)} kg`;
+    if (scaleDec) {
+        const sign = diff >= 0 ? '+' : '';
+        scaleDec.textContent = `${declaredWt.toFixed(1)} kg (${sign}${diff.toFixed(1)} kg / ${diffPercent}%)`;
+    }
     const uldCode = document.getElementById('lb-uld-code');
     if (uldCode) uldCode.textContent = c.uld_code || 'AKE-12345-GA';
 
+    const maxUldKg = 1588.0;
+    const maxAircraftPayloadKg = 18500.0;
+    const flightNum = c.flight_number || "GA-707";
+    const aircraftType = "Boeing 737-800F";
+    const isUldFit = displayWt <= maxUldKg;
+
     const lbJson = {
-        "event_type": "WEIGHT_BALANCE_AND_LOAD_PLANNING",
-        "cargo_id": c.id,
-        "scale_measurement": {
-            "platform": "Smart Floor Scale 15-Ton",
-            "declared_weight_kg": parseFloat(c.declared_weight_kg),
-            "actual_weight_kg": parseFloat(wt),
-            "discrepancy_kg": parseFloat((parseFloat(wt) - parseFloat(c.declared_weight_kg)).toFixed(1)),
-            "tolerance_status": "WITHIN_TOLERANCE"
+        "event_type": "SMART_SCALE_WEIGHT_ACQUISITION",
+        "protocol": "OIML_R76_SMART_SCALE_TCP_JSON",
+        "timestamp": new Date().toISOString(),
+        "cargo_shipment": {
+            "awb_number": c.awb_number,
+            "sscc": c.sscc,
+            "commodity": c.description,
+            "pieces": parseInt(c.quantity),
+            "origin_truck": c.truck_plate || "B 8888 KGO"
         },
-        "uld_consolidation": {
-            "container_code": c.uld_code || "AKE-12345-GA",
-            "container_type": "AKE",
-            "max_capacity_kg": 1588.0,
+        "smart_scale_measurement": {
+            "platform": "Smart Floor Scale 15-Ton IP68 (OIML R76 Class III)",
+            "declared_weight_kg": declaredWt,
+            "actual_weight_kg": parseFloat(displayWt.toFixed(1)),
+            "discrepancy_kg": parseFloat(diff.toFixed(1)),
+            "discrepancy_percent": `${diffPercent}%`,
+            "tolerance_limit": "±5.00%",
+            "tolerance_validation": isWithinTolerance ? "PASSED_WITHIN_TOLERANCE" : "EXCEEDED_TOLERANCE"
+        },
+        "uld_container_criteria": {
+            "assigned_container": c.uld_code || "AKE-12345-GA",
+            "container_type": "AKE (LD3 Contour)",
+            "max_gross_weight_capacity_kg": maxUldKg,
+            "container_tare_kg": 75.0,
+            "container_payload_status": isUldFit ? "COMPLIANT_WITHIN_ULD_LIMIT" : "OVERLOAD_EXCEEDS_ULD_LIMIT",
             "assigned_compartment": c.compartment || "AFT-LOWER-1"
         },
-        "aerodynamic_envelope": {
-            "center_of_gravity_percent_mac": 28.4,
-            "safety_envelope": "18.0% - 34.0% MAC",
-            "flight_trim_status": "OPTIMAL_SAFETY"
-        },
-        "flight_manifest": {
-            "flight_number": c.flight_number || "GA-707",
-            "aircraft_type": "Boeing 737-800F",
-            "route": "CGK -> DPS",
-            "electronic_loadsheet_status": c.current_stage >= 7 ? "FINALIZED_AND_SENT_TO_EFB" : "PENDING_FINAL_WEIGHT"
-        },
-        "timestamp": new Date().toISOString()
+        "aircraft_flight_criteria": {
+            "aircraft_model": aircraftType,
+            "flight_number": flightNum,
+            "max_aircraft_payload_capacity_kg": maxAircraftPayloadKg,
+            "cumulative_flight_payload_kg": parseFloat((5420.0 + displayWt).toFixed(1)),
+            "flight_payload_fit": "SAFE_WITHIN_AIRCRAFT_CAPACITY",
+            "center_of_gravity_mac": 28.4,
+            "safe_cg_envelope": "18.0% - 34.0% MAC",
+            "flight_trim_status": "OPTIMAL_SAFETY_TRIM",
+            "electronic_loadsheet": parseInt(c.current_stage || 1) >= 7 ? "ISSUED_TO_EFB_COCKPIT" : "PENDING_FINAL_DISPATCH"
+        }
     };
+
+    const streamDisp = document.getElementById('lb-json-stream-display');
+    if (streamDisp) streamDisp.textContent = JSON.stringify(lbJson, null, 2);
     const lbDisp = document.getElementById('lbPayloadDisplay');
     if (lbDisp) lbDisp.textContent = JSON.stringify(lbJson, null, 2);
 }
