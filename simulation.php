@@ -878,52 +878,84 @@ include __DIR__ . '/includes/header.php';
                 <div class="lg:col-span-7 space-y-6">
                     
                     <!-- Scanner & e-AWB Workstation Card -->
-                    <div class="bg-white p-6 rounded-2xl border border-gray-200/90 shadow-sm">
-                        <div class="flex items-center justify-between pb-3 mb-4 border-b border-gray-100">
-                            <h3 class="text-xs font-bold text-[#0D1C42] uppercase tracking-wider flex items-center">
-                                <i class="fa-solid fa-qrcode text-[#087F8A] mr-2 text-sm"></i>
-                                Pemindaian Gerbang &amp; Pencocokan e-AWB
-                            </h3>
-                            <span class="text-[10px] font-mono text-[#087F8A] bg-teal-50 px-2 py-0.5 rounded border border-teal-200 font-bold">Tahap 2 &amp; 3</span>
+                    <div class="bg-white p-6 rounded-2xl border border-gray-200/90 shadow-sm relative overflow-hidden">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 mb-4 border-b border-gray-100 gap-2">
+                            <div class="flex items-center space-x-2">
+                                <i class="fa-solid fa-qrcode text-[#087F8A] text-base"></i>
+                                <h3 class="text-xs font-bold text-[#0D1C42] uppercase tracking-wider">
+                                    Pemindaian Gerbang RFID &amp; Pencocokan e-AWB
+                                </h3>
+                            </div>
+                            <span id="cms-scanner-status-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 uppercase tracking-wide">
+                                <i class="fa-solid fa-hourglass-start mr-1"></i>Menunggu Pindaian Tag
+                            </span>
                         </div>
 
-                        <!-- Visual Tunnel Scanner Graphic -->
-                        <div class="p-5 rounded-xl bg-gradient-to-br from-slate-50 to-teal-50/40 border border-gray-200 mb-5 flex flex-col items-center justify-center shadow-inner">
+                        <!-- Visual Tunnel Scanner Graphic with Scanning Beam -->
+                        <div class="p-5 rounded-xl bg-gradient-to-br from-slate-50 to-teal-50/40 border border-gray-200 mb-5 flex flex-col items-center justify-center shadow-inner relative">
                             <div class="relative w-full max-w-md h-16 rounded-xl bg-white border-2 border-[#0CA1AF] flex items-center justify-between px-4 overflow-hidden mb-3 shadow-md">
-                                <div class="absolute inset-x-0 h-0.5 bg-[#0CA1AF] shadow-[0_0_12px_#0CA1AF] animate-pulse"></div>
+                                <div id="cms-scanner-beam" class="absolute inset-x-0 h-0.5 bg-[#0CA1AF] shadow-[0_0_12px_#0CA1AF] animate-pulse"></div>
                                 <div class="flex items-center space-x-2 text-[#087F8A] text-xs font-bold">
                                     <i class="fa-solid fa-barcode text-lg"></i>
                                     <span>RFID UHF Tunnel Scanner (865MHz)</span>
                                 </div>
                                 <span class="text-[10px] font-mono text-emerald-700 font-bold bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-200">2.5 m/s TUNNEL</span>
                             </div>
-                            <div class="flex flex-wrap items-center justify-center gap-3 text-xs font-mono">
+                            <div class="flex flex-wrap items-center justify-center gap-2.5 text-xs font-mono">
                                 <span class="text-slate-500 font-medium">Captured Primary Key (SSCC):</span>
-                                <span id="cms-captured-sscc" class="text-[#087F8A] font-bold bg-white px-3 py-1 rounded-lg border border-teal-200 shadow-sm font-mono">-</span>
+                                <span id="cms-captured-sscc" class="text-slate-400 font-semibold bg-slate-50 px-3 py-1 rounded-lg border border-gray-200 font-mono italic text-[11.5px]">[ Belum Dipindai - Klik Tombol Pindai di Bawah ]</span>
+                            </div>
+
+                            <!-- GS1 Decoded Tags Pill (Initially Hidden, shown when scanned) -->
+                            <div id="cms-gs1-pill-strip" class="hidden mt-3 pt-3 border-t border-teal-100/80 w-full flex flex-wrap items-center justify-center gap-3 text-[10.5px]">
+                                <span class="text-slate-500 font-bold"><i class="fa-solid fa-tags text-[#087F8A] mr-1"></i> GS1 Elements:</span>
+                                <span class="bg-white px-2.5 py-0.5 rounded border border-teal-200 font-mono text-[#087F8A]">AI (00) SSCC: <strong id="cms-gs1-sscc">-</strong></span>
+                                <span class="bg-white px-2.5 py-0.5 rounded border border-teal-200 font-mono text-[#087F8A]">AI (01) GTIN: <strong id="cms-gs1-gtin">-</strong></span>
+                                <span class="bg-white px-2.5 py-0.5 rounded border border-teal-200 font-mono text-[#087F8A]">Batch: <strong id="cms-gs1-batch">-</strong></span>
                             </div>
                         </div>
 
-                        <!-- Interactive Action Triggers -->
-                        <div class="pt-1 flex flex-wrap items-center gap-3">
-                            <button onclick="executeStageAction(2, 'CLEARED')" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-bold text-xs shadow-md shadow-teal-500/25 transition-all flex items-center transform hover:-translate-y-0.5">
-                                <i class="fa-solid fa-barcode mr-2"></i>
-                                <span>Pindai Tag RFID &amp; Baca SSCC (Tahap 2)</span>
-                            </button>
-                            <button onclick="executeStageAction(3, 'CLEARED')" class="px-5 py-2.5 rounded-xl bg-white hover:bg-teal-50 text-[#087F8A] hover:text-[#0CA1AF] text-xs font-bold border border-teal-300 shadow-sm transition-all flex items-center transform hover:-translate-y-0.5">
-                                <i class="fa-solid fa-laptop-code mr-2"></i>
-                                <span>Validasi &amp; Registrasi e-AWB di CMS (Tahap 3)</span>
+                        <!-- Sequential Action Buttons: Step 1 (Scan RFID) -> Step 2 (Validate e-AWB) -->
+                        <div class="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100">
+                            <div class="flex flex-wrap items-center gap-2.5">
+                                <!-- Tombol Tahap 2: Scan Barcode / RFID -->
+                                <button type="button" id="btn-cms-scan-rfid" onclick="executeStage2Scan()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-bold text-xs shadow-md shadow-teal-500/25 transition-all flex items-center transform hover:-translate-y-0.5 cursor-pointer">
+                                    <i class="fa-solid fa-barcode mr-2 text-sm"></i>
+                                    <span id="btn-cms-scan-text">Pindai Tag RFID &amp; Baca SSCC (Tahap 2)</span>
+                                </button>
+
+                                <!-- Tombol Tahap 3: Validasi e-AWB (Awalnya Terkunci) -->
+                                <button type="button" id="btn-cms-validate-awb" onclick="executeStage3Validate()" class="px-5 py-2.5 rounded-xl bg-slate-100 text-slate-400 text-xs font-bold border border-gray-200 cursor-not-allowed shadow-none flex items-center transition-all opacity-70">
+                                    <i id="btn-cms-validate-icon" class="fa-solid fa-lock mr-2 text-slate-400"></i>
+                                    <span id="btn-cms-validate-text">Validasi &amp; Registrasi e-AWB (Terkunci - Pindai RFID Dulu)</span>
+                                </button>
+                            </div>
+
+                            <button type="button" onclick="switchSystemDashboard('tms')" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-600 hover:text-[#087F8A] text-xs font-bold border border-gray-300 shadow-sm transition-colors flex items-center">
+                                <i class="fa-solid fa-arrow-left mr-1.5 text-xs"></i>
+                                <span>Kembali ke TMS</span>
                             </button>
                         </div>
                     </div>
 
+                    <?php
+                    // Filter cargos yang telah tervalidasi e-AWB dan teregistrasi di CMS (Stage >= 3)
+                    $cmsRegisteredCargos = array_filter($cargos, function($cg) {
+                        return (int)$cg['current_stage'] >= 3;
+                    });
+                    ?>
+
                     <!-- Inbound Cargo Ingestion Queue Table -->
                     <div class="bg-white p-6 rounded-2xl border border-gray-200/90 shadow-sm">
                         <div class="flex items-center justify-between pb-3 mb-3 border-b border-gray-100">
-                            <h3 class="text-xs font-bold text-[#0D1C42] uppercase tracking-wider flex items-center">
-                                <i class="fa-solid fa-boxes-stacked text-[#087F8A] mr-2 text-sm"></i>
-                                Antrean Masuk Kargo di CMS (Database: cargo_shipments)
-                            </h3>
-                            <span class="text-[10px] font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-gray-200 font-bold"><?= count($cargos) ?> Shipment</span>
+                            <div>
+                                <h3 class="text-xs font-bold text-[#0D1C42] uppercase tracking-wider flex items-center">
+                                    <i class="fa-solid fa-boxes-stacked text-[#087F8A] mr-2 text-sm"></i>
+                                    Antrean Masuk Kargo di CMS (Database: cargo_shipments)
+                                </h3>
+                                <p class="text-[10px] text-slate-500 mt-0.5">Kargo otomatis masuk ke antrean ini setelah divalidasi dan registrasi di e-AWB (Tahap 3)</p>
+                            </div>
+                            <span id="cms-cargo-count-badge" class="text-[10px] font-mono text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full border border-gray-200 font-bold"><?= count($cmsRegisteredCargos) ?> Shipment</span>
                         </div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-left text-xs">
@@ -937,21 +969,33 @@ include __DIR__ . '/includes/header.php';
                                         <th class="py-2.5 px-3">Status</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-gray-100 text-slate-700">
-                                    <?php foreach (array_slice($cargos, 0, 5) as $cg): ?>
-                                        <tr class="hover:bg-slate-50/70 transition-colors">
-                                            <td class="py-2 px-3 font-mono font-bold text-[#0D1C42]"><?= htmlspecialchars($cg['awb_number']) ?></td>
-                                            <td class="py-2 px-3 font-mono text-[11px] text-[#087F8A]"><?= htmlspecialchars($cg['sscc']) ?></td>
-                                            <td class="py-2 px-3 truncate max-w-[120px]"><?= htmlspecialchars($cg['description']) ?></td>
-                                            <td class="py-2 px-3 text-slate-500 truncate max-w-[120px]"><?= htmlspecialchars($cg['shipper']) ?></td>
-                                            <td class="py-2 px-3 font-bold text-[#087F8A]">Tahap <?= htmlspecialchars($cg['current_stage']) ?></td>
-                                            <td class="py-2 px-3">
-                                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-50 text-[#087F8A] border border-teal-200">
-                                                    <?= htmlspecialchars($cg['status']) ?>
-                                                </span>
+                                <tbody id="cmsCargoQueueTbody" class="divide-y divide-gray-100 text-slate-700">
+                                    <?php if (empty($cmsRegisteredCargos)): ?>
+                                        <tr id="cms-empty-queue-row">
+                                            <td colspan="6" class="py-8 text-center text-slate-400">
+                                                <div class="w-12 h-12 rounded-2xl bg-slate-50 border border-gray-200 text-slate-400 flex items-center justify-center text-xl mx-auto mb-2">
+                                                    <i class="fa-solid fa-inbox"></i>
+                                                </div>
+                                                <span class="font-bold text-[#0D1C42] block text-xs">Belum Ada Antrean Kargo Terdaftar di CMS</span>
+                                                <span class="text-[11px] text-slate-400 mt-0.5 block">Kargo akan masuk ke antrean ini secara otomatis setelah berhasil dipindai RFID (Tahap 2) &amp; divalidasi registrasi e-AWB (Tahap 3).</span>
                                             </td>
                                         </tr>
-                                    <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <?php foreach ($cmsRegisteredCargos as $cg): ?>
+                                            <tr class="hover:bg-slate-50/70 transition-colors">
+                                                <td class="py-2 px-3 font-mono font-bold text-[#0D1C42]"><?= htmlspecialchars($cg['awb_number']) ?></td>
+                                                <td class="py-2 px-3 font-mono text-[11px] text-[#087F8A] font-bold"><?= htmlspecialchars($cg['sscc']) ?></td>
+                                                <td class="py-2 px-3 truncate max-w-[120px]"><?= htmlspecialchars($cg['description']) ?></td>
+                                                <td class="py-2 px-3 text-slate-500 truncate max-w-[120px]"><?= htmlspecialchars($cg['shipper']) ?></td>
+                                                <td class="py-2 px-3 font-bold text-[#087F8A]">Tahap <?= htmlspecialchars($cg['current_stage']) ?></td>
+                                                <td class="py-2 px-3">
+                                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-50 text-[#087F8A] border border-teal-200">
+                                                        <?= htmlspecialchars($cg['status']) ?>
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
                                 </tbody>
                             </table>
                         </div>

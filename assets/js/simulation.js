@@ -1558,16 +1558,386 @@ function renderTMSDashboard(c) {
     updateTMSJsonPayload(activeDock, activePlate);
 }
 
+function executeStage2Scan() {
+    if (!currentCargoData) return;
+
+    Swal.fire({
+        title: 'Memindai Tag RFID & Barcode...',
+        html: `
+            <div class="p-3 bg-slate-50 rounded-xl border border-gray-200 text-xs text-left space-y-1.5 mt-2">
+                <div class="flex items-center text-teal-700 font-bold">
+                    <i class="fa-solid fa-barcode text-base mr-2 animate-pulse"></i>
+                    <span>Tunnel Scanner AIDC (2.5 m/s) Aktif</span>
+                </div>
+                <div class="text-slate-500 text-[11px]">Membaca antena UHF RFID 865MHz &amp; GS1 DataMatrix kargo...</div>
+            </div>
+        `,
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); },
+        background: '#ffffff',
+        color: '#0D1C42',
+        customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
+    });
+
+    fetch('api/simulate.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            cargo_id: currentCargoData.id,
+            stage: 2,
+            action: 'advance',
+            avsec_decision: 'CLEARED'
+        })
+    })
+    .then(r => r.json())
+    .then(res => {
+        if (res.success) {
+            currentCargoData.current_stage = 2;
+            currentCargoData.status = 'SCANNED';
+
+            Swal.fire({
+                title: 'Tag RFID Berhasil Dipindai!',
+                html: `
+                    <div class="text-xs text-left p-3.5 rounded-xl bg-slate-50 border border-gray-200 space-y-2 mt-2">
+                        <div class="flex items-center justify-between pb-1.5 border-b border-gray-200">
+                            <span class="text-slate-500 font-bold uppercase text-[10px]">Captured Primary Key (SSCC)</span>
+                            <span class="text-[#087F8A] font-mono font-black text-sm">${escapeHtml(currentCargoData.sscc)}</span>
+                        </div>
+                        <div class="flex justify-between items-center text-[11px]">
+                            <span class="text-slate-500">GTIN (01):</span>
+                            <span class="font-mono font-bold text-slate-800">${escapeHtml(currentCargoData.gtin || '08997193267836')}</span>
+                        </div>
+                        <div class="flex justify-between items-center text-[11px]">
+                            <span class="text-slate-500">Komoditas:</span>
+                            <span class="font-semibold text-slate-800">${escapeHtml(currentCargoData.description || 'Pakaian & Tekstil')}</span>
+                        </div>
+                        <div class="flex justify-between items-center text-[11px]">
+                            <span class="text-slate-500">Batch / Lot:</span>
+                            <span class="font-mono text-slate-700">${escapeHtml(currentCargoData.batch_no || 'LOT-GEN-1538')}</span>
+                        </div>
+                    </div>
+                    <div class="mt-3 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-left">
+                        <p class="text-emerald-800 font-bold">
+                            <i class="fa-solid fa-circle-check text-emerald-600 mr-1"></i>
+                            Pindaian RFID Terverifikasi! Tombol Validasi e-AWB (Tahap 3) kini telah terbuka.
+                        </p>
+                    </div>
+                `,
+                icon: 'success',
+                background: '#ffffff',
+                color: '#0D1C42',
+                confirmButtonColor: '#087F8A',
+                confirmButtonText: 'Lanjut ke Validasi e-AWB',
+                customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
+            }).then(() => {
+                initSimulation(currentCargoData.id, 2, 'cms');
+            });
+        } else {
+            Swal.fire({
+                title: 'Gagal Pindai RFID!',
+                text: res.message || 'Sensor RFID gagal membaca tag kargo.',
+                icon: 'error',
+                background: '#ffffff',
+                color: '#0D1C42',
+                confirmButtonColor: '#087F8A'
+            });
+        }
+    })
+    .catch(err => {
+        Swal.fire({
+            title: 'Error Sistem',
+            text: 'Gagal memproses pindaian RFID: ' + err,
+            icon: 'error',
+            background: '#ffffff',
+            color: '#0D1C42',
+            confirmButtonColor: '#087F8A'
+        });
+    });
+}
+
+function executeStage3Validate() {
+    if (!currentCargoData) return;
+
+    // Proteksi: Kargo harus sudah melewati pindaian RFID di Tahap 2
+    if (parseInt(currentCargoData.current_stage || 1) < 2) {
+        Swal.fire({
+            title: 'Pindai Tag RFID Terlebih Dahulu!',
+            html: `
+                <div class="text-xs text-left p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 space-y-1.5 mt-2">
+                    <p class="font-bold"><i class="fa-solid fa-triangle-exclamation text-amber-600 mr-1"></i> SOP Gerbang Inbound Bandara:</p>
+                    <p class="text-[11.5px] text-amber-800 leading-relaxed">Kargo wajib dipindai melalui High-Speed Tunnel RFID/Barcode (Tahap 2) untuk menangkap GS1 SSCC 18-digit sebelum dokumen digital e-AWB dapat divalidasi dan diregistrasi di CMS.</p>
+                </div>
+            `,
+            icon: 'warning',
+            background: '#ffffff',
+            color: '#0D1C42',
+            confirmButtonColor: '#087F8A',
+            confirmButtonText: 'Pindai RFID Sekarang',
+            showCancelButton: true,
+            cancelButtonText: 'Tutup',
+            cancelButtonColor: '#94a3b8'
+        }).then((res) => {
+            if (res.isConfirmed) {
+                executeStage2Scan();
+            }
+        });
+        return;
+    }
+
+    Swal.fire({
+        title: 'Mencocokkan e-AWB di CMS...',
+        html: `
+            <div class="p-3 bg-slate-50 rounded-xl border border-gray-200 text-xs text-left space-y-1.5 mt-2">
+                <div class="flex items-center text-[#087F8A] font-bold">
+                    <i class="fa-solid fa-arrows-rotate animate-spin mr-2"></i>
+                    <span>IATA e-freight Matcher Engine</span>
+                </div>
+                <div class="text-slate-500 text-[11px]">Mencocokkan SSCC ${escapeHtml(currentCargoData.sscc)} dengan nomor e-AWB ${escapeHtml(currentCargoData.awb_number)}...</div>
+            </div>
+        `,
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); },
+        background: '#ffffff',
+        color: '#0D1C42',
+        customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
+    });
+
+    fetch('api/simulate.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            cargo_id: currentCargoData.id,
+            stage: 3,
+            action: 'advance',
+            avsec_decision: 'CLEARED'
+        })
+    })
+    .then(r => r.json())
+    .then(res => {
+        if (res.success) {
+            currentCargoData.current_stage = 3;
+            currentCargoData.status = 'REGISTERED';
+
+            // Masukkan kargo ke antrean CMS di bawahnya secara real-time!
+            const tbody = document.getElementById('cmsCargoQueueTbody');
+            if (tbody) {
+                const emptyRow = document.getElementById('cms-empty-queue-row');
+                if (emptyRow) {
+                    emptyRow.remove();
+                }
+
+                const existingRow = document.getElementById(`cms-cargo-row-${currentCargoData.id}`);
+                if (!existingRow) {
+                    const tr = document.createElement('tr');
+                    tr.id = `cms-cargo-row-${currentCargoData.id}`;
+                    tr.className = 'hover:bg-slate-50/70 transition-colors bg-emerald-50/60 font-medium animate-pulse';
+                    tr.innerHTML = `
+                        <td class="py-2.5 px-3 font-mono font-bold text-[#0D1C42]">${escapeHtml(currentCargoData.awb_number)}</td>
+                        <td class="py-2.5 px-3 font-mono text-[11px] text-[#087F8A] font-bold">${escapeHtml(currentCargoData.sscc)}</td>
+                        <td class="py-2.5 px-3 truncate max-w-[120px]">${escapeHtml(currentCargoData.description || 'Pakaian & Tekstil')}</td>
+                        <td class="py-2.5 px-3 text-slate-500 truncate max-w-[120px]">${escapeHtml(currentCargoData.shipper || '-')}</td>
+                        <td class="py-2.5 px-3 font-bold text-[#087F8A]">Tahap 3</td>
+                        <td class="py-2.5 px-3">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-50 text-[#087F8A] border border-teal-200">
+                                REGISTERED
+                            </span>
+                        </td>
+                    `;
+                    tbody.insertBefore(tr, tbody.firstChild);
+
+                    setTimeout(() => {
+                        tr.classList.remove('bg-emerald-50/60', 'animate-pulse');
+                    }, 3000);
+                }
+            }
+
+            // Update badge jumlah shipment di antrean CMS
+            const badge = document.getElementById('cms-cargo-count-badge');
+            if (badge && tbody) {
+                const totalRows = tbody.querySelectorAll('tr:not(#cms-empty-queue-row)').length;
+                badge.textContent = `${totalRows} Shipment`;
+            }
+
+            Swal.fire({
+                title: 'e-AWB Berhasil Tervalidasi & Terdaftar!',
+                html: `
+                    <div class="text-xs text-left p-3.5 rounded-xl bg-slate-50 border border-gray-200 space-y-1.5 mt-2">
+                        <div class="flex justify-between items-center pb-1 border-b border-gray-200">
+                            <span class="text-slate-500 font-bold uppercase text-[10px]">Nomor e-AWB</span>
+                            <span class="text-[#0D1C42] font-mono font-black text-sm">${escapeHtml(currentCargoData.awb_number)}</span>
+                        </div>
+                        <div class="flex justify-between items-center text-[11px]">
+                            <span class="text-slate-500">Kunci SSCC:</span>
+                            <span class="font-mono text-[#087F8A] font-bold">${escapeHtml(currentCargoData.sscc)}</span>
+                        </div>
+                        <div class="flex justify-between items-center text-[11px]">
+                            <span class="text-slate-500">Status Pencocokan:</span>
+                            <span class="font-bold text-emerald-700">MATCHED &amp; REGISTERED</span>
+                        </div>
+                        <div class="flex justify-between items-center text-[11px]">
+                            <span class="text-slate-500">Internal Lane Routing:</span>
+                            <span class="font-mono text-slate-800 font-bold">LANE_02_AVSEC_SCREENING</span>
+                        </div>
+                    </div>
+                    <p class="text-xs text-emerald-700 font-bold mt-3">
+                        <i class="fa-solid fa-circle-check mr-1 text-emerald-600"></i>
+                        Kargo resmi masuk ke antrean CMS dan siap diarahkan ke screening X-Ray AVSEC!
+                    </p>
+                `,
+                icon: 'success',
+                background: '#ffffff',
+                color: '#0D1C42',
+                confirmButtonColor: '#087F8A',
+                confirmButtonText: 'Lanjut ke AVSEC (Tahap 4)',
+                showCancelButton: true,
+                cancelButtonText: 'Tetap di CMS',
+                cancelButtonColor: '#94a3b8',
+                customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
+            }).then((result) => {
+                initSimulation(currentCargoData.id, 3, result.isConfirmed ? 'avsec' : 'cms');
+            });
+        } else {
+            Swal.fire({
+                title: 'Gagal Validasi e-AWB!',
+                text: res.message || 'Terjadi kesalahan saat mencocokkan dokumen di CMS.',
+                icon: 'error',
+                background: '#ffffff',
+                color: '#0D1C42',
+                confirmButtonColor: '#087F8A'
+            });
+        }
+    })
+    .catch(err => {
+        Swal.fire({
+            title: 'Error Sistem',
+            text: 'Gagal memproses validasi e-AWB: ' + err,
+            icon: 'error',
+            background: '#ffffff',
+            color: '#0D1C42',
+            confirmButtonColor: '#087F8A'
+        });
+    });
+}
+
 function renderCMSDashboard(c) {
     if (!c) return;
+
     const ssccEl = document.getElementById('cms-captured-sscc');
-    if (ssccEl) ssccEl.textContent = c.sscc || '-';
+    const badgeEl = document.getElementById('cms-scanner-status-badge');
+    const pillStrip = document.getElementById('cms-gs1-pill-strip');
+    const scanBtn = document.getElementById('btn-cms-scan-rfid');
+    const scanText = document.getElementById('btn-cms-scan-text');
+    const valBtn = document.getElementById('btn-cms-validate-awb');
+    const valText = document.getElementById('btn-cms-validate-text');
+    const valIcon = document.getElementById('btn-cms-validate-icon');
+
+    const stage = parseInt(c.current_stage || 1);
+
+    // KASUS 1: BELUM DIPINDAI RFID (Stage < 2)
+    if (stage < 2) {
+        if (ssccEl) {
+            ssccEl.className = 'text-slate-400 font-semibold bg-slate-50 px-3 py-1 rounded-lg border border-gray-200 font-mono italic text-[11.5px]';
+            ssccEl.textContent = '[ Belum Dipindai - Klik Tombol Pindai di Bawah ]';
+        }
+        if (badgeEl) {
+            badgeEl.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 uppercase tracking-wide';
+            badgeEl.innerHTML = '<i class="fa-solid fa-hourglass-start mr-1"></i>Menunggu Pindaian Tag';
+        }
+        if (pillStrip) pillStrip.classList.add('hidden');
+
+        if (scanBtn) {
+            scanBtn.className = 'px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-bold text-xs shadow-md shadow-teal-500/25 transition-all flex items-center transform hover:-translate-y-0.5 cursor-pointer animate-pulse';
+        }
+        if (scanText) scanText.textContent = 'Pindai Tag RFID & Baca SSCC (Tahap 2)';
+
+        if (valBtn) {
+            valBtn.className = 'px-5 py-2.5 rounded-xl bg-slate-100 text-slate-400 text-xs font-bold border border-gray-200 cursor-not-allowed shadow-none flex items-center transition-all opacity-70';
+        }
+        if (valIcon) {
+            valIcon.className = 'fa-solid fa-lock mr-2 text-slate-400';
+        }
+        if (valText) {
+            valText.textContent = 'Validasi & Registrasi e-AWB (Terkunci - Pindai RFID Dulu)';
+        }
+    }
+    // KASUS 2: SUDAH DIPINDAI RFID, SIAP VALIDASI E-AWB (Stage == 2)
+    else if (stage === 2) {
+        if (ssccEl) {
+            ssccEl.className = 'text-emerald-700 font-black bg-emerald-50 px-3.5 py-1.5 rounded-lg border border-emerald-300 shadow-sm text-sm font-mono tracking-wider animate-pulse';
+            ssccEl.textContent = c.sscc || '-';
+        }
+        if (badgeEl) {
+            badgeEl.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase tracking-wide';
+            badgeEl.innerHTML = '<i class="fa-solid fa-circle-check mr-1 text-emerald-600"></i>RFID UHF &amp; Barcode GS1 Terdeteksi';
+        }
+        if (pillStrip) {
+            pillStrip.classList.remove('hidden');
+            const gSscc = document.getElementById('cms-gs1-sscc');
+            if (gSscc) gSscc.textContent = c.sscc || '-';
+            const gGtin = document.getElementById('cms-gs1-gtin');
+            if (gGtin) gGtin.textContent = c.gtin || '08997193267836';
+            const gBatch = document.getElementById('cms-gs1-batch');
+            if (gBatch) gBatch.textContent = c.batch_no || 'LOT-GEN-1538';
+        }
+
+        if (scanBtn) {
+            scanBtn.className = 'px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold border border-gray-300 shadow-sm transition-all flex items-center cursor-pointer';
+        }
+        if (scanText) scanText.textContent = 'RFID Terpindai (Pindai Ulang)';
+
+        // Tombol 2 terbuka dan berkedip hijau siap diklik!
+        if (valBtn) {
+            valBtn.className = 'px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-500/25 transition-all flex items-center transform hover:-translate-y-0.5 animate-pulse cursor-pointer';
+        }
+        if (valIcon) {
+            valIcon.className = 'fa-solid fa-laptop-code mr-2 text-sm';
+        }
+        if (valText) {
+            valText.textContent = 'Validasi & Registrasi e-AWB di CMS (Tahap 3)';
+        }
+    }
+    // KASUS 3: SUDAH TAHAP 3 ATAU LEBIH (Stage >= 3)
+    else {
+        if (ssccEl) {
+            ssccEl.className = 'text-emerald-700 font-bold bg-emerald-50 px-3.5 py-1 rounded-lg border border-emerald-200 font-mono text-sm';
+            ssccEl.textContent = c.sscc || '-';
+        }
+        if (badgeEl) {
+            badgeEl.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-teal-50 text-[#087F8A] border border-teal-200 uppercase tracking-wide';
+            badgeEl.innerHTML = '<i class="fa-solid fa-file-circle-check mr-1 text-[#087F8A]"></i>e-AWB Validated &amp; Registered';
+        }
+        if (pillStrip) {
+            pillStrip.classList.remove('hidden');
+            const gSscc = document.getElementById('cms-gs1-sscc');
+            if (gSscc) gSscc.textContent = c.sscc || '-';
+            const gGtin = document.getElementById('cms-gs1-gtin');
+            if (gGtin) gGtin.textContent = c.gtin || '08997193267836';
+            const gBatch = document.getElementById('cms-gs1-batch');
+            if (gBatch) gBatch.textContent = c.batch_no || 'LOT-GEN-1538';
+        }
+
+        if (scanBtn) {
+            scanBtn.className = 'px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold border border-gray-300 shadow-sm transition-all flex items-center cursor-pointer';
+        }
+        if (scanText) scanText.textContent = 'Pindai Ulang Tag RFID';
+
+        if (valBtn) {
+            valBtn.className = 'px-4 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold border border-emerald-300 shadow-sm transition-all flex items-center cursor-pointer';
+        }
+        if (valIcon) {
+            valIcon.className = 'fa-solid fa-circle-check mr-1.5 text-emerald-600';
+        }
+        if (valText) {
+            valText.textContent = 'e-AWB Tervalidasi (Validasi Ulang)';
+        }
+    }
 
     const cmsJson = {
         "event_type": "CMS_AIDC_AND_AWB_MATCHING",
         "hardware": "High-Speed Tunnel Barcode & RFID UHF Scanner",
         "conveyor_speed": "2.5 m/s",
-        "gs1_sscc_18": c.sscc,
+        "rfid_scan_status": (stage >= 2) ? "TAG_READ_SUCCESS" : "PENDING_SCAN",
+        "gs1_sscc_18": (stage >= 2) ? c.sscc : null,
         "e_awb_number": c.awb_number,
         "shipment": {
             "shipper": c.shipper,
@@ -1577,7 +1947,8 @@ function renderCMSDashboard(c) {
             "declared_weight_kg": parseFloat(c.declared_weight_kg)
         },
         "matching_result": {
-            "awb_matched": true,
+            "awb_matched": (stage >= 3),
+            "registration_status": (stage >= 3) ? "REGISTERED_IN_CMS" : "AWAITING_VALIDATION",
             "internal_sorting_lane": "LANE_02_AVSEC_SCREENING",
             "cold_chain_priority": c.commodity_type === 'PHARMA' ? "URGENT" : "STANDARD"
         },
