@@ -966,52 +966,305 @@ function generateRandomTASBooking() {
     if (el) el.value = code;
 }
 
-function highlightSelectedDock(dockSlot, customPlate = null) {
-    const docks = ['DOCK-01', 'DOCK-02', 'DOCK-03', 'DOCK-04'];
+// State okupansi operasional 4 dock terminal kargo inbound (TMS live state)
+const defaultDockLiveState = {
+    'DOCK-01': {
+        occupied: true,
+        plate: 'B 9182 KXA',
+        driver: 'Agus Setiawan',
+        transporter: 'PT Multi Lintas Express',
+        status: 'Sedang Bongkar Pallet',
+        timeRemaining: '12 mnt'
+    },
+    'DOCK-02': {
+        occupied: false,
+        plate: null,
+        driver: null,
+        transporter: null,
+        status: 'Standby / Siap Digunakan',
+        timeRemaining: null
+    },
+    'DOCK-03': {
+        occupied: true,
+        plate: 'B 4412 PQL',
+        driver: 'Hendra Wijaya',
+        transporter: 'PT Cipta Sarana Logistik',
+        status: 'Sedang Bongkar Pallet',
+        timeRemaining: '25 mnt'
+    },
+    'DOCK-04': {
+        occupied: false,
+        plate: null,
+        driver: null,
+        transporter: null,
+        status: 'Standby / Siap Digunakan',
+        timeRemaining: null
+    }
+};
+
+let dockLiveState = JSON.parse(JSON.stringify(defaultDockLiveState));
+
+function renderDockCards(selectedSlot = null, customPlate = null) {
+    const dockSelect = document.getElementById('input-tms-dock');
+    if (!selectedSlot) {
+        selectedSlot = dockSelect ? dockSelect.value : 'DOCK-02';
+    }
     const currentPlate = customPlate || document.getElementById('input-tms-plate')?.value.trim() || 'B 9482 XX';
+    const docks = ['DOCK-01', 'DOCK-02', 'DOCK-03', 'DOCK-04'];
+
+    let occupiedCount = 0;
+    let availableCount = 0;
 
     docks.forEach(d => {
+        const info = dockLiveState[d];
         const card = document.getElementById(`dock-card-${d}`);
         const icon = document.getElementById(`dock-icon-${d}`);
         const plate = document.getElementById(`dock-plate-${d}`);
         const status = document.getElementById(`dock-status-${d}`);
+        const badge = document.getElementById(`dock-badge-${d}`);
         if (!card) return;
 
-        const titleSpan = card.querySelector('span:first-child');
+        const titleSpan = card.querySelector('div > span:first-child') || card.querySelector('span:first-child');
 
-        if (d === dockSlot) {
-            card.className = 'p-3.5 rounded-xl border border-emerald-300 bg-emerald-50/50 text-center transition-all shadow-sm ring-1 ring-emerald-400/40';
-            if (titleSpan) titleSpan.className = 'text-[10px] font-bold text-emerald-700 block uppercase font-mono';
+        // KASUS 1: Dock yang saat ini dipilih oleh staff untuk kargo ini
+        if (d === selectedSlot) {
+            card.className = 'p-3.5 rounded-xl border-2 border-[#0CA1AF] bg-teal-50/70 text-center transition-all shadow-md ring-2 ring-teal-400/30 cursor-pointer relative overflow-hidden group select-none';
+            card.title = 'Alokasi dock terpilih kargo saat ini';
+            if (titleSpan) titleSpan.className = 'text-[10px] font-bold text-[#087F8A] uppercase font-mono';
+            if (badge) {
+                badge.className = 'text-[8.5px] px-1.5 py-0.5 rounded font-extrabold uppercase bg-teal-100 text-[#087F8A] border border-teal-300';
+                badge.textContent = 'TERPILIH';
+            }
             if (icon) {
-                icon.className = 'my-2 text-2xl text-emerald-600 animate-bounce';
+                icon.className = 'my-2 text-2xl text-[#087F8A] group-hover:scale-105 transition-transform animate-pulse';
                 icon.innerHTML = '<i class="fa-solid fa-truck"></i>';
-                setTimeout(() => { if (icon) icon.classList.remove('animate-bounce'); }, 1500);
             }
             if (plate) {
-                plate.className = 'text-xs font-bold text-[#0D1C42] block font-mono';
+                plate.className = 'text-xs font-black text-[#0D1C42] block font-mono truncate';
                 plate.textContent = currentPlate || 'B 9482 XX';
             }
             if (status) {
-                status.className = 'text-[9px] text-emerald-700 font-bold block mt-0.5';
-                status.textContent = 'Alokasi Bongkar Aktif';
+                status.className = 'text-[9px] text-teal-800 font-bold block mt-0.5';
+                status.innerHTML = '<i class="fa-solid fa-circle-check mr-1 text-emerald-600"></i>Alokasi Bongkar Anda';
             }
-        } else {
-            card.className = 'p-3.5 rounded-xl border border-gray-200 bg-slate-50 text-center transition-all';
-            if (titleSpan) titleSpan.className = 'text-[10px] font-bold text-slate-500 block uppercase font-mono';
+            availableCount++;
+        }
+        // KASUS 2: Dock sedang penuh terisi oleh armada lain
+        else if (info.occupied) {
+            occupiedCount++;
+            card.className = 'p-3.5 rounded-xl border border-rose-300 bg-rose-50/60 text-center transition-all cursor-pointer hover:border-rose-400 hover:shadow-md relative overflow-hidden group select-none';
+            card.title = `PENUH - Digunakan oleh ${info.plate}. Klik untuk lihat rincian.`;
+            if (titleSpan) titleSpan.className = 'text-[10px] font-bold text-rose-800 uppercase font-mono';
+            if (badge) {
+                badge.className = 'text-[8.5px] px-1.5 py-0.5 rounded font-extrabold uppercase bg-rose-200 text-rose-800 border border-rose-300';
+                badge.textContent = 'PENUH';
+            }
             if (icon) {
-                icon.className = 'my-2 text-2xl text-slate-300';
+                icon.className = 'my-2 text-2xl text-rose-500 group-hover:scale-105 transition-transform';
+                icon.innerHTML = '<i class="fa-solid fa-truck-ramp-box"></i>';
+            }
+            if (plate) {
+                plate.className = 'text-xs font-bold text-rose-950 block font-mono truncate';
+                plate.textContent = info.plate;
+            }
+            if (status) {
+                status.className = 'text-[9px] text-rose-700 font-bold block mt-0.5';
+                status.innerHTML = '<i class="fa-solid fa-circle-exclamation mr-1"></i>Sedang Bongkar';
+            }
+        }
+        // KASUS 3: Dock kosong dan standby, siap diklik untuk dipilih
+        else {
+            availableCount++;
+            card.className = 'p-3.5 rounded-xl border-2 border-dashed border-emerald-300 bg-emerald-50/20 text-center transition-all cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 hover:shadow-md relative overflow-hidden group select-none';
+            card.title = 'Dock KOSONG - Klik langsung untuk memilih dock ini';
+            if (titleSpan) titleSpan.className = 'text-[10px] font-bold text-emerald-700 uppercase font-mono';
+            if (badge) {
+                badge.className = 'text-[8.5px] px-1.5 py-0.5 rounded font-extrabold uppercase bg-emerald-100 text-emerald-700 border border-emerald-200';
+                badge.textContent = 'KOSONG';
+            }
+            if (icon) {
+                icon.className = 'my-2 text-2xl text-emerald-500 group-hover:scale-110 transition-transform';
                 icon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
             }
             if (plate) {
-                plate.className = 'text-xs font-bold text-slate-400 block font-mono';
-                plate.textContent = 'KOSONG';
+                plate.className = 'text-xs font-bold text-emerald-700 block font-mono';
+                plate.textContent = 'TERSEDIA';
             }
             if (status) {
-                status.className = 'text-[9px] text-slate-400 font-medium block mt-0.5';
-                status.textContent = 'Standby Slot';
+                status.className = 'text-[9px] text-emerald-700 font-semibold block mt-0.5';
+                status.textContent = 'Standby Leveler';
             }
         }
     });
+
+    // Update badges dan stat summary
+    const occBadge = document.getElementById('tms-dock-occupied-badge');
+    if (occBadge) occBadge.textContent = `${occupiedCount} Penuh`;
+    const availBadge = document.getElementById('tms-dock-available-badge');
+    if (availBadge) availBadge.textContent = `${availableCount} Kosong`;
+    const sumStat = document.getElementById('tms-dock-summary-stat');
+    if (sumStat) sumStat.innerHTML = `${occupiedCount}/4 Terisi <span class="text-xs text-slate-500 font-sans font-normal">${availableCount} Kosong</span>`;
+
+    // Sinkronkan pilihan dropdown
+    if (dockSelect && dockSelect.value !== selectedSlot) {
+        dockSelect.value = selectedSlot;
+    }
+}
+
+function handleDockCardClick(dockSlot) {
+    const dockInfo = dockLiveState[dockSlot];
+    const currentSelected = document.getElementById('input-tms-dock')?.value;
+
+    // Jika dock sedang penuh terisi armada lain
+    if (dockInfo && dockInfo.occupied && dockSlot !== currentSelected) {
+        Swal.fire({
+            title: `${dockSlot} SEDANG PENUH!`,
+            html: `
+                <div class="text-left text-xs p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-slate-700 space-y-2 mt-2">
+                    <div class="flex items-center justify-between pb-1.5 border-b border-rose-200">
+                        <span class="text-rose-700 font-extrabold uppercase text-[10px]">Status Operasional Dock</span>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-200 text-rose-800">PENUH / OCCUPIED</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-500">Truk di Dock:</span>
+                        <strong class="font-mono text-rose-900">${dockInfo.plate}</strong>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-500">Supir Terdaftar:</span>
+                        <span class="font-semibold text-slate-800">${dockInfo.driver || '-'}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-500">Vendor Ekspedisi:</span>
+                        <span class="text-slate-700">${dockInfo.transporter || '-'}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-500">Aktivitas Saat Ini:</span>
+                        <span class="font-semibold text-rose-800">${dockInfo.status}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-500">Estimasi Selesai:</span>
+                        <span class="font-mono font-bold text-emerald-700">±${dockInfo.timeRemaining || '15 mnt'}</span>
+                    </div>
+                </div>
+                <div class="mt-3 p-2.5 rounded-xl bg-teal-50 border border-teal-200 text-xs text-left">
+                    <span class="font-bold text-[#087F8A] block mb-1"><i class="fa-solid fa-lightbulb mr-1"></i> Rekomendasi Alokasi:</span>
+                    <p class="text-slate-600 text-[11px]">Silakan klik dock bertanda <strong class="text-emerald-700">KOSONG</strong> (misalnya <strong>DOCK 02</strong> atau <strong>DOCK 04</strong>) yang memiliki hidrolik siap bongkar.</p>
+                </div>
+            `,
+            icon: 'warning',
+            background: '#ffffff',
+            color: '#0D1C42',
+            confirmButtonColor: '#087F8A',
+            confirmButtonText: 'Pilih Dock yang Kosong',
+            customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
+        });
+        return;
+    }
+
+    if (dockSlot === currentSelected) {
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            title: `${dockSlot} Sedang Terpilih`,
+            text: 'Ini adalah dock yang saat ini dialokasikan untuk kargo Anda.',
+            icon: 'info',
+            showConfirmButton: false,
+            timer: 1500,
+            background: '#ffffff',
+            color: '#0D1C42',
+            customClass: { popup: 'rounded-xl shadow-lg border border-gray-200' }
+        });
+        return;
+    }
+
+    // Dock kosong berhasil dipilih langsung dari kartu!
+    const dockSelect = document.getElementById('input-tms-dock');
+    if (dockSelect) {
+        dockSelect.value = dockSlot;
+    }
+
+    renderDockCards(dockSlot);
+    updateTMSJsonPayload(dockSlot);
+
+    Swal.fire({
+        toast: true,
+        position: 'top-end',
+        title: `${dockSlot} Berhasil Dipilih!`,
+        text: `Alokasi bongkar kargo dialihkan ke ${dockSlot}`,
+        icon: 'success',
+        showConfirmButton: false,
+        timer: 1800,
+        background: '#ffffff',
+        color: '#0D1C42',
+        customClass: { popup: 'rounded-xl shadow-lg border border-gray-200' }
+    });
+}
+
+function handleDockSelectChange(dockSlot) {
+    if (dockLiveState[dockSlot] && dockLiveState[dockSlot].occupied) {
+        Swal.fire({
+            title: `${dockSlot} Sedang Penuh!`,
+            text: `Dock ini sedang digunakan oleh armada ${dockLiveState[dockSlot].plate}. Silakan pilih dock yang bertanda KOSONG.`,
+            icon: 'warning',
+            confirmButtonColor: '#087F8A'
+        });
+        const firstAvailable = Object.keys(dockLiveState).find(k => !dockLiveState[k].occupied) || 'DOCK-02';
+        document.getElementById('input-tms-dock').value = firstAvailable;
+        renderDockCards(firstAvailable);
+        return;
+    }
+    renderDockCards(dockSlot);
+    updateTMSJsonPayload(dockSlot);
+}
+
+function handlePlateInput(plateValue) {
+    const dockSelect = document.getElementById('input-tms-dock');
+    const selectedSlot = dockSelect ? dockSelect.value : 'DOCK-02';
+    renderDockCards(selectedSlot, plateValue);
+    updateTMSJsonPayload(selectedSlot, plateValue);
+}
+
+function updateTMSJsonPayload(assignedDock = null, customPlate = null) {
+    if (!currentCargoData) return;
+    const plateInput = document.getElementById('input-tms-plate');
+    const driverInput = document.getElementById('input-tms-driver');
+    const transInput = document.getElementById('input-tms-transporter');
+    const dockInput = document.getElementById('input-tms-dock');
+    const bookingInput = document.getElementById('input-tms-booking');
+
+    const activeDock = assignedDock || (dockInput ? dockInput.value : 'DOCK-02');
+    const activePlate = customPlate || (plateInput ? plateInput.value : currentCargoData.truck_plate) || 'B 9482 XX';
+
+    const tmsJson = {
+        "event_type": "TMS_TRUCK_GATE_CHECKIN",
+        "truck_id": currentCargoData.truck_arrival_id || "TRK-INBOUND-01",
+        "truck_plate": activePlate,
+        "driver_name": (driverInput ? driverInput.value : currentCargoData.driver_name) || "Suryadi Pratama",
+        "transporter": (transInput ? transInput.value : currentCargoData.transporter_company) || "PT Intermodal Logistik Sejahtera",
+        "assigned_dock": activeDock,
+        "booking_code": (bookingInput ? bookingInput.value : currentCargoData.booking_code) || "TAS-BOOK-9482",
+        "tas_booking_status": "CONFIRMED_VALID_TIMESLOT",
+        "gate_barrier_status": "BARRIER_OPENED",
+        "dock_allocation_check": {
+            "selected_dock": activeDock,
+            "dock_status": "AVAILABLE_ASSIGNED",
+            "full_docks": ["DOCK-01", "DOCK-03"],
+            "vacant_docks": ["DOCK-02", "DOCK-04"]
+        },
+        "hardware_specs": {
+            "rfid_gate_reader": "TMS UHF Long-Range RFID Reader (902-928 MHz)",
+            "barrier_gate": "High-Speed Boom Barrier (1.2s opening speed)",
+            "dock_leveler": "Hydraulic Pit Leveler 10-Ton Capacity"
+        },
+        "timestamp": new Date().toISOString()
+    };
+    const tmsDisp = document.getElementById('tmsPayloadDisplay');
+    if (tmsDisp) tmsDisp.textContent = JSON.stringify(tmsJson, null, 2);
+}
+
+// Kompatibilitas fungsi lama
+function highlightSelectedDock(dockSlot, customPlate = null) {
+    renderDockCards(dockSlot, customPlate);
 }
 
 function presetTMSTruckData() {
@@ -1025,12 +1278,12 @@ function presetTMSTruckData() {
     if (plateInput) plateInput.value = 'B 9482 XX';
     if (driverInput) driverInput.value = 'Suryadi Pratama';
     if (transInput) transInput.value = 'PT Intermodal Logistik Sejahtera';
-    if (dockInput) {
-        dockInput.value = 'DOCK-03';
-        highlightSelectedDock('DOCK-03', 'B 9482 XX');
-    }
+    if (dockInput) dockInput.value = 'DOCK-02';
     if (bookingInput) bookingInput.value = 'TAS-BOOK-' + Math.floor(1000 + Math.random() * 9000);
     if (statusInput) statusInput.value = 'ARRIVED';
+
+    renderDockCards('DOCK-02', 'B 9482 XX');
+    updateTMSJsonPayload('DOCK-02', 'B 9482 XX');
 
     Swal.fire({
         toast: true,
@@ -1066,7 +1319,7 @@ function submitTMSCheckIn() {
     const truckPlate = plateInput ? plateInput.value.trim().toUpperCase() : 'B 9482 XX';
     const driverName = driverInput ? driverInput.value.trim() : 'Suryadi Pratama';
     const transporter = transInput ? transInput.value.trim() : 'PT Intermodal Logistik Sejahtera';
-    const dockSlot = dockInput ? dockInput.value : 'DOCK-03';
+    const dockSlot = dockInput ? dockInput.value : 'DOCK-02';
     const bookingCode = bookingInput ? bookingInput.value.trim() : ('TAS-BOOK-' + Math.floor(1000 + Math.random() * 9000));
     const truckStatus = statusInput ? statusInput.value : 'ARRIVED';
 
@@ -1089,6 +1342,17 @@ function submitTMSCheckIn() {
             confirmButtonColor: '#087F8A'
         });
         if (driverInput) driverInput.focus();
+        return;
+    }
+
+    // Validasi apakah dock slot yang dipilih sedang penuh oleh armada lain
+    if (dockLiveState[dockSlot] && dockLiveState[dockSlot].occupied && dockLiveState[dockSlot].plate !== truckPlate) {
+        Swal.fire({
+            title: `${dockSlot} Sedang Penuh!`,
+            text: `Alokasi gagal: ${dockSlot} sedang digunakan oleh armada ${dockLiveState[dockSlot].plate}. Silakan pilih dock yang kosong (DOCK-02 atau DOCK-04).`,
+            icon: 'error',
+            confirmButtonColor: '#087F8A'
+        });
         return;
     }
 
@@ -1158,8 +1422,18 @@ function submitTMSCheckIn() {
                 countBadge.textContent = `${totalRows} Armada`;
             }
 
-            // Highlight dock slot yang dipilih
-            highlightSelectedDock(dockSlot, truckPlate);
+            // Tandai dock terpilih sekarang aktif digunakan oleh truk ini
+            if (dockLiveState[dockSlot]) {
+                dockLiveState[dockSlot].occupied = true;
+                dockLiveState[dockSlot].plate = truckPlate;
+                dockLiveState[dockSlot].driver = driverName;
+                dockLiveState[dockSlot].transporter = transporter;
+                dockLiveState[dockSlot].status = 'Sedang Bongkar (Baru Tiba)';
+                dockLiveState[dockSlot].timeRemaining = '30 mnt';
+            }
+
+            // Re-render dock cards
+            renderDockCards(dockSlot, truckPlate);
 
             // Update local state currentCargoData
             currentCargoData.current_stage = 1;
@@ -1174,26 +1448,7 @@ function submitTMSCheckIn() {
             }
 
             // Update JSON Inspector di kolom kanan
-            const tmsJson = {
-                "event_type": "TMS_TRUCK_GATE_CHECKIN",
-                "truck_id": truck.id || "TRK-INBOUND-01",
-                "truck_plate": truckPlate,
-                "driver_name": driverName,
-                "transporter": transporter,
-                "assigned_dock": dockSlot,
-                "booking_code": bookingCode,
-                "tas_booking_status": "CONFIRMED_VALID_TIMESLOT",
-                "gate_barrier_status": "BARRIER_OPENED",
-                "hardware_specs": {
-                    "rfid_gate_reader": "TMS UHF Long-Range RFID Reader (902-928 MHz)",
-                    "barrier_gate": "High-Speed Boom Barrier (1.2s opening speed)",
-                    "dock_leveler": "Hydraulic Pit Leveler 10-Ton Capacity"
-                },
-                "status": "CHECKIN_VERIFIED_SUCCESS",
-                "timestamp": new Date().toISOString()
-            };
-            const tmsDisp = document.getElementById('tmsPayloadDisplay');
-            if (tmsDisp) tmsDisp.textContent = JSON.stringify(tmsJson, null, 2);
+            updateTMSJsonPayload(dockSlot, truckPlate);
 
             const stageBadge = document.getElementById('tms-cargo-stage-badge');
             if (stageBadge) stageBadge.textContent = `Tahap 1: REGISTERED`;
@@ -1281,8 +1536,13 @@ function renderTMSDashboard(c) {
         transInput.value = c.transporter_company;
     }
     const dockInput = document.getElementById('input-tms-dock');
-    if (dockInput && c.dock_slot) {
-        dockInput.value = c.dock_slot;
+    if (dockInput) {
+        // Jika dock kargo kosong atau sudah teralokasi, jika kargo punya dock sendiri gunakan, jika tidak default ke dock kosong
+        let targetSlot = c.dock_slot || 'DOCK-02';
+        if (dockLiveState[targetSlot] && dockLiveState[targetSlot].occupied && dockLiveState[targetSlot].plate !== c.truck_plate) {
+            targetSlot = 'DOCK-02';
+        }
+        dockInput.value = targetSlot;
     }
     const bookingInput = document.getElementById('input-tms-booking');
     if (bookingInput && c.booking_code) {
@@ -1292,29 +1552,10 @@ function renderTMSDashboard(c) {
     const stageBadge = document.getElementById('tms-cargo-stage-badge');
     if (stageBadge) stageBadge.textContent = `Tahap ${c.current_stage}: ${c.status}`;
 
-    const activeDock = (dockInput ? dockInput.value : c.dock_slot) || 'DOCK-03';
+    const activeDock = (dockInput ? dockInput.value : c.dock_slot) || 'DOCK-02';
     const activePlate = (plateInput ? plateInput.value : c.truck_plate) || 'B 9482 XX';
-    highlightSelectedDock(activeDock, activePlate);
-
-    const tmsJson = {
-        "event_type": "TMS_TRUCK_GATE_CHECKIN",
-        "truck_id": c.truck_arrival_id || "TRK-INBOUND-01",
-        "truck_plate": activePlate,
-        "driver_name": (driverInput ? driverInput.value : c.driver_name) || "Suryadi Pratama",
-        "transporter": (transInput ? transInput.value : c.transporter_company) || "PT Intermodal Logistik Sejahtera",
-        "assigned_dock": activeDock,
-        "booking_code": (bookingInput ? bookingInput.value : c.booking_code) || "TAS-BOOK-9482",
-        "tas_booking_status": "CONFIRMED_VALID_TIMESLOT",
-        "gate_barrier_status": "BARRIER_OPENED",
-        "hardware_specs": {
-            "rfid_gate_reader": "TMS UHF Long-Range RFID Reader (902-928 MHz)",
-            "barrier_gate": "High-Speed Boom Barrier (1.2s opening speed)",
-            "dock_leveler": "Hydraulic Pit Leveler 10-Ton Capacity"
-        },
-        "timestamp": new Date().toISOString()
-    };
-    const tmsDisp = document.getElementById('tmsPayloadDisplay');
-    if (tmsDisp) tmsDisp.textContent = JSON.stringify(tmsJson, null, 2);
+    renderDockCards(activeDock, activePlate);
+    updateTMSJsonPayload(activeDock, activePlate);
 }
 
 function renderCMSDashboard(c) {

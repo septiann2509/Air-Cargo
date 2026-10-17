@@ -469,7 +469,7 @@ include __DIR__ . '/includes/header.php';
                 <div class="bg-white p-4 rounded-2xl border border-gray-200/90 shadow-sm flex items-center justify-between">
                     <div>
                         <span class="text-slate-400 text-[10px] font-bold uppercase tracking-wider block">Alokasi Dock Slot</span>
-                        <span class="text-2xl font-black text-emerald-600 font-mono mt-1 block">Dock 1-4 <span class="text-xs text-slate-500 font-sans font-normal">Siap</span></span>
+                        <span id="tms-dock-summary-stat" class="text-2xl font-black text-emerald-600 font-mono mt-1 block">2/4 Terisi <span class="text-xs text-slate-500 font-sans font-normal">2 Kosong</span></span>
                     </div>
                     <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg">
                         <i class="fa-solid fa-warehouse"></i>
@@ -502,38 +502,82 @@ include __DIR__ . '/includes/header.php';
                     
                     <!-- Visual Dock Allocation Cards -->
                     <div class="bg-white p-6 rounded-2xl border border-gray-200/90 shadow-sm">
-                        <div class="flex items-center justify-between pb-3 mb-4 border-b border-gray-100">
-                            <h3 class="text-xs font-bold text-[#0D1C42] uppercase tracking-wider flex items-center">
-                                <i class="fa-solid fa-dolly text-[#087F8A] mr-2 text-sm"></i>
-                                Status Live Terminal Cargo Docks (Inbound Unloading Bay)
-                            </h3>
-                            <span class="text-[10px] font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-bold">4 Docks Terpasang</span>
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 mb-4 border-b border-gray-100 gap-2">
+                            <div>
+                                <h3 class="text-xs font-bold text-[#0D1C42] uppercase tracking-wider flex items-center">
+                                    <i class="fa-solid fa-dolly text-[#087F8A] mr-2 text-sm"></i>
+                                    Status Live Terminal Cargo Docks (Inbound Unloading Bay)
+                                </h3>
+                                <p class="text-[10px] text-slate-500 mt-0.5">Klik langsung kartu dock bertanda <strong class="text-emerald-700">KOSONG</strong> untuk memilih alokasi bongkar</p>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span id="tms-dock-occupied-badge" class="text-[10px] font-mono text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200 font-bold">2 Penuh</span>
+                                <span id="tms-dock-available-badge" class="text-[10px] font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 font-bold">2 Kosong</span>
+                            </div>
                         </div>
 
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                            <div id="dock-card-DOCK-01" class="p-3.5 rounded-xl border border-gray-200 bg-slate-50 text-center transition-all">
-                                <span class="text-[10px] font-bold text-slate-500 block uppercase font-mono">DOCK 01</span>
-                                <div id="dock-icon-DOCK-01" class="my-2 text-2xl text-slate-300"><i class="fa-solid fa-circle-check"></i></div>
-                                <span id="dock-plate-DOCK-01" class="text-xs font-bold text-slate-400 block font-mono">KOSONG</span>
-                                <span id="dock-status-DOCK-01" class="text-[9px] text-slate-400 font-medium block mt-0.5">Standby Slot</span>
+                        <!-- 4 Interactive Dock Cards -->
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="tmsDockCardsContainer">
+                            <!-- DOCK 01: PENUH -->
+                            <div id="dock-card-DOCK-01" onclick="handleDockCardClick('DOCK-01')" class="p-3.5 rounded-xl border border-rose-300 bg-rose-50/60 text-center transition-all cursor-pointer hover:border-rose-400 hover:shadow-md relative overflow-hidden group select-none" title="Klik untuk lihat rincian armada">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[10px] font-bold text-rose-800 uppercase font-mono">DOCK 01</span>
+                                    <span id="dock-badge-DOCK-01" class="text-[8.5px] px-1.5 py-0.5 rounded font-extrabold uppercase bg-rose-200 text-rose-800 border border-rose-300">PENUH</span>
+                                </div>
+                                <div id="dock-icon-DOCK-01" class="my-2 text-2xl text-rose-500 group-hover:scale-105 transition-transform">
+                                    <i class="fa-solid fa-truck-ramp-box"></i>
+                                </div>
+                                <span id="dock-plate-DOCK-01" class="text-xs font-bold text-rose-950 block font-mono">B 9182 KXA</span>
+                                <span id="dock-status-DOCK-01" class="text-[9px] text-rose-700 font-bold block mt-0.5">
+                                    <i class="fa-solid fa-circle-exclamation mr-1"></i>Sedang Bongkar
+                                </span>
+                                <span class="text-[8.5px] text-rose-500 font-semibold block mt-1">Sisa ±12 mnt &bull; Klik Info</span>
                             </div>
-                            <div id="dock-card-DOCK-02" class="p-3.5 rounded-xl border border-gray-200 bg-slate-50 text-center transition-all">
-                                <span class="text-[10px] font-bold text-slate-500 block uppercase font-mono">DOCK 02</span>
-                                <div id="dock-icon-DOCK-02" class="my-2 text-2xl text-slate-300"><i class="fa-solid fa-circle-check"></i></div>
-                                <span id="dock-plate-DOCK-02" class="text-xs font-bold text-slate-400 block font-mono">KOSONG</span>
-                                <span id="dock-status-DOCK-02" class="text-[9px] text-slate-400 font-medium block mt-0.5">Standby Slot</span>
+
+                            <!-- DOCK 02: KOSONG / TERPILIH -->
+                            <div id="dock-card-DOCK-02" onclick="handleDockCardClick('DOCK-02')" class="p-3.5 rounded-xl border-2 border-[#0CA1AF] bg-teal-50/70 text-center transition-all shadow-md ring-2 ring-teal-400/30 cursor-pointer relative overflow-hidden group select-none" title="Alokasi terpilih kargo saat ini">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[10px] font-bold text-[#087F8A] uppercase font-mono">DOCK 02</span>
+                                    <span id="dock-badge-DOCK-02" class="text-[8.5px] px-1.5 py-0.5 rounded font-extrabold uppercase bg-teal-100 text-[#087F8A] border border-teal-300">TERPILIH</span>
+                                </div>
+                                <div id="dock-icon-DOCK-02" class="my-2 text-2xl text-[#087F8A] group-hover:scale-105 transition-transform">
+                                    <i class="fa-solid fa-truck"></i>
+                                </div>
+                                <span id="dock-plate-DOCK-02" class="text-xs font-black text-[#0D1C42] block font-mono">B 9482 XX</span>
+                                <span id="dock-status-DOCK-02" class="text-[9px] text-teal-800 font-bold block mt-0.5">
+                                    <i class="fa-solid fa-circle-check mr-1 text-emerald-600"></i>Alokasi Bongkar Anda
+                                </span>
+                                <span class="text-[8.5px] text-[#087F8A] font-semibold block mt-1">Dock Aktif Kargo</span>
                             </div>
-                            <div id="dock-card-DOCK-03" class="p-3.5 rounded-xl border border-emerald-300 bg-emerald-50/50 text-center transition-all shadow-sm">
-                                <span class="text-[10px] font-bold text-emerald-700 block uppercase font-mono">DOCK 03</span>
-                                <div id="dock-icon-DOCK-03" class="my-2 text-2xl text-emerald-600"><i class="fa-solid fa-truck"></i></div>
-                                <span id="dock-plate-DOCK-03" class="text-xs font-bold text-[#0D1C42] block font-mono">B 9482 XX</span>
-                                <span id="dock-status-DOCK-03" class="text-[9px] text-emerald-700 font-bold block mt-0.5">Bongkar Pallet SSCC</span>
+
+                            <!-- DOCK 03: PENUH -->
+                            <div id="dock-card-DOCK-03" onclick="handleDockCardClick('DOCK-03')" class="p-3.5 rounded-xl border border-rose-300 bg-rose-50/60 text-center transition-all cursor-pointer hover:border-rose-400 hover:shadow-md relative overflow-hidden group select-none" title="Klik untuk lihat rincian armada">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[10px] font-bold text-rose-800 uppercase font-mono">DOCK 03</span>
+                                    <span id="dock-badge-DOCK-03" class="text-[8.5px] px-1.5 py-0.5 rounded font-extrabold uppercase bg-rose-200 text-rose-800 border border-rose-300">PENUH</span>
+                                </div>
+                                <div id="dock-icon-DOCK-03" class="my-2 text-2xl text-rose-500 group-hover:scale-105 transition-transform">
+                                    <i class="fa-solid fa-truck-ramp-box"></i>
+                                </div>
+                                <span id="dock-plate-DOCK-03" class="text-xs font-bold text-rose-950 block font-mono">B 4412 PQL</span>
+                                <span id="dock-status-DOCK-03" class="text-[9px] text-rose-700 font-bold block mt-0.5">
+                                    <i class="fa-solid fa-circle-exclamation mr-1"></i>Sedang Bongkar
+                                </span>
+                                <span class="text-[8.5px] text-rose-500 font-semibold block mt-1">Sisa ±25 mnt &bull; Klik Info</span>
                             </div>
-                            <div id="dock-card-DOCK-04" class="p-3.5 rounded-xl border border-gray-200 bg-slate-50 text-center transition-all">
-                                <span class="text-[10px] font-bold text-slate-500 block uppercase font-mono">DOCK 04</span>
-                                <div id="dock-icon-DOCK-04" class="my-2 text-2xl text-slate-300"><i class="fa-solid fa-circle-check"></i></div>
-                                <span id="dock-plate-DOCK-04" class="text-xs font-bold text-slate-400 block font-mono">KOSONG</span>
-                                <span id="dock-status-DOCK-04" class="text-[9px] text-slate-400 font-medium block mt-0.5">Standby Slot</span>
+
+                            <!-- DOCK 04: KOSONG / TERSEDIA -->
+                            <div id="dock-card-DOCK-04" onclick="handleDockCardClick('DOCK-04')" class="p-3.5 rounded-xl border-2 border-dashed border-emerald-300 bg-emerald-50/20 text-center transition-all cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 hover:shadow-md relative overflow-hidden group select-none" title="Klik untuk memilih dock ini">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[10px] font-bold text-emerald-700 uppercase font-mono">DOCK 04</span>
+                                    <span id="dock-badge-DOCK-04" class="text-[8.5px] px-1.5 py-0.5 rounded font-extrabold uppercase bg-emerald-100 text-emerald-700 border border-emerald-200">KOSONG</span>
+                                </div>
+                                <div id="dock-icon-DOCK-04" class="my-2 text-2xl text-emerald-500 group-hover:scale-110 transition-transform">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                </div>
+                                <span id="dock-plate-DOCK-04" class="text-xs font-bold text-emerald-700 block font-mono">TERSEDIA</span>
+                                <span id="dock-status-DOCK-04" class="text-[9px] text-emerald-700 font-semibold block mt-0.5">Standby Leveler</span>
+                                <span class="text-[8.5px] text-emerald-600 font-bold block mt-1 group-hover:underline">Klik untuk Pilih &rarr;</span>
                             </div>
                         </div>
                     </div>
@@ -571,7 +615,7 @@ include __DIR__ . '/includes/header.php';
                                 <label for="input-tms-plate" class="text-[10px] text-slate-500 block uppercase font-bold tracking-wider mb-1">
                                     <i class="fa-solid fa-car text-[#087F8A] mr-1"></i> Nomor Plat Polisi
                                 </label>
-                                <input type="text" id="input-tms-plate" oninput="highlightSelectedDock(document.getElementById('input-tms-dock').value, this.value)" class="w-full bg-white border border-gray-300 focus:border-[#087F8A] focus:ring-1 focus:ring-[#087F8A] rounded-lg px-3 py-1.5 text-xs font-mono font-black text-[#0D1C42] uppercase focus:outline-none transition-all shadow-sm" placeholder="Contoh: B 9482 XX" value="B 9482 XX">
+                                <input type="text" id="input-tms-plate" oninput="handlePlateInput(this.value)" class="w-full bg-white border border-gray-300 focus:border-[#087F8A] focus:ring-1 focus:ring-[#087F8A] rounded-lg px-3 py-1.5 text-xs font-mono font-black text-[#0D1C42] uppercase focus:outline-none transition-all shadow-sm" placeholder="Contoh: B 9482 XX" value="B 9482 XX">
                             </div>
 
                             <!-- Input 2: Nama Supir Terdaftar -->
@@ -592,14 +636,17 @@ include __DIR__ . '/includes/header.php';
 
                             <!-- Input 4: Alokasi Dock Unloading -->
                             <div class="p-3.5 rounded-xl bg-slate-50 border border-gray-200 focus-within:border-[#0CA1AF] focus-within:bg-teal-50/20 transition-all">
-                                <label for="input-tms-dock" class="text-[10px] text-slate-500 block uppercase font-bold tracking-wider mb-1">
-                                    <i class="fa-solid fa-warehouse text-[#087F8A] mr-1"></i> Alokasi Dock Unloading
-                                </label>
-                                <select id="input-tms-dock" onchange="highlightSelectedDock(this.value, document.getElementById('input-tms-plate').value)" class="w-full bg-white border border-gray-300 focus:border-[#087F8A] focus:ring-1 focus:ring-[#087F8A] rounded-lg px-3 py-1.5 text-xs font-mono font-bold text-emerald-700 focus:outline-none cursor-pointer transition-all shadow-sm">
-                                    <option value="DOCK-01">DOCK-01 (Hydraulic Leveler)</option>
-                                    <option value="DOCK-02">DOCK-02 (Hydraulic Leveler)</option>
-                                    <option value="DOCK-03" selected>DOCK-03 (Hydraulic Leveler)</option>
-                                    <option value="DOCK-04">DOCK-04 (Hydraulic Leveler)</option>
+                                <div class="flex items-center justify-between mb-1">
+                                    <label for="input-tms-dock" class="text-[10px] text-slate-500 block uppercase font-bold tracking-wider">
+                                        <i class="fa-solid fa-warehouse text-[#087F8A] mr-1"></i> Alokasi Dock Unloading
+                                    </label>
+                                    <span class="text-[9px] font-bold text-slate-400">Pilih / Klik Kartu</span>
+                                </div>
+                                <select id="input-tms-dock" onchange="handleDockSelectChange(this.value)" class="w-full bg-white border border-gray-300 focus:border-[#087F8A] focus:ring-1 focus:ring-[#087F8A] rounded-lg px-3 py-1.5 text-xs font-mono font-bold text-[#087F8A] focus:outline-none cursor-pointer transition-all shadow-sm">
+                                    <option value="DOCK-01" disabled class="text-rose-600 bg-rose-50 font-semibold">DOCK-01 (PENUH - B 9182 KXA Sedang Bongkar)</option>
+                                    <option value="DOCK-02" selected class="text-emerald-700 font-bold">DOCK-02 (KOSONG - Siap Digunakan)</option>
+                                    <option value="DOCK-03" disabled class="text-rose-600 bg-rose-50 font-semibold">DOCK-03 (PENUH - B 4412 PQL Sedang Bongkar)</option>
+                                    <option value="DOCK-04" class="text-emerald-700 font-bold">DOCK-04 (KOSONG - Siap Digunakan)</option>
                                 </select>
                             </div>
 
