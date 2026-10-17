@@ -988,8 +988,8 @@ $companyShort   = 'AC';
                     <p class="text-white/70">Jl. Jend. Sudirman Kav. 52-53, Senayan, Kebayoran Baru, Jakarta Selatan 12190</p>
                     <div class="pt-2">
                         <span class="block text-white/60 text-[10px] uppercase font-bold">Layanan Contact Center</span>
-                        <span class="text-lg font-extrabold text-amber-300">(021) 5088-2890</span>
-                        <span class="block text-[10px] text-white/70">(021) 5088-2890 / WA: 0811-9840-2890</span>
+                        <span class="text-lg font-extrabold text-amber-300">(081) 4567-8910 </span>
+                        <span class="block text-[10px] text-white/70">(081) 4567-8910 / WA: 0811-9840-2890</span>
                     </div>
                 </div>
             </div>
