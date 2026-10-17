@@ -67,13 +67,17 @@ include __DIR__ . '/includes/header.php';
         </div>
 
         <div class="flex items-center space-x-2.5">
-            <button onclick="openNewCargoModal()" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-bold text-xs shadow-lg shadow-teal-500/25 transition-all flex items-center gap-1.5 transform hover:-translate-y-0.5">
-                <i class="fa-solid fa-plus text-xs"></i>
-                <span>Input Kargo Baru</span>
-            </button>
-            <a href="simulation.php" class="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-[#0D1C42] font-bold text-xs border border-gray-300 shadow-sm transition-all flex items-center gap-1.5 transform hover:-translate-y-0.5">
-                <i class="fa-solid fa-play text-xs text-[#087F8A]"></i>
-                <span>Buka Lab Simulasi</span>
+            <a href="simulation_live.php" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#0CA1AF] via-[#087F8A] to-[#014D54] hover:from-[#04AFBF] hover:to-[#087F8A] text-white font-extrabold text-xs shadow-lg shadow-teal-500/25 transition-all flex items-center gap-1.5 transform hover:-translate-y-0.5 border border-teal-300/40">
+                <i class="fa-solid fa-gamepad text-xs text-amber-300"></i>
+                <span>Simulasi Live 3D</span>
+            </a>
+            <a href="cargo_input.php" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-[#0D1C42] font-bold text-xs border border-gray-300 shadow-sm transition-all flex items-center gap-1.5 transform hover:-translate-y-0.5">
+                <i class="fa-solid fa-plus text-xs text-[#087F8A]"></i>
+                <span>Input Kargo</span>
+            </a>
+            <a href="simulation.php" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-[#0D1C42] font-bold text-xs border border-gray-300 shadow-sm transition-all flex items-center gap-1.5 transform hover:-translate-y-0.5">
+                <i class="fa-solid fa-microchip text-xs text-[#087F8A]"></i>
+                <span>Lab 7-Tahap</span>
             </a>
             <button onclick="refreshDashboardData()" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-600 hover:text-[#087F8A] border border-gray-300 text-xs shadow-sm transition-colors" title="Perbarui Data">
                 <i class="fa-solid fa-arrows-rotate"></i>

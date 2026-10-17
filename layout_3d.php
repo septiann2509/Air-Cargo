@@ -6,6 +6,25 @@ require_once __DIR__ . '/config/database.php';
 requireAuth();
 
 $user = getCurrentUser();
+$db = getDb();
+
+// Ambil data kargo terbaru dari database untuk integrasi simulasi 3D real-time
+$cargosQuery = $db->query("
+    SELECT c.*, 
+           t.truck_plate, t.driver_name, t.dock_slot, t.booking_code,
+           s.xray_result, s.notes as xray_notes,
+           w.actual_weight_kg as scale_weight, w.tolerance_status
+    FROM cargo_shipments c
+    LEFT JOIN truck_arrivals t ON c.truck_arrival_id = t.id
+    LEFT JOIN security_checks s ON s.cargo_id = c.id
+    LEFT JOIN weight_records w ON w.cargo_id = c.id
+    ORDER BY c.created_at DESC
+    LIMIT 25
+");
+$dbCargos = $cargosQuery->fetchAll();
+$selectedCargoId = $_GET['cargo_id'] ?? '';
+$initialXrayParam = $_GET['xray'] ?? '';
+
 $pageTitle = 'Denah 3D Terminal Kargo — Sesuai Lapangan & Blueprint';
 $bodyClass = 'bg-[#08121E] text-white';
 include __DIR__ . '/includes/header.php';
@@ -270,7 +289,59 @@ include __DIR__ . '/includes/header.php';
             </div>
 
             <!-- Collapsible Body for Card 1 -->
-            <div id="sim-collapsible-body" class="transition-all duration-300 overflow-hidden" style="max-height: 500px; opacity: 1;">
+            <div id="sim-collapsible-body" class="transition-all duration-300 overflow-hidden" style="max-height: 580px; opacity: 1;">
+                
+                <!-- WIDGET INTEGRASI DATABASE KARGO -->
+                <div class="mt-2.5 p-2 rounded-xl bg-teal-950/50 border border-teal-500/40">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-[9.5px] font-bold text-teal-300 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-database text-[10px] text-teal-400"></i>
+                            Pilih Kargo Input Data:
+                        </span>
+                        <a href="cargo_input.php" class="text-[8.5px] px-2 py-0.5 rounded-md bg-gradient-to-r from-[#0CA1AF] to-[#087F8A] hover:opacity-95 text-white font-bold transition-all flex items-center gap-1 shadow-sm" title="Buka Form Input Kargo Baru">
+                            <i class="fa-solid fa-plus text-[7px]"></i> Input Baru
+                        </a>
+                    </div>
+                    <select id="select-db-cargo" onchange="applyCargoFromDb(this.value)" class="w-full py-1 px-1.5 rounded-lg bg-[#081226] text-white text-[9.5px] border border-teal-500/40 focus:border-teal-300 focus:outline-none font-mono cursor-pointer">
+                        <option value="">-- Mode Simulasi Standar (Demo Multi-Truk) --</option>
+                        <?php foreach ($dbCargos as $cg): 
+                            $dockNum = '1';
+                            if (strpos($cg['dock_slot'] ?? '', '02') !== false || strpos($cg['dock_slot'] ?? '', '2') !== false) $dockNum = '2';
+                            if (strpos($cg['dock_slot'] ?? '', '03') !== false || strpos($cg['dock_slot'] ?? '', '3') !== false) $dockNum = '3';
+                            $isSusp = ($cg['xray_result'] === 'SUSPECT' || $cg['status'] === 'SUSPECT');
+                            $statusIcon = $isSusp ? '⚠️' : '✅';
+                        ?>
+                            <option value="<?= htmlspecialchars($cg['id']) ?>" <?= ($cg['id'] === $selectedCargoId) ? 'selected' : '' ?>>
+                                <?= $statusIcon ?> <?= htmlspecialchars($cg['awb_number']) ?> &bull; <?= htmlspecialchars(mb_strimwidth($cg['description'], 0, 16, '...')) ?> (Truk <?= $dockNum ?>)
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+
+                    <!-- Cargo Detail Mini Banner (Muncul saat kargo database dipilih) -->
+                    <div id="db-cargo-detail-banner" class="mt-1.5 p-1.5 rounded-lg bg-black/40 border border-white/10 text-[9px] space-y-1" style="display: none;">
+                        <div class="flex items-center justify-between">
+                            <span class="text-white/60">AWB:</span>
+                            <span id="db-c-awb" class="font-mono font-bold text-teal-300">-</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-white/60">Barang:</span>
+                            <span id="db-c-desc" class="font-semibold text-white truncate max-w-[170px]">-</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-white/60">Truk / Sopir:</span>
+                            <span id="db-c-truck" class="text-amber-300 font-mono">-</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-white/60">Status X-Ray:</span>
+                            <span id="db-c-xray" class="px-1.5 py-0.2 rounded font-bold text-[8.5px]">-</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-white/60">Tujuan Akhir:</span>
+                            <span id="db-c-dest" class="font-bold text-[8.5px]">-</span>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Controls (Play, Reset, Step) -->
                 <div class="flex items-center justify-between gap-3 mt-2.5">
                     <div class="flex items-center gap-1.5">
@@ -4785,6 +4856,26 @@ let wpT = 0;
 
 function buildWaypoints(truckNum = 1, scenario = 'normal') {
     if (truckNum === 1) {
+        if (scenario === 'suspect') {
+            // Skenario Suspect Truk 1: Terdeteksi Anomali di Line 1 -> Dialihkan ke Ruang Karantina (3B)
+            return [
+                { pos: new THREE.Vector3(-26.0, 0.55, -38.5), step: 1, stage: 'dock', title: '1. BONGKAR DARI TRUK 1', text: '[PALET 1] Kargo dibongkar dari bak Truk 1 (Dermaga 01)', subtext: 'Koli diverifikasi jadwal TAS & dibongkar dari Truk 1', isUld: false, color: '#3B82F6' },
+                { pos: new THREE.Vector3(-26.0, 0.50, -35.5), step: 1, stage: 'dock', title: '1. DOCK LEVELER 1', text: '[PALET 1] Meluncur di jembatan dock leveler baja Dermaga 1', subtext: 'Menghubungkan lantai bak truk langsung ke jalur konveyor', isUld: false, color: '#3B82F6' },
+                { pos: new THREE.Vector3(-26.0, 0.35, -33.0), step: 1, stage: 'dock', title: '1. FEEDER CONVEYOR 1', text: '[PALET 1] Meluncur di jalur pengumpan feeder conveyor Dermaga 1', subtext: 'Sensor optik mendeteksi aliran kargo masuk dermaga', isUld: false, color: '#3B82F6' },
+                { pos: new THREE.Vector3(-26.0, 0.35, -31.0), step: 1, stage: 'dock', title: '1. MASTER RECEIVING TRUNK', text: '[PALET 1] Bergabung ke rel penerimaan utama (Trunk Z = -31)', subtext: 'Membelok ke barat memimpin antrean menuju Gerbang RFID', isUld: false, color: '#3B82F6' },
+                { pos: new THREE.Vector3(-28.0, 0.35, -31.0), step: 2, stage: 'rfid', title: '2. BELOKAN PORTAL RFID', text: '[PALET 1] Membelok ke selatan masuk jalur pemindaian RFID Portal', subtext: 'Memimpin antrean ke gantry AIDC RFID Scan Portal (Lokasi 2)', isUld: false, color: '#0CA1AF' },
+                { pos: new THREE.Vector3(-28.0, 0.35, -27.0), step: 2, stage: 'rfid', title: '2. SCANNING RFID PORTAL', text: '[PALET 1] Tag GS1 SSCC 18-digit terdeteksi di Portal RFID!', subtext: 'SSCC terverifikasi valid di CMS', isUld: false, color: '#0CA1AF' },
+                { pos: new THREE.Vector3(-28.0, 0.35, -24.0), step: 3, stage: 'xray', title: '3. MASUK HEADER DISTRIBUSI', text: '[PALET 1] Tiba di Header Distribusi (Z = -24) berbelok ke timur', subtext: 'Membuka rute percabangan menuju Mesin X-Ray AVSEC Line 1', isUld: false, color: '#EF4444' },
+                { pos: new THREE.Vector3(-13.0, 0.35, -24.0), step: 3, stage: 'xray', title: '3. PERCABANGAN X-RAY LINE 1', text: '[PALET 1] Tiba di percabangan Line 1 membelok ke infeed tunnel', subtext: 'Sistem pengarah otomatis membelokkan koli ke Line 1', isUld: false, color: '#EF4444' },
+                { pos: new THREE.Vector3(-13.0, 0.35, -20.0), step: 3, stage: 'xray', title: '3. MASUK TEROWONGAN LINE 1', text: '[PALET 1] Masuk terowongan Dual-View X-Ray Screening Line 1', subtext: 'Pemindaian keamanan fisik sudut horizontal & vertikal 160kV', isUld: false, color: '#EF4444' },
+                { pos: new THREE.Vector3(-13.0, 0.35, -17.0), step: 3, stage: 'xray', title: '3. ⚠️ ANOMALI TERDETEKSI DI LINE 1!', text: '⚠️ PERINGATAN X-RAY LINE 1: Terdeteksi Anomali Kerapatan & Bahan Berbahaya!', subtext: 'Sensor AVSEC mendeteksi zat terlarang! Status: SUSPECT & HOLD', isUld: false, color: '#EF4444' },
+                { pos: new THREE.Vector3(3.0, 0.35, -16.5), step: 3, stage: 'quarantine', title: '3B. DIVERTER SPUR LINE 1 AKTIF', text: '🚨 DIVERTER SPUR AKTIF: Palet Truk 1 otomatis dialihkan ke Karantina!', subtext: 'Lengan pendorong pneumatik aktif mendorong palet ke jalur isolasi', isUld: false, color: '#EF4444' },
+                { pos: new THREE.Vector3(8.5, 0.35, -16.5), step: 3, stage: 'quarantine', title: '3B. REL TRANSFER DIVERTER SPUR', text: 'Palet Truk 1 meluncur di rel transfer baja menuju Ruang Karantina', subtext: 'Jalur isolasi bebas hambatan berkecepatan 1.5 m/s dengan perlindungan rel pengaman', isUld: false, color: '#EF4444' },
+                { pos: new THREE.Vector3(14.0, 0.35, -16.5), step: 3, stage: 'quarantine', title: '3B. MASUK PINTU RUANG KARANTINA', text: 'Palet Truk 1 meluncur melewati pintu masuk Ruang Karantina (3B)', subtext: 'Menembus tirai PVC memasuki ruangan inspeksi bertekanan negatif', isUld: false, color: '#EF4444' },
+                { pos: new THREE.Vector3(22.0, 0.45, -16.5), step: 3, stage: 'quarantine', title: '3B. MEJA PEMERIKSAAN SEKUNDER', text: 'Palet Truk 1 tiba di Meja Pemeriksaan Fisik Sekunder', subtext: 'Petugas AVSEC & Teknisi Forensik bersiap melakukan uji usap ETD', isUld: false, color: '#EF4444' },
+                { pos: new THREE.Vector3(24.2, 0.70, -16.5), step: 3, stage: 'quarantine', title: '3B. 🛑 STATUS: SUSPECT & HOLD', text: '🛑 STATUS: SUSPECT & HOLD! DILARANG KERAS ke Pesawat!', subtext: 'Kargo ditahan dalam lemari brankas bukti. Laporan insiden diterbitkan.', isUld: false, color: '#EF4444' }
+            ];
+        }
         // UNIT 1: Truk 1 (Dock 1, X = -26) -> Feeder -> Master Trunk -> RFID Portal -> Header -> X-Ray Line 1 -> Collector -> Koridor Tengah -> Meja Caster Build-up -> Scale -> Gate -> High-Loader -> Boeing 777F (Palka Depan)
         return [
             // 0 - 3: TAHAP 1 - BONGKAR TRUK 1 & FEEDER (X = -26.0)
@@ -4826,8 +4917,8 @@ function buildWaypoints(truckNum = 1, scenario = 'normal') {
             { pos: new THREE.Vector3(63.8, 3.85, 11.2), step: 6, stage: 'loading', title: '6. DIMUAT KE BOEING 777F (DEPARTED)', text: '[PALET 1] ULD 1 terkunci aman di palka depan Boeing 777F!', subtext: 'Kunci lantai kargo aktif. High-Loader turun menjemput ULD 2.', isUld: true, isLoaded: true, color: '#38BDF8' }
         ];
     } else if (truckNum === 2) {
-        if (scenario === 'suspect' && currentTruckMode === 2) {
-            // Skenario Suspect Khusus Truk 2 Tunggal: Terdeteksi Anomali di Line 2 -> Dialihkan ke Karantina (3B)
+        if (scenario === 'suspect') {
+            // Skenario Suspect Khusus Truk 2: Terdeteksi Anomali di Line 2 -> Dialihkan ke Karantina (3B)
             return [
                 // 0 - 3: TAHAP 1 - BONGKAR TRUK 2 & FEEDER
                 { pos: new THREE.Vector3(0.0, 0.55, -38.5), step: 1, stage: 'dock', title: '1. BONGKAR DARI TRUK 2', text: '[PALET 2] Kargo dibongkar serentak dari bak Truk 2 (Dermaga 02)', subtext: 'Koli kedua diverifikasi jadwal & dibongkar serentak dari Truk 2', isUld: false, color: '#3B82F6' },
@@ -5225,6 +5316,151 @@ function simulateTruckQuarantine(truckNum = 3) {
     } else {
         flyCameraSmooth(new THREE.Vector3(10, 18, -24), new THREE.Vector3(0, 2, -35), 1400);
         addLogEntry(`🚨 [SIMULASI TRUK ${truckNum}] Kargo Truk ${truckNum} dibongkar di Dock 0${truckNum}, terdeteksi anomali di X-Ray Line ${truckNum}, dan dialihkan masuk Ruang Karantina (3B)!`);
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INTEGRASI SIMULASI DATABASE LIVE (INPUT FORM -> SIMULASI 3D REAL-TIME)
+// ─────────────────────────────────────────────────────────────────────────────
+const DB_CARGOS = <?= json_encode($dbCargos, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+const INITIAL_CARGO_ID = <?= json_encode($selectedCargoId) ?>;
+const INITIAL_XRAY_PARAM = <?= json_encode($initialXrayParam) ?>;
+let activeDbCargo = null;
+
+function applyCargoFromDb(cargoId) {
+    if (!cargoId) {
+        activeDbCargo = null;
+        const banner = document.getElementById('db-cargo-detail-banner');
+        if (banner) banner.style.display = 'none';
+        setTruckSource('all');
+        addLogEntry('Mengembalikan simulasi ke mode standar multi-truk simultan.');
+        return;
+    }
+
+    const c = DB_CARGOS.find(item => item.id === cargoId);
+    if (!c) return;
+
+    activeDbCargo = c;
+
+    // Tentukan truk mana berdasarkan dock_slot
+    let tNum = 1;
+    const dockStr = (c.dock_slot || '').toUpperCase();
+    if (dockStr.includes('02') || dockStr.includes('2')) tNum = 2;
+    else if (dockStr.includes('03') || dockStr.includes('3')) tNum = 3;
+
+    // Tentukan skenario berdasarkan xray_result atau status kargo
+    const isSuspect = (c.xray_result === 'SUSPECT' || c.status === 'SUSPECT' || INITIAL_XRAY_PARAM === 'SUSPECT');
+    const scenario = isSuspect ? 'suspect' : 'normal';
+
+    // Update Dropdown UI jika belum cocok
+    const sel = document.getElementById('select-db-cargo');
+    if (sel && sel.value !== cargoId) sel.value = cargoId;
+
+    // Update Banner UI
+    const banner = document.getElementById('db-cargo-detail-banner');
+    if (banner) {
+        banner.style.display = 'block';
+        const awbEl = document.getElementById('db-c-awb');
+        if (awbEl) awbEl.textContent = c.awb_number;
+        const descEl = document.getElementById('db-c-desc');
+        if (descEl) descEl.textContent = `${c.description} (${c.declared_weight_kg || 0} kg)`;
+        const truckEl = document.getElementById('db-c-truck');
+        if (truckEl) truckEl.textContent = `${c.truck_plate || 'Truk ' + tNum} (${c.dock_slot || 'DOCK-0' + tNum})`;
+        
+        const xrayEl = document.getElementById('db-c-xray');
+        const destEl = document.getElementById('db-c-dest');
+        if (isSuspect) {
+            if (xrayEl) {
+                xrayEl.textContent = '⚠️ SUSPECT (BAHAYA)';
+                xrayEl.className = 'px-1.5 py-0.5 rounded font-bold text-[8.5px] bg-rose-500/30 text-rose-300 border border-rose-500/50 animate-pulse';
+            }
+            if (destEl) {
+                destEl.textContent = '🛑 Dialihkan ke Ruang Karantina (3B)';
+                destEl.className = 'font-bold text-[8.5px] text-rose-400';
+            }
+        } else {
+            if (xrayEl) {
+                xrayEl.textContent = '✅ CLEARED (AMAN)';
+                xrayEl.className = 'px-1.5 py-0.5 rounded font-bold text-[8.5px] bg-emerald-500/30 text-emerald-300 border border-emerald-500/50';
+            }
+            if (destEl) {
+                destEl.textContent = '✈️ Dimuat ke Palka Boeing 777F';
+                destEl.className = 'font-bold text-[8.5px] text-emerald-400';
+            }
+        }
+    }
+
+    // Update Unit Badge 3D (Truk & AWB)
+    const targetUnit = cargoUnits[tNum - 1];
+    if (targetUnit && targetUnit.badgeObj) {
+        targetUnit.badgeObj.draw(c.awb_number, c.truck_plate || `TRUK ${tNum}`);
+        targetUnit.badgeObj.texture.needsUpdate = true;
+    }
+
+    // Update Floating HUD Billboard di atas paket
+    if (cargoHud) {
+        const hudColor = isSuspect ? '#EF4444' : '#0CA1AF';
+        const hudTitle = isSuspect ? `⚠️ ANOMALI: ${c.awb_number}` : `📦 KARGO: ${c.awb_number}`;
+        const hudSub = `${c.description} — ${c.truck_plate || 'Truk ' + tNum}`;
+        updateCargoHudText(hudTitle, hudSub, hudColor);
+    }
+
+    // Aktifkan truk tunggal ini
+    currentTruckMode = tNum;
+    isAutoRotateTrucks = false;
+    currentTruckNum = tNum;
+    currentScenario = scenario;
+
+    cargoUnits.forEach(u => {
+        const isThis = (u.truckNum === tNum);
+        u.active = isThis;
+        u.root.visible = isThis;
+        u.waypoints = buildWaypoints(u.truckNum, scenario);
+    });
+    activeWaypoints = cargoUnits[tNum - 1].waypoints;
+
+    updateTruckButtonUI();
+
+    const btnNorm = document.getElementById('btn-scen-normal');
+    const btnSusp = document.getElementById('btn-scen-suspect');
+    const lblEnd = document.getElementById('label-flow-end');
+    if (isSuspect) {
+        if (btnSusp) {
+            btnSusp.classList.remove('bg-white/10', 'text-rose-300');
+            btnSusp.classList.add('bg-rose-600', 'text-white', 'shadow-lg');
+        }
+        if (btnNorm) {
+            btnNorm.classList.remove('bg-[#0CA1AF]', 'text-white');
+            btnNorm.classList.add('bg-white/10', 'text-slate-300');
+        }
+        if (lblEnd) lblEnd.textContent = 'Karantina';
+    } else {
+        if (btnNorm) {
+            btnNorm.classList.add('bg-[#0CA1AF]', 'text-white');
+            btnNorm.classList.remove('bg-white/10', 'text-slate-300');
+        }
+        if (btnSusp) {
+            btnSusp.classList.add('bg-white/10', 'text-rose-300');
+            btnSusp.classList.remove('bg-rose-600', 'text-white', 'shadow-lg');
+        }
+        if (lblEnd) lblEnd.textContent = 'Pesawat';
+    }
+
+    restartFlow();
+
+    // Arahkan kamera awal ke Dock truk yang bersangkutan
+    if (tNum === 3) {
+        flyCameraSmooth(new THREE.Vector3(34, 18, -24), new THREE.Vector3(26, 2, -35), 1400);
+    } else if (tNum === 2) {
+        flyCameraSmooth(new THREE.Vector3(10, 18, -24), new THREE.Vector3(0, 2, -35), 1400);
+    } else {
+        flyCameraSmooth(new THREE.Vector3(-14, 18, -24), new THREE.Vector3(-26, 2, -35), 1400);
+    }
+
+    if (isSuspect) {
+        addLogEntry(`🚨 [DATABASE KARGO: ${c.awb_number}] Kargo terindikasi BAHAYA (${c.description}) dari ${c.truck_plate}! Melalui Scan RFID → X-Ray terdeteksi anomali → Masuk Ruang Karantina (3B).`);
+    } else {
+        addLogEntry(`📦 [DATABASE KARGO: ${c.awb_number}] Kargo AMAN (${c.description}) dari ${c.truck_plate}! Melalui Scan RFID → Lolos X-Ray → Storage → Timbangan ULD → Dimuat ke Pesawat.`);
     }
 }
 
@@ -6150,6 +6386,11 @@ function hideLoadingScreen() {
         if (typeof updateInspectorCollapseState === 'function') updateInspectorCollapseState();
         if (typeof updateSimCollapseState === 'function') updateSimCollapseState();
         if (typeof updateTruckButtonUI === 'function') updateTruckButtonUI();
+        if (typeof INITIAL_CARGO_ID !== 'undefined' && INITIAL_CARGO_ID) {
+            setTimeout(() => {
+                applyCargoFromDb(INITIAL_CARGO_ID);
+            }, 500);
+        }
     } catch(e) {
         console.warn('Init state notice:', e);
     }
