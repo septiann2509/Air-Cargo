@@ -3,6 +3,7 @@
 
 let currentCargoData = null;
 let currentStageView = 1;
+let currentSystemDashboard = 'all';
 let activePayloadTab = 'request';
 let currentRequestJson = {};
 let currentResponseJson = {};
@@ -67,8 +68,15 @@ const STAGE_METADATA = {
     }
 };
 
-function initSimulation(cargoId, targetStageView = null) {
+function initSimulation(cargoId, targetStageView = null, targetSystem = null) {
     if (!cargoId) return;
+
+    if (targetSystem) {
+        currentSystemDashboard = targetSystem;
+    } else {
+        const urlSys = new URLSearchParams(window.location.search).get('system');
+        if (urlSys) currentSystemDashboard = urlSys;
+    }
 
     fetch(`api/cargo.php?action=detail&id=${encodeURIComponent(cargoId)}`)
         .then(r => r.json())
@@ -79,6 +87,7 @@ function initSimulation(cargoId, targetStageView = null) {
                 renderAuditTimeline(res.data.logs);
                 updateStepperState(currentCargoData.current_stage, currentCargoData.status);
                 selectStageView(targetStageView || currentCargoData.current_stage || 1);
+                switchSystemDashboard(currentSystemDashboard, false);
             } else {
                 Swal.fire({
                     title: 'Error',
@@ -530,7 +539,7 @@ function executeStageAction(stage, avsecDecision) {
                 if (avsecDecision === 'CLEARED' && stage < 7) {
                     nextView = stage + 1;
                 }
-                initSimulation(currentCargoData.id, nextView);
+                initSimulation(currentCargoData.id, nextView, currentSystemDashboard);
             });
         } else {
             Swal.fire({
@@ -602,7 +611,7 @@ function triggerAutoRun() {
                         confirmButtonColor: '#087F8A',
                         customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
                     }).then(() => {
-                        initSimulation(currentCargoData.id);
+                        initSimulation(currentCargoData.id, null, currentSystemDashboard);
                     });
                 } else {
                     Swal.fire({
@@ -874,4 +883,228 @@ function renderAuditTimeline(logs) {
     });
 
     container.innerHTML = html;
+}
+
+// =========================================================================
+// SYSTEM DASHBOARD SWITCHER & SPECIALIZED OPERATIONAL RENDERERS
+// (TMS, CMS, AVSEC System, Load & Balance / Load Planning System)
+// =========================================================================
+
+function switchSystemDashboard(systemKey, updateUrl = true) {
+    const validKeys = ['all', 'tms', 'cms', 'avsec', 'load_balance'];
+    if (!validKeys.includes(systemKey)) systemKey = 'all';
+    currentSystemDashboard = systemKey;
+
+    // Toggle button active styles
+    validKeys.forEach(k => {
+        const btn = document.getElementById(`tabBtn-${k}`);
+        if (btn) {
+            const pill = btn.querySelector('span:last-child');
+            if (k === systemKey) {
+                btn.className = 'system-tab-btn px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-[#087F8A] text-white shadow-md shadow-teal-500/20';
+                if (pill) pill.className = 'text-[9px] px-2 py-0.5 rounded-full bg-white/20 text-white font-extrabold tracking-wide uppercase';
+            } else {
+                btn.className = 'system-tab-btn px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-slate-50 text-slate-700 hover:bg-teal-50 hover:text-[#087F8A] border border-gray-200';
+                if (pill) pill.className = 'text-[9px] px-2 py-0.5 rounded-full bg-slate-200 text-slate-600 font-extrabold';
+            }
+        }
+
+        // Toggle view visibility
+        const viewEl = document.getElementById(`view-system-${k}`);
+        if (viewEl) {
+            if (k === systemKey) {
+                viewEl.classList.remove('hidden');
+            } else {
+                viewEl.classList.add('hidden');
+            }
+        }
+    });
+
+    // Update breadcrumb label
+    const indicatorText = document.getElementById('activeSystemIndicatorText');
+    if (indicatorText) {
+        const labelMap = {
+            'all': 'Alur Terpadu End-to-End',
+            'tms': 'Dashboard TMS (Tahap 1)',
+            'cms': 'Dashboard CMS (Tahap 2-3)',
+            'avsec': 'Dashboard AVSEC System (Tahap 4)',
+            'load_balance': 'Dashboard Load & Balance (Tahap 5-7)'
+        };
+        indicatorText.textContent = labelMap[systemKey] || 'Alur Terpadu End-to-End';
+    }
+
+    // Update URL query string without reloading page
+    if (updateUrl && window.history && window.history.replaceState) {
+        const url = new URL(window.location);
+        url.searchParams.set('system', systemKey);
+        window.history.replaceState({}, '', url);
+    }
+
+    // Refresh data in specialized views
+    if (currentCargoData) {
+        renderTMSDashboard(currentCargoData);
+        renderCMSDashboard(currentCargoData);
+        renderAVSECDashboard(currentCargoData);
+        renderLoadBalanceDashboard(currentCargoData);
+    }
+}
+
+function renderTMSDashboard(c) {
+    if (!c) return;
+    const plateEl = document.getElementById('tms-truck-plate');
+    if (plateEl) plateEl.textContent = c.truck_plate || 'B 9482 KXT';
+    const driverEl = document.getElementById('tms-truck-driver');
+    if (driverEl) driverEl.textContent = c.driver_name || 'Supir Terdaftar';
+    const transEl = document.getElementById('tms-truck-transporter');
+    if (transEl) transEl.textContent = c.transporter_company || 'PT Antar Lintas Logistik';
+    const dockEl = document.getElementById('tms-truck-dock');
+    if (dockEl) dockEl.textContent = c.dock_slot || 'DOCK-01';
+    const bookEl = document.getElementById('tms-truck-booking');
+    if (bookEl) bookEl.textContent = c.booking_code || 'TAS-BOOK-9482';
+    const stageBadge = document.getElementById('tms-cargo-stage-badge');
+    if (stageBadge) stageBadge.textContent = `Tahap ${c.current_stage}: ${c.status}`;
+
+    const dock1Plate = document.getElementById('tms-dock1-plate');
+    if (dock1Plate) dock1Plate.textContent = c.truck_plate || 'B 9482 KXT';
+
+    const tmsJson = {
+        "event_type": "TMS_TRUCK_GATE_CHECKIN",
+        "truck_id": c.truck_arrival_id || "TRK-INBOUND-01",
+        "truck_plate": c.truck_plate || "B 9482 KXT",
+        "driver_name": c.driver_name || "Supir Terdaftar",
+        "transporter": c.transporter_company || "PT Antar Lintas Logistik",
+        "assigned_dock": c.dock_slot || "DOCK-01",
+        "booking_code": c.booking_code || "TAS-BOOK-9482",
+        "tas_booking_status": "CONFIRMED_VALID_TIMESLOT",
+        "gate_barrier_status": "BARRIER_OPENED",
+        "hardware_specs": {
+            "rfid_gate_reader": "TMS UHF Long-Range RFID Reader (902-928 MHz)",
+            "barrier_gate": "High-Speed Boom Barrier (1.2s opening speed)",
+            "dock_leveler": "Hydraulic Pit Leveler 10-Ton Capacity"
+        },
+        "timestamp": new Date().toISOString()
+    };
+    const tmsDisp = document.getElementById('tmsPayloadDisplay');
+    if (tmsDisp) tmsDisp.textContent = JSON.stringify(tmsJson, null, 2);
+}
+
+function renderCMSDashboard(c) {
+    if (!c) return;
+    const ssccEl = document.getElementById('cms-captured-sscc');
+    if (ssccEl) ssccEl.textContent = c.sscc || '-';
+
+    const cmsJson = {
+        "event_type": "CMS_AIDC_AND_AWB_MATCHING",
+        "hardware": "High-Speed Tunnel Barcode & RFID UHF Scanner",
+        "conveyor_speed": "2.5 m/s",
+        "gs1_sscc_18": c.sscc,
+        "e_awb_number": c.awb_number,
+        "shipment": {
+            "shipper": c.shipper,
+            "consignee": c.consignee,
+            "commodity": c.description,
+            "pieces": parseInt(c.quantity),
+            "declared_weight_kg": parseFloat(c.declared_weight_kg)
+        },
+        "matching_result": {
+            "awb_matched": true,
+            "internal_sorting_lane": "LANE_02_AVSEC_SCREENING",
+            "cold_chain_priority": c.commodity_type === 'PHARMA' ? "URGENT" : "STANDARD"
+        },
+        "timestamp": new Date().toISOString()
+    };
+    const cmsDisp = document.getElementById('cmsPayloadDisplay');
+    if (cmsDisp) cmsDisp.textContent = JSON.stringify(cmsJson, null, 2);
+}
+
+function renderAVSECDashboard(c) {
+    if (!c) return;
+    const certWrap = document.getElementById('avsec-certificate-wrap');
+    const warnWrap = document.getElementById('avsec-suspect-warning-wrap');
+    const statusInd = document.getElementById('avsec-status-indicator');
+    const csdNum = document.getElementById('avsec-csd-number');
+    const inspId = document.getElementById('avsec-inspector-id');
+    const clearTime = document.getElementById('avsec-clearance-time');
+
+    const isSuspect = c.status === 'SUSPECT';
+
+    if (isSuspect) {
+        if (certWrap) certWrap.classList.add('hidden');
+        if (warnWrap) warnWrap.classList.remove('hidden');
+        if (statusInd) {
+            statusInd.textContent = 'STATUS: SUSPECT (DITAHAN)';
+            statusInd.className = 'text-[10px] font-mono px-3 py-1 rounded-full font-bold bg-rose-50 text-rose-700 border border-rose-300 animate-pulse';
+        }
+    } else {
+        if (certWrap) certWrap.classList.remove('hidden');
+        if (warnWrap) warnWrap.classList.add('hidden');
+        if (statusInd) {
+            statusInd.textContent = (c.current_stage >= 4) ? 'STATUS: CLEARED (LOLOS)' : 'STATUS: MENUNGGU SCREENING';
+            statusInd.className = (c.current_stage >= 4)
+                ? 'text-[10px] font-mono px-3 py-1 rounded-full font-bold bg-emerald-50 text-emerald-700 border border-emerald-200'
+                : 'text-[10px] font-mono px-3 py-1 rounded-full font-bold bg-teal-50 text-[#087F8A] border border-teal-200';
+        }
+        if (csdNum) csdNum.textContent = c.csd_number || (`CSD-ID-${c.awb_number.replace(/[^0-9]/g, '')}-77`);
+        if (inspId) inspId.textContent = c.inspector_id || 'AVSEC-OPR-07';
+        if (clearTime) clearTime.textContent = c.check_time || 'CLEARANCE VALIDATED';
+    }
+
+    const avsecJson = {
+        "event_type": "SECURITY_SCREENING_EVALUATION",
+        "cargo_id": c.id,
+        "awb_number": c.awb_number,
+        "scanner": "Dual-View High-Energy X-Ray (180x180cm, 320kV)",
+        "penetration_steel_mm": 80,
+        "screening_decision": isSuspect ? "SUSPECT" : "CLEARED",
+        "csd_certificate": isSuspect ? null : (c.csd_number || `CSD-ID-${c.awb_number.replace(/[^0-9]/g, '')}-77`),
+        "inspector_id": c.inspector_id || "AVSEC-OPR-07",
+        "density_spectrum": isSuspect ? "HIGH_DENSITY_ANOMALY (Z > 20)" : "NORMAL_ORGANIC_MIXED (Z 7-14)",
+        "quarantine_lockout": isSuspect,
+        "timestamp": new Date().toISOString()
+    };
+    const avsecDisp = document.getElementById('avsecPayloadDisplay');
+    if (avsecDisp) avsecDisp.textContent = JSON.stringify(avsecJson, null, 2);
+}
+
+function renderLoadBalanceDashboard(c) {
+    if (!c) return;
+    const wt = c.actual_weight_kg ? parseFloat(c.actual_weight_kg).toFixed(1) : parseFloat(c.declared_weight_kg).toFixed(1);
+    const scaleWt = document.getElementById('lb-scale-weight');
+    if (scaleWt) scaleWt.textContent = `${wt} KG`;
+    const scaleDec = document.getElementById('lb-scale-declared');
+    if (scaleDec) scaleDec.textContent = `${parseFloat(c.declared_weight_kg).toFixed(1)} kg`;
+    const uldCode = document.getElementById('lb-uld-code');
+    if (uldCode) uldCode.textContent = c.uld_code || 'AKE-12345-GA';
+
+    const lbJson = {
+        "event_type": "WEIGHT_BALANCE_AND_LOAD_PLANNING",
+        "cargo_id": c.id,
+        "scale_measurement": {
+            "platform": "Smart Floor Scale 15-Ton",
+            "declared_weight_kg": parseFloat(c.declared_weight_kg),
+            "actual_weight_kg": parseFloat(wt),
+            "discrepancy_kg": parseFloat((parseFloat(wt) - parseFloat(c.declared_weight_kg)).toFixed(1)),
+            "tolerance_status": "WITHIN_TOLERANCE"
+        },
+        "uld_consolidation": {
+            "container_code": c.uld_code || "AKE-12345-GA",
+            "container_type": "AKE",
+            "max_capacity_kg": 1588.0,
+            "assigned_compartment": c.compartment || "AFT-LOWER-1"
+        },
+        "aerodynamic_envelope": {
+            "center_of_gravity_percent_mac": 28.4,
+            "safety_envelope": "18.0% - 34.0% MAC",
+            "flight_trim_status": "OPTIMAL_SAFETY"
+        },
+        "flight_manifest": {
+            "flight_number": c.flight_number || "GA-707",
+            "aircraft_type": "Boeing 737-800F",
+            "route": "CGK -> DPS",
+            "electronic_loadsheet_status": c.current_stage >= 7 ? "FINALIZED_AND_SENT_TO_EFB" : "PENDING_FINAL_WEIGHT"
+        },
+        "timestamp": new Date().toISOString()
+    };
+    const lbDisp = document.getElementById('lbPayloadDisplay');
+    if (lbDisp) lbDisp.textContent = JSON.stringify(lbJson, null, 2);
 }

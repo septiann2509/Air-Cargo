@@ -80,6 +80,49 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED') {
 
     try {
         switch ($stage) {
+            case 1: // TAHAP 1: Kedatangan Truk & Booking Slot (TMS / TAS Gate)
+                $update = $db->prepare("
+                    UPDATE cargo_shipments 
+                    SET current_stage = 1, status = 'REGISTERED' 
+                    WHERE id = ?
+                ");
+                $update->execute([$cargoId]);
+
+                if (!empty($cargo['truck_arrival_id'])) {
+                    $db->prepare("
+                        UPDATE truck_arrivals 
+                        SET status = 'ARRIVED' 
+                        WHERE id = ?
+                    ")->execute([$cargo['truck_arrival_id']]);
+                }
+
+                $jsonPayload = [
+                    "event_type" => "TMS_TRUCK_GATE_CHECKIN",
+                    "truck_id" => $cargo['truck_arrival_id'] ?? 'TRK-INBOUND-01',
+                    "truck_plate" => $cargo['truck_plate'] ?? 'B 9482 KXT',
+                    "driver_name" => $cargo['driver_name'] ?? 'Supir Terdaftar',
+                    "transporter" => $cargo['transporter_company'] ?? 'PT Antar Lintas Logistik',
+                    "assigned_dock" => $cargo['dock_slot'] ?? 'DOCK-04',
+                    "tas_booking_status" => "CONFIRMED_VALID_TIMESLOT",
+                    "gate_barrier_status" => "BARRIER_OPENED",
+                    "hardware_specs" => [
+                        "rfid_gate_reader" => "TMS UHF Long-Range RFID Reader (902-928 MHz)",
+                        "barrier_gate" => "High-Speed Boom Barrier (1.2s opening speed)",
+                        "dock_leveler" => "Hydraulic Pit Leveler 10-Ton Capacity"
+                    ],
+                    "timestamp" => date('c')
+                ];
+
+                $responsePayload = [
+                    "status" => "200_OK",
+                    "message" => "Truk berhasil diverifikasi di gerbang TAS & diarahkan ke " . ($cargo['dock_slot'] ?? 'DOCK-04'),
+                    "tms_pass_token" => "TAS-TOKEN-" . strtoupper(bin2hex(random_bytes(4))),
+                    "next_stage" => "UNLOAD_TO_RFID_GATE_CONVEYOR"
+                ];
+
+                logTransaction($db, $cargoId, 1, "Kedatangan Truk & Booking Slot (TMS/TAS)", "TMS RFID Gate Reader & Barrier Gate", "Intermodal TMS / Truck Appointment System (TAS)", "Verifikasi Waktu Kedatangan & Pembukaan Gerbang Otomatis", $jsonPayload, $responsePayload);
+                break;
+
             case 2: // TAHAP 2: Scan RFID / Barcode di Gerbang Masuk
                 $scanTime = date('Y-m-d H:i:s');
                 $update = $db->prepare("
