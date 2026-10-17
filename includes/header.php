@@ -125,11 +125,56 @@ $companyShort   = 'AC';
                         <i class="fa-solid fa-chart-pie text-xs <?= ($currentPage === 'dashboard.php') ? 'text-[#087F8A]' : 'text-teal-200' ?>"></i>
                         <span><span class="hidden 2xl:inline">Dashboard </span>Eksekutif</span>
                     </a>
-                    <a href="simulation.php" class="px-2.5 2xl:px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap text-xs 2xl:text-sm font-bold <?= ($currentPage === 'simulation.php') ? 'bg-white text-[#087F8A] shadow-md font-extrabold' : 'text-white/85 hover:text-white hover:bg-white/15' ?>">
-                        <i class="fa-solid fa-microchip text-xs <?= ($currentPage === 'simulation.php') ? 'text-[#087F8A]' : 'text-teal-200' ?>"></i>
-                        <span>Simulasi 7-Tahap</span>
-                        <span class="text-[8px] 2xl:text-[9px] px-1.5 py-0.2 rounded-full <?= ($currentPage === 'simulation.php') ? 'bg-teal-100 text-[#087F8A]' : 'bg-teal-400/25 text-teal-100 border border-teal-300/30' ?> font-bold hidden 2xl:inline-block">PoC</span>
-                    </a>
+                    <!-- Simulasi 7-Tahap Dropdown (Alur Terpadu & 4 Dashboard Fitur Sistem) -->
+                    <div class="relative group">
+                        <a href="simulation.php" class="px-2.5 2xl:px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap text-xs 2xl:text-sm font-bold <?= ($currentPage === 'simulation.php') ? 'bg-white text-[#087F8A] shadow-md font-extrabold' : 'text-white/85 hover:text-white hover:bg-white/15' ?>">
+                            <i class="fa-solid fa-microchip text-xs <?= ($currentPage === 'simulation.php') ? 'text-[#087F8A]' : 'text-teal-200' ?>"></i>
+                            <span>Simulasi 7-Tahap</span>
+                            <span class="text-[8px] 2xl:text-[9px] px-1.5 py-0.2 rounded-full <?= ($currentPage === 'simulation.php') ? 'bg-teal-100 text-[#087F8A]' : 'bg-teal-400/25 text-teal-100 border border-teal-300/30' ?> font-bold hidden 2xl:inline-block">PoC</span>
+                            <i class="fa-solid fa-chevron-down text-[8px] opacity-75 group-hover:rotate-180 transition-transform"></i>
+                        </a>
+                        <!-- Sub-menu Dropdown -->
+                        <div class="absolute left-0 top-full pt-1.5 w-64 hidden group-hover:block z-50 animate-fadeIn">
+                            <div class="bg-white rounded-2xl shadow-2xl border border-gray-100 p-2 text-slate-700">
+                                <a href="simulation.php?system=all" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold hover:bg-teal-50 hover:text-[#087F8A] transition-colors">
+                                    <span class="w-7 h-7 rounded-lg bg-teal-50 text-[#087F8A] flex items-center justify-center text-xs flex-shrink-0"><i class="fa-solid fa-arrows-split-up-and-left"></i></span>
+                                    <div>
+                                        <span class="block">Alur Terpadu 7-Tahap</span>
+                                        <span class="block text-[10px] text-slate-400 font-normal">Visualisasi Master End-to-End</span>
+                                    </div>
+                                </a>
+                                <div class="my-1 border-t border-gray-100"></div>
+                                <a href="simulation.php?system=tms" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold hover:bg-teal-50 hover:text-[#087F8A] transition-colors">
+                                    <span class="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-xs flex-shrink-0"><i class="fa-solid fa-truck"></i></span>
+                                    <div>
+                                        <span class="block font-bold">Dashboard TMS</span>
+                                        <span class="block text-[10px] text-slate-400 font-normal">Tahap 1 &bull; Kedatangan Truk &amp; TAS</span>
+                                    </div>
+                                </a>
+                                <a href="simulation.php?system=cms" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold hover:bg-teal-50 hover:text-[#087F8A] transition-colors">
+                                    <span class="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-xs flex-shrink-0"><i class="fa-solid fa-laptop-code"></i></span>
+                                    <div>
+                                        <span class="block font-bold">Dashboard CMS</span>
+                                        <span class="block text-[10px] text-slate-400 font-normal">Tahap 2-3 &bull; RFID &amp; e-AWB Matching</span>
+                                    </div>
+                                </a>
+                                <a href="simulation.php?system=avsec" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold hover:bg-teal-50 hover:text-[#087F8A] transition-colors">
+                                    <span class="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-xs flex-shrink-0"><i class="fa-solid fa-shield-halved"></i></span>
+                                    <div>
+                                        <span class="block font-bold">Dashboard AVSEC System</span>
+                                        <span class="block text-[10px] text-slate-400 font-normal">Tahap 4 &bull; Dual-View X-Ray &amp; CSD</span>
+                                    </div>
+                                </a>
+                                <a href="simulation.php?system=load_balance" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold hover:bg-teal-50 hover:text-[#087F8A] transition-colors">
+                                    <span class="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-xs flex-shrink-0"><i class="fa-solid fa-scale-balanced"></i></span>
+                                    <div>
+                                        <span class="block font-bold">Load &amp; Balance System</span>
+                                        <span class="block text-[10px] text-slate-400 font-normal">Tahap 5-7 &bull; W&amp;B, ULD &amp; Flight</span>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                     <a href="database_viewer.php" class="px-2.5 2xl:px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap text-xs 2xl:text-sm font-bold <?= ($currentPage === 'database_viewer.php') ? 'bg-white text-[#087F8A] shadow-md font-extrabold' : 'text-white/85 hover:text-white hover:bg-white/15' ?>">
                         <i class="fa-solid fa-database text-xs <?= ($currentPage === 'database_viewer.php') ? 'text-[#087F8A]' : 'text-teal-200' ?>"></i>
                         <span>Database Live</span>
@@ -178,7 +223,15 @@ $companyShort   = 'AC';
         <div class="flex flex-col space-y-4 text-base font-bold text-center">
             <a href="index.php" class="py-2.5 rounded-xl <?= ($currentPage === 'index.php') ? 'bg-white text-[#087F8A]' : 'text-white hover:bg-white/15' ?>">Beranda</a>
             <a href="dashboard.php" class="py-2.5 rounded-xl <?= ($currentPage === 'dashboard.php') ? 'bg-white text-[#087F8A]' : 'text-white hover:bg-white/15' ?>">Dashboard Eksekutif</a>
-            <a href="simulation.php" class="py-2.5 rounded-xl <?= ($currentPage === 'simulation.php') ? 'bg-white text-[#087F8A]' : 'text-white hover:bg-white/15' ?>">Simulasi 7-Tahap PoC</a>
+            <div>
+                <a href="simulation.php?system=all" class="block py-2 rounded-xl <?= ($currentPage === 'simulation.php') ? 'bg-white text-[#087F8A]' : 'text-white hover:bg-white/15' ?>">Simulasi 7-Tahap (Alur Terpadu)</a>
+                <div class="grid grid-cols-2 gap-1.5 mt-2 px-1 text-xs">
+                    <a href="simulation.php?system=tms" class="py-1.5 px-2 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center gap-1"><i class="fa-solid fa-truck text-[10px]"></i> TMS</a>
+                    <a href="simulation.php?system=cms" class="py-1.5 px-2 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center gap-1"><i class="fa-solid fa-laptop-code text-[10px]"></i> CMS</a>
+                    <a href="simulation.php?system=avsec" class="py-1.5 px-2 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center gap-1"><i class="fa-solid fa-shield-halved text-[10px]"></i> AVSEC</a>
+                    <a href="simulation.php?system=load_balance" class="py-1.5 px-2 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center gap-1"><i class="fa-solid fa-scale-balanced text-[10px]"></i> Load &amp; Balance</a>
+                </div>
+            </div>
             <a href="database_viewer.php" class="py-2.5 rounded-xl <?= ($currentPage === 'database_viewer.php') ? 'bg-white text-[#087F8A]' : 'text-white hover:bg-white/15' ?>">Database Live</a>
             <a href="layout_3d.php" class="py-2.5 rounded-xl <?= ($currentPage === 'layout_3d.php') ? 'bg-white text-[#087F8A]' : 'text-white hover:bg-white/15' ?>">Denah 3D Terminal</a>
         </div>
