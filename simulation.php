@@ -200,7 +200,7 @@ include __DIR__ . '/includes/header.php';
                     <?php
                     $stagesConfig = [
                         1 => ['icon' => 'fa-truck', 'name' => '1. Kedatangan Truk', 'sub' => 'TMS / TAS Gate'],
-                        2 => ['icon' => 'fa-qrcode', 'name' => '2. Scan RFID Gate', 'sub' => 'High-Speed AIDC'],
+                        2 => ['icon' => 'fa-code', 'name' => '2. Ingest JSON Data', 'sub' => 'AIDC JSON Stream'],
                         3 => ['icon' => 'fa-laptop-code', 'name' => '3. Registrasi CMS', 'sub' => 'e-AWB Matching'],
                         4 => ['icon' => 'fa-shield-halved', 'name' => '4. X-Ray AVSEC', 'sub' => 'Dual-View Scan'],
                         5 => ['icon' => 'fa-scale-balanced', 'name' => '5. Penimbangan', 'sub' => 'Smart ULD Scale'],
@@ -799,7 +799,7 @@ include __DIR__ . '/includes/header.php';
                                 </span>
                             </div>
                             <p class="text-xs text-slate-500 mt-0.5">
-                                High-Speed Barcode/RFID Tunnel Ingest, Validasi GS1 SSCC 18-Digit, &amp; Pencocokan Dokumen Electronic Air Waybill (e-AWB).
+                                AIDC Inbound Data Ingestion (Payload JSON), Validasi GS1 SSCC 18-Digit, &amp; Pencocokan Dokumen Electronic Air Waybill (e-AWB).
                             </p>
                         </div>
                     </div>
@@ -814,12 +814,12 @@ include __DIR__ . '/includes/header.php';
                 <!-- 4-Layer Architecture Pill Strip -->
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4 text-[11px]">
                     <div class="p-3 rounded-xl bg-slate-50 border border-gray-200">
-                        <span class="text-[9px] uppercase font-bold text-slate-400 block tracking-wider">Layer 1 (Hardware)</span>
-                        <span class="font-bold text-[#0D1C42] block mt-0.5">High-Speed Scanner (2.5 m/s, IP65)</span>
+                        <span class="text-[9px] uppercase font-bold text-slate-400 block tracking-wider">Layer 1 (Ingest Format)</span>
+                        <span class="font-bold text-[#0D1C42] block mt-0.5">JSON Payload (AIDC Inbound)</span>
                     </div>
                     <div class="p-3 rounded-xl bg-slate-50 border border-gray-200">
                         <span class="text-[9px] uppercase font-bold text-slate-400 block tracking-wider">Layer 2 (Network)</span>
-                        <span class="font-bold text-[#0D1C42] block mt-0.5">Industrial Ethernet (Profinet/TCP)</span>
+                        <span class="font-bold text-[#0D1C42] block mt-0.5">Industrial Ethernet (REST / MQTT)</span>
                     </div>
                     <div class="p-3 rounded-xl bg-slate-50 border border-gray-200">
                         <span class="text-[9px] uppercase font-bold text-slate-400 block tracking-wider">Layer 3 (Software)</span>
@@ -836,11 +836,11 @@ include __DIR__ . '/includes/header.php';
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
                 <div class="bg-white p-4 rounded-2xl border border-gray-200/90 shadow-sm flex items-center justify-between">
                     <div>
-                        <span class="text-slate-400 text-[10px] font-bold uppercase tracking-wider block">Conveyor Ingest Speed</span>
-                        <span class="text-2xl font-black text-[#0D1C42] font-mono mt-1 block">2.5 <span class="text-xs text-slate-500 font-sans font-normal">m/s IP65</span></span>
+                        <span class="text-slate-400 text-[10px] font-bold uppercase tracking-wider block">Format Stream Ingest</span>
+                        <span class="text-2xl font-black text-[#0D1C42] font-mono mt-1 block">JSON <span class="text-xs text-slate-500 font-sans font-normal">Payload</span></span>
                     </div>
                     <div class="w-10 h-10 rounded-xl bg-teal-50 text-[#087F8A] flex items-center justify-center text-lg">
-                        <i class="fa-solid fa-qrcode"></i>
+                        <i class="fa-solid fa-code"></i>
                     </div>
                 </div>
                 <div class="bg-white p-4 rounded-2xl border border-gray-200/90 shadow-sm flex items-center justify-between">
@@ -877,57 +877,66 @@ include __DIR__ . '/includes/header.php';
                 <!-- Left Column (7 cols) -->
                 <div class="lg:col-span-7 space-y-6">
                     
-                    <!-- Scanner & e-AWB Workstation Card -->
+                    <!-- Scanner & e-AWB Workstation Card (JSON Ingestion) -->
                     <div class="bg-white p-6 rounded-2xl border border-gray-200/90 shadow-sm relative overflow-hidden">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 mb-4 border-b border-gray-100 gap-2">
                             <div class="flex items-center space-x-2">
-                                <i class="fa-solid fa-qrcode text-[#087F8A] text-base"></i>
+                                <i class="fa-solid fa-code text-[#087F8A] text-base"></i>
                                 <h3 class="text-xs font-bold text-[#0D1C42] uppercase tracking-wider">
-                                    Pemindaian Gerbang RFID &amp; Pencocokan e-AWB
+                                    Pemindaian Inbound Data Ingest (JSON) &amp; Pencocokan e-AWB
                                 </h3>
                             </div>
                             <span id="cms-scanner-status-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 uppercase tracking-wide">
-                                <i class="fa-solid fa-hourglass-start mr-1"></i>Menunggu Pindaian Tag
+                                <i class="fa-solid fa-hourglass-start mr-1"></i>Menunggu Ingest JSON
                             </span>
                         </div>
 
-                        <!-- Visual Tunnel Scanner Graphic with Scanning Beam -->
-                        <div class="p-5 rounded-xl bg-gradient-to-br from-slate-50 to-teal-50/40 border border-gray-200 mb-5 flex flex-col items-center justify-center shadow-inner relative">
-                            <div class="relative w-full max-w-md h-16 rounded-xl bg-white border-2 border-[#0CA1AF] flex items-center justify-between px-4 overflow-hidden mb-3 shadow-md">
-                                <div id="cms-scanner-beam" class="absolute inset-x-0 h-0.5 bg-[#0CA1AF] shadow-[0_0_12px_#0CA1AF] animate-pulse"></div>
-                                <div class="flex items-center space-x-2 text-[#087F8A] text-xs font-bold">
-                                    <i class="fa-solid fa-barcode text-lg"></i>
-                                    <span>RFID UHF Tunnel Scanner (865MHz)</span>
+                        <!-- JSON Ingestion Stream Console (Menggantikan Hardware Fisik RFID dengan Data JSON) -->
+                        <div class="p-4 rounded-xl bg-[#0A1628] border border-slate-800 mb-5 shadow-inner relative overflow-hidden">
+                            <div class="flex items-center justify-between pb-2.5 mb-2.5 border-b border-slate-800 text-xs font-mono">
+                                <div class="flex items-center space-x-2">
+                                    <span class="flex h-2.5 w-2.5 relative">
+                                        <span id="cms-json-indicator-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                        <span id="cms-json-indicator-dot" class="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                                    </span>
+                                    <span class="text-slate-200 font-bold text-[11px] tracking-wide">STREAM: AIDC_INBOUND_INGEST.json</span>
+                                    <span class="text-[10px] text-teal-400 bg-teal-950/60 px-1.5 py-0.5 rounded border border-teal-800/60">application/json</span>
                                 </div>
-                                <span class="text-[10px] font-mono text-emerald-700 font-bold bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-200">2.5 m/s TUNNEL</span>
-                            </div>
-                            <div class="flex flex-wrap items-center justify-center gap-2.5 text-xs font-mono">
-                                <span class="text-slate-500 font-medium">Captured Primary Key (SSCC):</span>
-                                <span id="cms-captured-sscc" class="text-slate-400 font-semibold bg-slate-50 px-3 py-1 rounded-lg border border-gray-200 font-mono italic text-[11.5px]">[ Belum Dipindai - Klik Tombol Pindai di Bawah ]</span>
+                                <div class="flex items-center space-x-2">
+                                    <span id="cms-json-status-tag" class="text-[10px] font-mono text-amber-300 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-800/80">STANDBY - WAITING JSON INGEST</span>
+                                    <span class="hidden sm:inline-block text-[10px] font-mono text-slate-400 bg-slate-800/60 px-2 py-0.5 rounded border border-slate-700">REST API / MQTT</span>
+                                </div>
                             </div>
 
-                            <!-- GS1 Decoded Tags Pill (Initially Hidden, shown when scanned) -->
-                            <div id="cms-gs1-pill-strip" class="hidden mt-3 pt-3 border-t border-teal-100/80 w-full flex flex-wrap items-center justify-center gap-3 text-[10.5px]">
-                                <span class="text-slate-500 font-bold"><i class="fa-solid fa-tags text-[#087F8A] mr-1"></i> GS1 Elements:</span>
-                                <span class="bg-white px-2.5 py-0.5 rounded border border-teal-200 font-mono text-[#087F8A]">AI (00) SSCC: <strong id="cms-gs1-sscc">-</strong></span>
-                                <span class="bg-white px-2.5 py-0.5 rounded border border-teal-200 font-mono text-[#087F8A]">AI (01) GTIN: <strong id="cms-gs1-gtin">-</strong></span>
-                                <span class="bg-white px-2.5 py-0.5 rounded border border-teal-200 font-mono text-[#087F8A]">Batch: <strong id="cms-gs1-batch">-</strong></span>
+                            <!-- JSON Raw Viewer -->
+                            <pre id="cms-json-payload-display" class="font-mono text-[11px] leading-relaxed text-emerald-400 bg-[#060D1A] p-3.5 rounded-xl border border-slate-800/90 overflow-x-auto max-h-52 scrollbar-thin select-all"><code>// Memuat stream JSON pemindaian...</code></pre>
+
+                            <!-- Console Bottom Metadata -->
+                            <div class="mt-3 pt-2.5 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2.5 text-xs font-mono">
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-slate-400 text-[11px]">Primary Key (SSCC):</span>
+                                    <span id="cms-captured-sscc" class="text-slate-400 font-semibold bg-slate-800/80 px-2.5 py-0.5 rounded border border-slate-700 font-mono italic text-[11px]">[ Menunggu Ingest JSON ]</span>
+                                </div>
+                                <div id="cms-gs1-pill-strip" class="hidden flex flex-wrap items-center gap-2 text-[10.5px]">
+                                    <span class="bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/70 text-emerald-400 font-mono">AI (01) GTIN: <strong id="cms-gs1-gtin">-</strong></span>
+                                    <span class="bg-teal-950/60 px-2 py-0.5 rounded border border-teal-800/70 text-teal-300 font-mono">Batch: <strong id="cms-gs1-batch">-</strong></span>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Sequential Action Buttons: Step 1 (Scan RFID) -> Step 2 (Validate e-AWB) -->
+                        <!-- Sequential Action Buttons: Step 1 (Ingest JSON) -> Step 2 (Validate e-AWB) -->
                         <div class="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100">
                             <div class="flex flex-wrap items-center gap-2.5">
-                                <!-- Tombol Tahap 2: Scan Barcode / RFID -->
+                                <!-- Tombol Tahap 2: Ingest Data Pemindaian JSON -->
                                 <button type="button" id="btn-cms-scan-rfid" onclick="executeStage2Scan()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-bold text-xs shadow-md shadow-teal-500/25 transition-all flex items-center transform hover:-translate-y-0.5 cursor-pointer">
-                                    <i class="fa-solid fa-barcode mr-2 text-sm"></i>
-                                    <span id="btn-cms-scan-text">Pindai Tag RFID &amp; Baca SSCC (Tahap 2)</span>
+                                    <i class="fa-solid fa-code mr-2 text-sm"></i>
+                                    <span id="btn-cms-scan-text">Kirim / Ingest Payload JSON (Tahap 2)</span>
                                 </button>
 
                                 <!-- Tombol Tahap 3: Validasi e-AWB (Awalnya Terkunci) -->
                                 <button type="button" id="btn-cms-validate-awb" onclick="executeStage3Validate()" class="px-5 py-2.5 rounded-xl bg-slate-100 text-slate-400 text-xs font-bold border border-gray-200 cursor-not-allowed shadow-none flex items-center transition-all opacity-70">
                                     <i id="btn-cms-validate-icon" class="fa-solid fa-lock mr-2 text-slate-400"></i>
-                                    <span id="btn-cms-validate-text">Validasi &amp; Registrasi e-AWB (Terkunci - Pindai RFID Dulu)</span>
+                                    <span id="btn-cms-validate-text">Validasi &amp; Registrasi e-AWB (Terkunci - Ingest JSON Dulu)</span>
                                 </button>
                             </div>
 
@@ -977,7 +986,7 @@ include __DIR__ . '/includes/header.php';
                                                     <i class="fa-solid fa-inbox"></i>
                                                 </div>
                                                 <span class="font-bold text-[#0D1C42] block text-xs">Belum Ada Antrean Kargo Terdaftar di CMS</span>
-                                                <span class="text-[11px] text-slate-400 mt-0.5 block">Kargo akan masuk ke antrean ini secara otomatis setelah berhasil dipindai RFID (Tahap 2) &amp; divalidasi registrasi e-AWB (Tahap 3).</span>
+                                                <span class="text-[11px] text-slate-400 mt-0.5 block">Kargo akan masuk ke antrean ini secara otomatis setelah berhasil dipindai via Ingest JSON (Tahap 2) &amp; divalidasi registrasi e-AWB (Tahap 3).</span>
                                             </td>
                                         </tr>
                                     <?php else: ?>

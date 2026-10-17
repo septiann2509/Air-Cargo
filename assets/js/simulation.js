@@ -1562,14 +1562,15 @@ function executeStage2Scan() {
     if (!currentCargoData) return;
 
     Swal.fire({
-        title: 'Memindai Tag RFID & Barcode...',
+        title: 'Mentransmisikan Payload JSON...',
         html: `
-            <div class="p-3 bg-slate-50 rounded-xl border border-gray-200 text-xs text-left space-y-1.5 mt-2">
-                <div class="flex items-center text-teal-700 font-bold">
-                    <i class="fa-solid fa-barcode text-base mr-2 animate-pulse"></i>
-                    <span>Tunnel Scanner AIDC (2.5 m/s) Aktif</span>
+            <div class="p-3.5 bg-[#0B1528] rounded-xl border border-slate-700 text-xs text-left space-y-2 mt-2 font-mono">
+                <div class="flex items-center justify-between text-teal-400 font-bold border-b border-slate-700/80 pb-1.5">
+                    <span class="flex items-center"><i class="fa-solid fa-code text-sm mr-2 animate-pulse"></i> AIDC Edge JSON Ingest</span>
+                    <span class="text-[10px] text-amber-300 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-800">TRANSMITTING</span>
                 </div>
-                <div class="text-slate-500 text-[11px]">Membaca antena UHF RFID 865MHz &amp; GS1 DataMatrix kargo...</div>
+                <div class="text-slate-400 text-[11px]">Mengirimkan payload data pemindaian kargo (GS1 SSCC, GTIN, Batch) dalam format JSON ke CMS Engine...</div>
+                <div class="text-emerald-400 text-[10.5px] bg-[#060D1A] p-2 rounded border border-slate-800">POST /api/v1/aidc/ingest-scan HTTP/1.1<br>Host: cms.aircargo.local</div>
             </div>
         `,
         allowOutsideClick: false,
@@ -1595,31 +1596,38 @@ function executeStage2Scan() {
             currentCargoData.current_stage = 2;
             currentCargoData.status = 'SCANNED';
 
+            const payloadResult = {
+                event_type: "AIDC_INBOUND_INGEST",
+                timestamp: new Date().toISOString(),
+                device_id: "EDGE-AIDC-SCANNER-01",
+                scan_protocol: "GS1_DIGITAL_LINK_JSON",
+                payload: {
+                    sscc: currentCargoData.sscc || "3899123450007509019",
+                    gtin: currentCargoData.gtin || "08997193267836",
+                    batch_no: currentCargoData.batch_no || "LOT-GEN-1538",
+                    gross_weight_kg: parseFloat(currentCargoData.gross_weight || currentCargoData.chargeable_weight || 354.0),
+                    pieces: parseInt(currentCargoData.quantity || currentCargoData.pieces || 50),
+                    commodity: currentCargoData.description || "Pakaian & Tekstil Premium Ekspor",
+                    truck_plate: currentCargoData.truck_plate || "B 8888 KGO",
+                    dock_slot: currentCargoData.dock_slot || "DOCK-02"
+                },
+                ingest_status: "SUCCESS_200_OK"
+            };
+
             Swal.fire({
-                title: 'Tag RFID Berhasil Dipindai!',
+                title: 'Payload JSON Berhasil Diterima!',
                 html: `
-                    <div class="text-xs text-left p-3.5 rounded-xl bg-slate-50 border border-gray-200 space-y-2 mt-2">
-                        <div class="flex items-center justify-between pb-1.5 border-b border-gray-200">
-                            <span class="text-slate-500 font-bold uppercase text-[10px]">Captured Primary Key (SSCC)</span>
-                            <span class="text-[#087F8A] font-mono font-black text-sm">${escapeHtml(currentCargoData.sscc)}</span>
+                    <div class="text-xs text-left p-3.5 rounded-xl bg-[#0B1528] border border-slate-700 space-y-2 mt-2 font-mono">
+                        <div class="flex items-center justify-between pb-1.5 border-b border-slate-700/80">
+                            <span class="text-slate-400 font-bold text-[10px] uppercase">Payload JSON Stream (HTTP 200 OK)</span>
+                            <span class="text-emerald-400 font-bold text-[10px] bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800">AIDC-INGEST-SUCCESS</span>
                         </div>
-                        <div class="flex justify-between items-center text-[11px]">
-                            <span class="text-slate-500">GTIN (01):</span>
-                            <span class="font-mono font-bold text-slate-800">${escapeHtml(currentCargoData.gtin || '08997193267836')}</span>
-                        </div>
-                        <div class="flex justify-between items-center text-[11px]">
-                            <span class="text-slate-500">Komoditas:</span>
-                            <span class="font-semibold text-slate-800">${escapeHtml(currentCargoData.description || 'Pakaian & Tekstil')}</span>
-                        </div>
-                        <div class="flex justify-between items-center text-[11px]">
-                            <span class="text-slate-500">Batch / Lot:</span>
-                            <span class="font-mono text-slate-700">${escapeHtml(currentCargoData.batch_no || 'LOT-GEN-1538')}</span>
-                        </div>
+                        <pre class="font-mono text-[10.5px] text-emerald-400 bg-[#060D1A] p-2.5 rounded-lg border border-slate-800 overflow-x-auto max-h-44 leading-relaxed">${escapeHtml(JSON.stringify(payloadResult, null, 2))}</pre>
                     </div>
                     <div class="mt-3 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-left">
                         <p class="text-emerald-800 font-bold">
                             <i class="fa-solid fa-circle-check text-emerald-600 mr-1"></i>
-                            Pindaian RFID Terverifikasi! Tombol Validasi e-AWB (Tahap 3) kini telah terbuka.
+                            Payload JSON Terverifikasi! Tombol Validasi e-AWB (Tahap 3) kini telah terbuka.
                         </p>
                     </div>
                 `,
@@ -1634,8 +1642,8 @@ function executeStage2Scan() {
             });
         } else {
             Swal.fire({
-                title: 'Gagal Pindai RFID!',
-                text: res.message || 'Sensor RFID gagal membaca tag kargo.',
+                title: 'Gagal Ingest JSON!',
+                text: res.message || 'Transmisi payload JSON pemindaian gagal diproses.',
                 icon: 'error',
                 background: '#ffffff',
                 color: '#0D1C42',
@@ -1646,7 +1654,7 @@ function executeStage2Scan() {
     .catch(err => {
         Swal.fire({
             title: 'Error Sistem',
-            text: 'Gagal memproses pindaian RFID: ' + err,
+            text: 'Gagal memproses ingest JSON: ' + err,
             icon: 'error',
             background: '#ffffff',
             color: '#0D1C42',
@@ -1658,21 +1666,21 @@ function executeStage2Scan() {
 function executeStage3Validate() {
     if (!currentCargoData) return;
 
-    // Proteksi: Kargo harus sudah melewati pindaian RFID di Tahap 2
+    // Proteksi: Kargo harus sudah melewati pindaian JSON di Tahap 2
     if (parseInt(currentCargoData.current_stage || 1) < 2) {
         Swal.fire({
-            title: 'Pindai Tag RFID Terlebih Dahulu!',
+            title: 'Lakukan Ingest JSON Pemindaian Terlebih Dahulu!',
             html: `
                 <div class="text-xs text-left p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 space-y-1.5 mt-2">
                     <p class="font-bold"><i class="fa-solid fa-triangle-exclamation text-amber-600 mr-1"></i> SOP Gerbang Inbound Bandara:</p>
-                    <p class="text-[11.5px] text-amber-800 leading-relaxed">Kargo wajib dipindai melalui High-Speed Tunnel RFID/Barcode (Tahap 2) untuk menangkap GS1 SSCC 18-digit sebelum dokumen digital e-AWB dapat divalidasi dan diregistrasi di CMS.</p>
+                    <p class="text-[11.5px] text-amber-800 leading-relaxed">Kargo wajib melewati transmisi payload JSON pemindaian (Tahap 2) untuk menangkap GS1 SSCC 18-digit sebelum dokumen digital e-AWB dapat divalidasi dan diregistrasi di CMS.</p>
                 </div>
             `,
             icon: 'warning',
             background: '#ffffff',
             color: '#0D1C42',
             confirmButtonColor: '#087F8A',
-            confirmButtonText: 'Pindai RFID Sekarang',
+            confirmButtonText: 'Kirim Payload JSON Sekarang',
             showCancelButton: true,
             cancelButtonText: 'Tutup',
             cancelButtonColor: '#94a3b8'
@@ -1825,6 +1833,10 @@ function renderCMSDashboard(c) {
     const ssccEl = document.getElementById('cms-captured-sscc');
     const badgeEl = document.getElementById('cms-scanner-status-badge');
     const pillStrip = document.getElementById('cms-gs1-pill-strip');
+    const jsonDisplay = document.getElementById('cms-json-payload-display');
+    const jsonStatusTag = document.getElementById('cms-json-status-tag');
+    const jsonPing = document.getElementById('cms-json-indicator-ping');
+    const jsonDot = document.getElementById('cms-json-indicator-dot');
     const scanBtn = document.getElementById('btn-cms-scan-rfid');
     const scanText = document.getElementById('btn-cms-scan-text');
     const valBtn = document.getElementById('btn-cms-validate-awb');
@@ -1833,22 +1845,71 @@ function renderCMSDashboard(c) {
 
     const stage = parseInt(c.current_stage || 1);
 
-    // KASUS 1: BELUM DIPINDAI RFID (Stage < 2)
+    const scanPayload = {
+        event_type: "AIDC_INBOUND_INGEST",
+        device_id: "EDGE-AIDC-SCANNER-01",
+        scan_protocol: "GS1_DIGITAL_LINK_JSON",
+        timestamp: new Date().toISOString(),
+        cargo_data: {
+            sscc: c.sscc || "3899123450007509019",
+            gtin: c.gtin || "08997193267836",
+            batch_no: c.batch_no || "LOT-GEN-1538",
+            weight_kg: parseFloat(c.actual_weight_kg || c.declared_weight_kg || c.gross_weight || 354.0),
+            pieces: parseInt(c.quantity || c.pieces || 50),
+            commodity: c.description || "Pakaian & Tekstil Premium Ekspor",
+            truck_plate: c.truck_plate || "B 8888 KGO",
+            dock_slot: c.dock_slot || "DOCK-02"
+        },
+        signal_metrics: {
+            carrier_freq_mhz: 865.7,
+            rssi_dbm: -41.5,
+            read_confidence: "99.98%"
+        },
+        status: stage >= 2 ? "PAYLOAD_VERIFIED_SUCCESS" : "AWAITING_INGESTION"
+    };
+
+    // KASUS 1: BELUM INGEST DATA JSON (Stage < 2)
     if (stage < 2) {
+        if (jsonDisplay) {
+            const standbyJson = {
+                status: "STANDBY_WAITING_PAYLOAD",
+                source: "EDGE-AIDC-GATEWAY-01",
+                protocol: "REST_JSON / GS1_EPC_GEN2",
+                message: "// Menunggu transmisi payload JSON pemindaian dari gerbang kargo inbound...",
+                sample_expected_schema: {
+                    sscc: "18-digit GS1 SSCC Primary Key",
+                    gtin: "14-digit Global Trade Item Number",
+                    batch_no: "Batch / Production Lot",
+                    weight_kg: "Float",
+                    pieces: "Integer"
+                }
+            };
+            jsonDisplay.textContent = JSON.stringify(standbyJson, null, 2);
+        }
+        if (jsonStatusTag) {
+            jsonStatusTag.className = "text-[10px] font-mono text-amber-300 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-800/80";
+            jsonStatusTag.textContent = "STANDBY - WAITING JSON INGEST";
+        }
+        if (jsonPing) {
+            jsonPing.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75";
+        }
+        if (jsonDot) {
+            jsonDot.className = "relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500";
+        }
         if (ssccEl) {
-            ssccEl.className = 'text-slate-400 font-semibold bg-slate-50 px-3 py-1 rounded-lg border border-gray-200 font-mono italic text-[11.5px]';
-            ssccEl.textContent = '[ Belum Dipindai - Klik Tombol Pindai di Bawah ]';
+            ssccEl.className = 'text-slate-400 font-semibold bg-slate-800/80 px-2.5 py-0.5 rounded border border-slate-700 font-mono italic text-[11px]';
+            ssccEl.textContent = '[ Menunggu Ingest JSON ]';
         }
         if (badgeEl) {
             badgeEl.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 uppercase tracking-wide';
-            badgeEl.innerHTML = '<i class="fa-solid fa-hourglass-start mr-1"></i>Menunggu Pindaian Tag';
+            badgeEl.innerHTML = '<i class="fa-solid fa-hourglass-start mr-1"></i>Menunggu Ingest JSON';
         }
         if (pillStrip) pillStrip.classList.add('hidden');
 
         if (scanBtn) {
             scanBtn.className = 'px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-bold text-xs shadow-md shadow-teal-500/25 transition-all flex items-center transform hover:-translate-y-0.5 cursor-pointer animate-pulse';
         }
-        if (scanText) scanText.textContent = 'Pindai Tag RFID & Baca SSCC (Tahap 2)';
+        if (scanText) scanText.textContent = 'Kirim / Ingest Payload JSON (Tahap 2)';
 
         if (valBtn) {
             valBtn.className = 'px-5 py-2.5 rounded-xl bg-slate-100 text-slate-400 text-xs font-bold border border-gray-200 cursor-not-allowed shadow-none flex items-center transition-all opacity-70';
@@ -1857,23 +1918,34 @@ function renderCMSDashboard(c) {
             valIcon.className = 'fa-solid fa-lock mr-2 text-slate-400';
         }
         if (valText) {
-            valText.textContent = 'Validasi & Registrasi e-AWB (Terkunci - Pindai RFID Dulu)';
+            valText.textContent = 'Validasi & Registrasi e-AWB (Terkunci - Ingest JSON Dulu)';
         }
     }
-    // KASUS 2: SUDAH DIPINDAI RFID, SIAP VALIDASI E-AWB (Stage == 2)
+    // KASUS 2: SUDAH INGEST DATA JSON, SIAP VALIDASI E-AWB (Stage == 2)
     else if (stage === 2) {
+        if (jsonDisplay) {
+            jsonDisplay.textContent = JSON.stringify(scanPayload, null, 2);
+        }
+        if (jsonStatusTag) {
+            jsonStatusTag.className = "text-[10px] font-mono text-emerald-300 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/80";
+            jsonStatusTag.textContent = "HTTP 200 OK - JSON PAYLOAD INGESTED";
+        }
+        if (jsonPing) {
+            jsonPing.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75";
+        }
+        if (jsonDot) {
+            jsonDot.className = "relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500";
+        }
         if (ssccEl) {
-            ssccEl.className = 'text-emerald-700 font-black bg-emerald-50 px-3.5 py-1.5 rounded-lg border border-emerald-300 shadow-sm text-sm font-mono tracking-wider animate-pulse';
+            ssccEl.className = 'text-emerald-400 font-black bg-emerald-950/70 px-2.5 py-0.5 rounded border border-emerald-700/80 shadow-sm text-xs font-mono tracking-wider animate-pulse';
             ssccEl.textContent = c.sscc || '-';
         }
         if (badgeEl) {
             badgeEl.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase tracking-wide';
-            badgeEl.innerHTML = '<i class="fa-solid fa-circle-check mr-1 text-emerald-600"></i>RFID UHF &amp; Barcode GS1 Terdeteksi';
+            badgeEl.innerHTML = '<i class="fa-solid fa-circle-check mr-1 text-emerald-600"></i>Payload JSON Terverifikasi (HTTP 200)';
         }
         if (pillStrip) {
             pillStrip.classList.remove('hidden');
-            const gSscc = document.getElementById('cms-gs1-sscc');
-            if (gSscc) gSscc.textContent = c.sscc || '-';
             const gGtin = document.getElementById('cms-gs1-gtin');
             if (gGtin) gGtin.textContent = c.gtin || '08997193267836';
             const gBatch = document.getElementById('cms-gs1-batch');
@@ -1883,7 +1955,7 @@ function renderCMSDashboard(c) {
         if (scanBtn) {
             scanBtn.className = 'px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold border border-gray-300 shadow-sm transition-all flex items-center cursor-pointer';
         }
-        if (scanText) scanText.textContent = 'RFID Terpindai (Pindai Ulang)';
+        if (scanText) scanText.textContent = 'JSON Terpindai (Kirim Ulang)';
 
         // Tombol 2 terbuka dan berkedip hijau siap diklik!
         if (valBtn) {
@@ -1898,8 +1970,19 @@ function renderCMSDashboard(c) {
     }
     // KASUS 3: SUDAH TAHAP 3 ATAU LEBIH (Stage >= 3)
     else {
+        if (jsonDisplay) {
+            scanPayload.status = "INGESTED_AND_EAWB_MATCHED";
+            jsonDisplay.textContent = JSON.stringify(scanPayload, null, 2);
+        }
+        if (jsonStatusTag) {
+            jsonStatusTag.className = "text-[10px] font-mono text-teal-300 bg-teal-950/60 px-2 py-0.5 rounded border border-teal-800/80";
+            jsonStatusTag.textContent = "PROCESSED - e-AWB MATCHED";
+        }
+        if (jsonPing) jsonPing.className = "hidden";
+        if (jsonDot) jsonDot.className = "relative inline-flex rounded-full h-2.5 w-2.5 bg-teal-500";
+
         if (ssccEl) {
-            ssccEl.className = 'text-emerald-700 font-bold bg-emerald-50 px-3.5 py-1 rounded-lg border border-emerald-200 font-mono text-sm';
+            ssccEl.className = 'text-emerald-400 font-bold bg-emerald-950/60 px-2.5 py-0.5 rounded border border-emerald-800 font-mono text-xs';
             ssccEl.textContent = c.sscc || '-';
         }
         if (badgeEl) {
@@ -1908,8 +1991,6 @@ function renderCMSDashboard(c) {
         }
         if (pillStrip) {
             pillStrip.classList.remove('hidden');
-            const gSscc = document.getElementById('cms-gs1-sscc');
-            if (gSscc) gSscc.textContent = c.sscc || '-';
             const gGtin = document.getElementById('cms-gs1-gtin');
             if (gGtin) gGtin.textContent = c.gtin || '08997193267836';
             const gBatch = document.getElementById('cms-gs1-batch');
@@ -1917,26 +1998,26 @@ function renderCMSDashboard(c) {
         }
 
         if (scanBtn) {
-            scanBtn.className = 'px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold border border-gray-300 shadow-sm transition-all flex items-center cursor-pointer';
+            scanBtn.className = 'px-4 py-2.5 rounded-xl bg-slate-50 text-slate-500 text-xs font-medium border border-gray-200 transition-all flex items-center cursor-pointer';
         }
-        if (scanText) scanText.textContent = 'Pindai Ulang Tag RFID';
+        if (scanText) scanText.textContent = 'JSON Terverifikasi';
 
         if (valBtn) {
-            valBtn.className = 'px-4 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold border border-emerald-300 shadow-sm transition-all flex items-center cursor-pointer';
+            valBtn.className = 'px-4 py-2.5 rounded-xl bg-teal-50 text-[#087F8A] text-xs font-bold border border-teal-200 transition-all flex items-center cursor-default';
         }
         if (valIcon) {
-            valIcon.className = 'fa-solid fa-circle-check mr-1.5 text-emerald-600';
+            valIcon.className = 'fa-solid fa-circle-check mr-2 text-teal-600';
         }
         if (valText) {
-            valText.textContent = 'e-AWB Tervalidasi (Validasi Ulang)';
+            valText.textContent = 'e-AWB Telah Teregistrasi';
         }
     }
 
     const cmsJson = {
         "event_type": "CMS_AIDC_AND_AWB_MATCHING",
-        "hardware": "High-Speed Tunnel Barcode & RFID UHF Scanner",
-        "conveyor_speed": "2.5 m/s",
-        "rfid_scan_status": (stage >= 2) ? "TAG_READ_SUCCESS" : "PENDING_SCAN",
+        "ingest_source": "AIDC Inbound Edge JSON Gateway",
+        "ingest_format": "JSON_GS1_EPC_GEN2",
+        "json_ingest_status": (stage >= 2) ? "PAYLOAD_INGESTED_SUCCESS" : "AWAITING_INGESTION",
         "gs1_sscc_18": (stage >= 2) ? c.sscc : null,
         "e_awb_number": c.awb_number,
         "shipment": {

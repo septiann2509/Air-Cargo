@@ -147,7 +147,7 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $truckD
                 logTransaction($db, $cargoId, 1, "Kedatangan Truk & Booking Slot (TMS/TAS)", "TMS RFID Gate Reader & Barrier Gate", "Intermodal TMS / Truck Appointment System (TAS)", "Verifikasi Waktu Kedatangan & Pembukaan Gerbang Otomatis", $jsonPayload, $responsePayload);
                 break;
 
-            case 2: // TAHAP 2: Scan RFID / Barcode di Gerbang Masuk
+            case 2: // TAHAP 2: Pemindaian Data Inbound (JSON Ingestion)
                 $scanTime = date('Y-m-d H:i:s');
                 $update = $db->prepare("
                     UPDATE cargo_shipments 
@@ -157,32 +157,34 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $truckD
                 $update->execute([$scanTime, $cargoId]);
 
                 $jsonPayload = [
-                    "event_type" => "RFID_AIDC_GATE_SCAN",
-                    "device_id" => "SCANNER-GATE-CONVEYOR-01",
-                    "hardware_specs" => [
-                        "type" => "High-Speed Barcode/RFID Tunnel Scanner",
-                        "antenna" => "UHF Impinj Indy R2000 865-868MHz",
+                    "event_type" => "AIDC_INBOUND_JSON_INGEST",
+                    "device_id" => "EDGE-AIDC-SCANNER-01",
+                    "stream_protocol" => "GS1_DIGITAL_LINK_JSON / REST_MQTT",
+                    "edge_telemetry" => [
                         "conveyor_speed" => "2.5 m/s",
-                        "ip_rating" => "IP65"
+                        "carrier_freq" => "865.7 MHz (EPC Gen2 TDS 2.0)",
+                        "rssi_dbm" => -41.5,
+                        "confidence" => "99.98%"
                     ],
                     "gs1_data" => [
                         "ai_00_sscc" => $cargo['sscc'],
                         "ai_01_gtin" => $cargo['gtin'],
                         "ai_10_batch_no" => $cargo['batch_no'],
                         "ai_17_expiry_date" => $cargo['expiry_date'],
-                        "quantity_koli" => (int)$cargo['quantity']
+                        "quantity_koli" => (int)$cargo['quantity'],
+                        "declared_weight_kg" => (float)$cargo['declared_weight_kg']
                     ],
-                    "scanned_at" => date('c')
+                    "ingested_at" => date('c')
                 ];
 
                 $responsePayload = [
                     "status" => "200_OK",
-                    "message" => "Tag SSCC berhasil diidentifikasi dan dikirim ke CMS",
+                    "message" => "Payload JSON AIDC (SSCC-18) berhasil diidentifikasi dan dikirim ke CMS",
                     "cms_ingest_token" => "CMS-TOKEN-" . strtoupper(bin2hex(random_bytes(4))),
                     "next_action" => "CMS_REGISTRATION"
                 ];
 
-                logTransaction($db, $cargoId, 2, "Scan RFID/Barcode Gerbang Masuk", "High-Speed RFID/Barcode Scanner", "Cargo Management Software (CMS)", "Pembacaan Massal Tag GS1 AIDC (SSCC-18) di Gerbang Masuk", $jsonPayload, $responsePayload);
+                logTransaction($db, $cargoId, 2, "Pemindaian Data Inbound (JSON Ingestion)", "AIDC Inbound Edge Gateway (JSON Ingest)", "Cargo Management Software (CMS)", "Ingest Data Pemindaian JSON (SSCC/GTIN) ke CMS", $jsonPayload, $responsePayload);
                 break;
 
             case 3: // TAHAP 3: Registrasi Data & e-AWB Matching di CMS
