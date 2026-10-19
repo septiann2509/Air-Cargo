@@ -67,12 +67,12 @@ include __DIR__ . '/includes/header.php';
     <!-- Ornamen Batik Sudut Resmi InJourney (Top-Right) -->
     <img src="assets/img/injourney/pattern-green-BTZ3yksm.png" 
          alt="Batik Kawung Ornament" 
-         class="absolute -top-12 -right-12 w-72 sm:w-96 lg:w-[480px] pointer-events-none opacity-25 mix-blend-screen select-none transform rotate-0 transition-opacity duration-700">
+         class="absolute -top-12 -right-12 w-72 sm:w-96 lg:w-[480px] pointer-events-none opacity-80 select-none transform rotate-0 transition-opacity duration-700">
 
     <!-- Ornamen Batik Sudut Resmi InJourney (Bottom-Left) -->
     <img src="assets/img/injourney/pattern-green-BTZ3yksm.png" 
          alt="Batik Kawung Ornament" 
-         class="absolute -bottom-16 -left-16 w-72 sm:w-96 lg:w-[480px] pointer-events-none opacity-20 mix-blend-screen select-none transform rotate-180 transition-opacity duration-700">
+         class="absolute -bottom-16 -left-16 w-72 sm:w-96 lg:w-[480px] pointer-events-none opacity-70 select-none transform rotate-180 transition-opacity duration-700">
 
     <!-- Floating Glow Orbs (InJourney Teal & Deep Cyan) -->
     <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-[#0CA1AF]/15 rounded-full blur-3xl pointer-events-none animate-pulse"></div>

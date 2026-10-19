@@ -685,10 +685,25 @@ camera.position.copy(DEFAULT_CAM_POS);
 const controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.target.copy(DEFAULT_CAM_TARGET);
 controls.enableDamping = true;
-controls.dampingFactor = 0.05;
-controls.maxPolarAngle = Math.PI / 2.08;
-controls.minDistance = 8;
-controls.maxDistance = 160;
+controls.dampingFactor = 0.06;
+controls.screenSpacePanning = true; // Izinkan pan bebas 2D ke segala arah
+controls.maxPolarAngle = Math.PI * 0.495; // Rotasi vertikal penuh hingga sejajar tanah
+controls.minPolarAngle = 0.01; // Pandangan bird-eye lurus ke bawah
+controls.minDistance = 2.0; // Zoom sangat dekat
+controls.maxDistance = 550; // Zoom jauh menyeluruh
+controls.rotateSpeed = 0.85;
+controls.panSpeed = 0.95;
+controls.zoomSpeed = 1.15;
+controls.listenToKeyEvents(window);
+controls.keyPanSpeed = 16.0;
+
+controls.addEventListener('start', () => {
+    if (typeof followCargoCam !== 'undefined' && followCargoCam) {
+        followCargoCam = false;
+        const btn = document.getElementById('btn-cam-follow');
+        if (btn) btn.classList.remove('active');
+    }
+});
 controls.update();
 
 // ─────────────────────────────────────────────────────────────────────────────

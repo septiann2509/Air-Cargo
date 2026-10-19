@@ -612,6 +612,43 @@ include __DIR__ . '/includes/header.php';
             </button>
         </div>
 
+        <!-- FLOATING PAN & ZOOM D-PAD CONTROLLER (NAVIGASI PRESISI) -->
+        <div class="absolute top-16 right-4 z-20 flex flex-col items-center gap-1 p-1.5 rounded-xl bg-slate-900/90 backdrop-blur-md border border-teal-500/30 shadow-2xl text-white">
+            <div class="text-[8px] font-black text-teal-300 uppercase tracking-wider mb-0.5 flex items-center gap-1">
+                <i class="fa-solid fa-compass text-teal-400 text-[8.5px]"></i>
+                <span>Geser &amp; Zoom</span>
+            </div>
+            <!-- D-pad Pan 2D -->
+            <div class="grid grid-cols-3 gap-1">
+                <div></div>
+                <button onclick="panCamera(0, 8)" class="w-7 h-7 rounded bg-white/10 hover:bg-[#0CA1AF] text-slate-200 hover:text-white flex items-center justify-center text-xs transition-all active:scale-95 cursor-pointer" title="Geser Maju (Arrow Up)"><i class="fa-solid fa-chevron-up"></i></button>
+                <div></div>
+                <button onclick="panCamera(8, 0)" class="w-7 h-7 rounded bg-white/10 hover:bg-[#0CA1AF] text-slate-200 hover:text-white flex items-center justify-center text-xs transition-all active:scale-95 cursor-pointer" title="Geser Kiri (Arrow Left)"><i class="fa-solid fa-chevron-left"></i></button>
+                <button onclick="resetCameraAngle()" class="w-7 h-7 rounded bg-teal-500/25 hover:bg-[#0CA1AF] text-teal-300 hover:text-white flex items-center justify-center text-[10px] transition-all active:scale-95 cursor-pointer" title="Reset Posisi Awal"><i class="fa-solid fa-arrows-to-dot"></i></button>
+                <button onclick="panCamera(-8, 0)" class="w-7 h-7 rounded bg-white/10 hover:bg-[#0CA1AF] text-slate-200 hover:text-white flex items-center justify-center text-xs transition-all active:scale-95 cursor-pointer" title="Geser Kanan (Arrow Right)"><i class="fa-solid fa-chevron-right"></i></button>
+                <div></div>
+                <button onclick="panCamera(0, -8)" class="w-7 h-7 rounded bg-white/10 hover:bg-[#0CA1AF] text-slate-200 hover:text-white flex items-center justify-center text-xs transition-all active:scale-95 cursor-pointer" title="Geser Mundur (Arrow Down)"><i class="fa-solid fa-chevron-down"></i></button>
+                <div></div>
+            </div>
+            <div class="w-full h-px bg-white/15 my-0.5"></div>
+            <!-- Zoom In & Out -->
+            <div class="flex items-center gap-1 w-full justify-between">
+                <button onclick="zoomCamera(6)" class="flex-1 py-1 rounded bg-white/10 hover:bg-[#0CA1AF] text-slate-200 hover:text-white flex items-center justify-center text-xs font-bold transition-all active:scale-95 cursor-pointer" title="Zoom Dekat (+)"><i class="fa-solid fa-plus text-[10px]"></i></button>
+                <button onclick="zoomCamera(-6)" class="flex-1 py-1 rounded bg-white/10 hover:bg-[#0CA1AF] text-slate-200 hover:text-white flex items-center justify-center text-xs font-bold transition-all active:scale-95 cursor-pointer" title="Zoom Jauh (-)"><i class="fa-solid fa-minus text-[10px]"></i></button>
+            </div>
+        </div>
+
+        <!-- FLOATING MOUSE CONTROLS HINT -->
+        <div id="mouse-hint-pill" class="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 hidden md:flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-slate-900/85 backdrop-blur-md border border-teal-500/35 text-[10.5px] text-slate-200 shadow-2xl pointer-events-auto transition-opacity">
+            <i class="fa-solid fa-computer-mouse text-teal-400"></i>
+            <span><strong class="text-white">Klik Kiri:</strong> Putar 360°</span>
+            <span class="text-teal-400/50">•</span>
+            <span><strong class="text-white">Klik Kanan / Shift+Klik:</strong> Geser (Pan)</span>
+            <span class="text-teal-400/50">•</span>
+            <span><strong class="text-white">Scroll:</strong> Zoom (2m - 650m)</span>
+            <button onclick="document.getElementById('mouse-hint-pill').remove()" class="text-slate-400 hover:text-white ml-1 text-xs cursor-pointer" title="Tutup panduan">&times;</button>
+        </div>
+
         <!-- FIDS FLIGHT & CARGO GLASS BILLBOARD (DI BAWAH NAV BAR ATAS) -->
         <div class="absolute top-14 left-4 z-20 flex flex-col gap-1 pointer-events-none">
             <div class="hud-chip flex items-center gap-3 bg-slate-900/90 border border-teal-500/40">
@@ -1094,11 +1131,104 @@ camera.position.set(-38, 32, -45);
 
 const controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
-controls.dampingFactor = 0.08;
-controls.maxPolarAngle = Math.PI / 2 - 0.02;
-controls.minDistance = 5;
-controls.maxDistance = 280;
+controls.dampingFactor = 0.06;
+controls.screenSpacePanning = true; // Izinkan pan bebas 2D (kiri, kanan, atas, bawah) ke segala arah
+controls.maxPolarAngle = Math.PI * 0.495; // Memungkinkan rotasi vertikal penuh dari atas hingga sejajar tanah
+controls.minPolarAngle = 0.01; // Memungkinkan pandangan vertikal 90 derajat lurus ke bawah (bird-eye)
+controls.minDistance = 2.0; // Zoom dekat untuk inspeksi kargo dan sensor
+controls.maxDistance = 650; // Zoom jauh untuk melihat kawasan bandara secara utuh
+controls.rotateSpeed = 0.85; // Kecepatan putar mouse yang presisi dan halus
+controls.panSpeed = 0.95; // Kecepatan geser/pan mouse yang responsif
+controls.zoomSpeed = 1.15; // Kecepatan zoom mouse wheel yang nyaman
 controls.target.set(12, 3, -2);
+
+// Deteksi Interaksi Mouse User — Berikan kendali bebas 100% tanpa hambatan
+let isUserInteracting = false;
+let isCamTransitioning = false;
+
+controls.addEventListener('start', () => {
+    isUserInteracting = true;
+    isCamTransitioning = false;
+    if (simCameraMode === 'follow') {
+        simCameraMode = 'free';
+        if (typeof setCameraViewUI === 'function') setCameraViewUI('free');
+    }
+});
+
+controls.addEventListener('end', () => {
+    isUserInteracting = false;
+});
+
+// Keyboard Navigation Support (Pan dengan tombol panah keyboard)
+controls.listenToKeyEvents(window);
+controls.keyPanSpeed = 16.0;
+
+// Switch Mode Drag Mouse (Putar 360° vs Geser / Pan)
+let currentMouseDragMode = 'rotate'; // 'rotate' | 'pan'
+
+function setMouseDragMode(mode) {
+    currentMouseDragMode = mode;
+    const bRot = document.getElementById('btn-mode-rotate');
+    const bPan = document.getElementById('btn-mode-pan');
+    if (mode === 'pan') {
+        controls.mouseButtons.LEFT = THREE.MOUSE.PAN;
+        controls.mouseButtons.RIGHT = THREE.MOUSE.ROTATE;
+        if (bPan) {
+            bPan.className = 'px-2 py-1 rounded text-[10px] font-bold bg-[#0CA1AF] text-white shadow flex items-center gap-1 transition-all cursor-pointer';
+        }
+        if (bRot) {
+            bRot.className = 'px-2 py-1 rounded text-[10px] font-bold text-slate-300 hover:text-white flex items-center gap-1 transition-all cursor-pointer';
+        }
+        canvas.style.cursor = 'move';
+    } else {
+        controls.mouseButtons.LEFT = THREE.MOUSE.ROTATE;
+        controls.mouseButtons.RIGHT = THREE.MOUSE.PAN;
+        if (bRot) {
+            bRot.className = 'px-2 py-1 rounded text-[10px] font-bold bg-[#0CA1AF] text-white shadow flex items-center gap-1 transition-all cursor-pointer';
+        }
+        if (bPan) {
+            bPan.className = 'px-2 py-1 rounded text-[10px] font-bold text-slate-300 hover:text-white flex items-center gap-1 transition-all cursor-pointer';
+        }
+        canvas.style.cursor = 'grab';
+    }
+}
+
+// Navigasi Kamera Presisi (Pan & Zoom dengan On-Screen Controller)
+function panCamera(dx, dz) {
+    camera.updateMatrixWorld();
+    const right = new THREE.Vector3(camera.matrixWorld.elements[0], 0, camera.matrixWorld.elements[2]).normalize();
+    const forward = new THREE.Vector3(-camera.matrixWorld.elements[8], 0, -camera.matrixWorld.elements[10]).normalize();
+
+    const delta = new THREE.Vector3()
+        .addScaledVector(right, dx)
+        .addScaledVector(forward, dz);
+
+    camera.position.add(delta);
+    controls.target.add(delta);
+    controls.update();
+
+    isCamTransitioning = false;
+    if (simCameraMode === 'follow') {
+        simCameraMode = 'free';
+        if (typeof setCameraViewUI === 'function') setCameraViewUI('free');
+    }
+}
+
+function zoomCamera(amount) {
+    const offset = new THREE.Vector3().subVectors(controls.target, camera.position);
+    const dist = offset.length();
+    if (dist > 3.0 || amount < 0) {
+        const step = Math.min(amount, dist - 2.5);
+        const dir = offset.clone().normalize();
+        camera.position.addScaledVector(dir, step);
+        controls.update();
+    }
+    isCamTransitioning = false;
+    if (simCameraMode === 'follow') {
+        simCameraMode = 'free';
+        if (typeof setCameraViewUI === 'function') setCameraViewUI('free');
+    }
+}
 
 // Lighting — Balanced Atmospheric Contrast (No Overexposure)
 const ambientLight = new THREE.AmbientLight(0xdce7f5, 0.85);
@@ -1737,10 +1867,12 @@ function createAsphaltArrowMesh(x, z, rotY = 0) {
 }
 
 // 1. Hamparan Rumput Hijau Lapangan Terbang Bandara (Airfield Grass Turf 380m x 320m)
-const grassGeo = new THREE.PlaneGeometry(380, 320);
+// 1. Hamparan Rumput Hijau Lapangan Terbang Bandara (Airfield Grass Turf 450m x 450m)
+// Membentang luas melingkupi seluruh fasilitas terminal & jalan tanpa ada celah hampa
+const grassGeo = new THREE.PlaneGeometry(450, 450);
 const grassMesh = new THREE.Mesh(grassGeo, MAT.airfieldGrass);
 grassMesh.rotation.x = -Math.PI / 2;
-grassMesh.position.set(20, -0.08, 0);
+grassMesh.position.set(20, -0.08, -30);
 grassMesh.receiveShadow = true;
 layoutGroup.add(grassMesh);
 
@@ -1764,24 +1896,31 @@ yardMesh.receiveShadow = true;
 layoutGroup.add(yardMesh);
 
 // 4. Jalan Raya Akses Truk Masuk & Keluar (Landside Access Highway ke Selatan)
-// Membentang dari Z = -70.0 s.d. Z = -175.0 (Panjang 105m, Lebar 22m, X = -15.0 s.d. +7.0)
-const roadGeo = new THREE.PlaneGeometry(22, 105);
+// Membentang tepat dari Z = -70.0 s.d. Z = -140.0 (Panjang 70m, Lebar 22m, X = -15.0 s.d. +7.0, Center Z = -105.0)
+// Disesuaikan proporsional, rapi, dan berlabuh kokoh di dalam batas rumput bandara
+const roadGeo = new THREE.PlaneGeometry(22, 70);
 const roadMesh = new THREE.Mesh(roadGeo, MAT.asphaltRoad);
 roadMesh.rotation.x = -Math.PI / 2;
-roadMesh.position.set(-4.0, -0.04, -122.5);
+roadMesh.position.set(-4.0, -0.04, -105.0);
 roadMesh.receiveShadow = true;
 layoutGroup.add(roadMesh);
 
 // ─────────────────────────────────────────────────────────────────────────────
-// KANSTIN BETON 3D, TROTOAR PEJALAN KAKI & PERIMETER PELATARAN
+// KANSTIN BETON 3D, TROTOAR PEJALAN KAKI SIMETRIS & PERIMETER PELATARAN
 // ─────────────────────────────────────────────────────────────────────────────
 const curbGroup = new THREE.Group();
 
-// Kanstin Lurus Sisi Barat Jalan (West Road Curb X = -15.15)
-const westCurb = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.16, 105), MAT.concreteCurb);
-westCurb.position.set(-15.15, 0.04, -122.5);
+// Kanstin Lurus Sisi Barat Jalan (West Road Curb X = -15.15, Z = -70 s.d. -140)
+const westCurb = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.16, 70), MAT.concreteCurb);
+westCurb.position.set(-15.15, 0.04, -105.0);
 westCurb.receiveShadow = true;
 curbGroup.add(westCurb);
+
+// Trotoar Pejalan Kaki Sisi Barat (West Pedestrian Sidewalk di Sisi Barat Jalan)
+const westSidewalk = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.12, 70), MAT.sidewalkPaver);
+westSidewalk.position.set(-16.5, 0.02, -105.0);
+westSidewalk.receiveShadow = true;
+curbGroup.add(westSidewalk);
 
 // Kanstin Belokan Sudut Barat Menuju Pelataran (-15.15, -70) ke (-46.15, -55)
 const westFlareLength = Math.hypot(31, 15);
@@ -1798,9 +1937,9 @@ westYardCurb.position.set(-46.15, 0.04, -45.375);
 westYardCurb.receiveShadow = true;
 curbGroup.add(westYardCurb);
 
-// Kanstin Lurus Sisi Timur Jalan (East Road Curb X = +7.15)
-const eastCurb = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.16, 105), MAT.concreteCurb);
-eastCurb.position.set(7.15, 0.04, -122.5);
+// Kanstin Lurus Sisi Timur Jalan (East Road Curb X = +7.15, Z = -70 s.d. -140)
+const eastCurb = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.16, 70), MAT.concreteCurb);
+eastCurb.position.set(7.15, 0.04, -105.0);
 eastCurb.receiveShadow = true;
 curbGroup.add(eastCurb);
 
@@ -1819,9 +1958,9 @@ eastYardCurb.position.set(38.15, 0.04, -45.375);
 eastYardCurb.receiveShadow = true;
 curbGroup.add(eastYardCurb);
 
-// Trotoar Pejalan Kaki (Pedestrian Sidewalk di Sisi Timur Jalan)
-const sidewalk = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.12, 105), MAT.sidewalkPaver);
-sidewalk.position.set(8.5, 0.02, -122.5);
+// Trotoar Pejalan Kaki Sisi Timur (East Pedestrian Sidewalk di Sisi Timur Jalan)
+const sidewalk = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.12, 70), MAT.sidewalkPaver);
+sidewalk.position.set(8.5, 0.02, -105.0);
 sidewalk.receiveShadow = true;
 curbGroup.add(sidewalk);
 
@@ -1835,18 +1974,18 @@ const roadMarkGroup = new THREE.Group();
 // 1. Garis Tepi Kuning Solid (Yellow Outer Curb Lines)
 [-14.6, 6.6].forEach(rx => {
     const yellowEdge = new THREE.Mesh(
-        new THREE.PlaneGeometry(0.22, 104),
+        new THREE.PlaneGeometry(0.22, 69.2),
         new THREE.MeshBasicMaterial({ color: 0xFACC15, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 })
     );
     yellowEdge.rotation.x = -Math.PI / 2;
-    yellowEdge.position.set(rx, 0.012, -122.5);
+    yellowEdge.position.set(rx, 0.012, -105.0);
     roadMarkGroup.add(yellowEdge);
 });
 
 // 2. Garis Sumbu Jalan Putus-Putus Putih (Center Dashed Lane Divider di X = -1.0)
-for (let rz = -170; rz <= -76; rz += 8.0) {
+for (let rz = -135; rz <= -76; rz += 7.0) {
     const whiteDash = new THREE.Mesh(
-        new THREE.PlaneGeometry(0.28, 3.6),
+        new THREE.PlaneGeometry(0.28, 3.5),
         new THREE.MeshBasicMaterial({ color: 0xFFFFFF, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 })
     );
     whiteDash.rotation.x = -Math.PI / 2;
@@ -1856,11 +1995,11 @@ for (let rz = -170; rz <= -76; rz += 8.0) {
 
 // 3. Garis Koridor Lajur Masuk Truk Solid Putih (Inbound Corridor Line di X = -9.0)
 const inboundLine = new THREE.Mesh(
-    new THREE.PlaneGeometry(0.2, 94),
+    new THREE.PlaneGeometry(0.2, 59.5),
     new THREE.MeshBasicMaterial({ color: 0xFFFFFF, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 })
 );
 inboundLine.rotation.x = -Math.PI / 2;
-inboundLine.position.set(-9.0, 0.014, -123.0);
+inboundLine.position.set(-9.0, 0.014, -105.5);
 roadMarkGroup.add(inboundLine);
 
 // 4. Garis Henti Putih Tebal & Teks "STOP" di Depan Barrier Gerbang (Z = -74.5)
@@ -1887,18 +2026,433 @@ for (let zx = -13.0; zx <= 5.0; zx += 1.4) {
     roadMarkGroup.add(zStripe);
 }
 
-// 6. Marka Batas Kecepatan "MAX 20" Stencil di Permukaan Aspal (Z = -120.0)
+// 6. Marka Batas Kecepatan "MAX 20" Stencil di Permukaan Aspal (Z = -112.0)
 const speedLimitText = makeTarmacText("MAX 20", 3.4, 1.8, "#FACC15");
-speedLimitText.position.set(-5.0, 0.018, -120.0);
+speedLimitText.position.set(-5.0, 0.018, -112.0);
 roadMarkGroup.add(speedLimitText);
 
 // 7. Marka Panah Pengarah Jalan (Directional Road Arrows)
-[-145.0, -100.0].forEach(az => {
+[-128.0, -95.0].forEach(az => {
     const arrowMesh = createAsphaltArrowMesh(-5.0, az, 0);
     roadMarkGroup.add(arrowMesh);
 });
 
 layoutGroup.add(roadMarkGroup);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MONUMEN GERBANG AKSES UTAMA BANDARA & LANDSCAPING (MAIN AIRPORT ENTRANCE PORTAL)
+// Berdiri kokoh di ujung selatan jalan akses (Z = -140.0), menutup ujung jalan secara elegan
+// ─────────────────────────────────────────────────────────────────────────────
+const mainEntranceGroup = new THREE.Group();
+mainEntranceGroup.position.set(0, 0, -140.0);
+
+// 1. Portal Rangka Baja Arsitektural (Overhead Gantry Arch)
+[-16.2, 8.2].forEach(px => {
+    // Pedestal Beton
+    const basePylon = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.8, 1.6), MAT.concreteCurb);
+    basePylon.position.set(px, 0.4, 0);
+    basePylon.castShadow = true;
+    basePylon.receiveShadow = true;
+    mainEntranceGroup.add(basePylon);
+
+    // Tiang Portal Baja Galvanis
+    const colMesh = new THREE.Mesh(new THREE.BoxGeometry(0.7, 7.6, 0.7), MAT.roofTruss);
+    colMesh.position.set(px, 4.4, 0);
+    colMesh.castShadow = true;
+    mainEntranceGroup.add(colMesh);
+
+    // Aksen Brand InJourney Teal di Kolom
+    const accentCol = new THREE.Mesh(new THREE.BoxGeometry(0.75, 1.8, 0.75), MAT.injourneyTeal);
+    accentCol.position.set(px, 4.4, 0);
+    mainEntranceGroup.add(accentCol);
+});
+
+// Balok Melintang Portal Utama (Span Lebar 25.4m dari Barat ke Timur)
+const mainSpan = new THREE.Mesh(new THREE.BoxGeometry(25.4, 1.4, 1.2), MAT.roofTruss);
+mainSpan.position.set(-4.0, 7.8, 0);
+mainSpan.castShadow = true;
+mainEntranceGroup.add(mainSpan);
+
+// Kanopi Atap Lengkung Futuristik InJourney di Atas Balok
+const canopyTop = new THREE.Mesh(new THREE.BoxGeometry(26.2, 0.25, 3.2), MAT.injourneyTeal);
+canopyTop.position.set(-4.0, 8.6, 0);
+canopyTop.castShadow = true;
+mainEntranceGroup.add(canopyTop);
+
+// Array untuk Animasi Kibaran Bendera Realistis di Render Loop
+const animatedFlags = [];
+
+// Helper Membuat Tekstur Terbalik Horizontal untuk Sisi Belakang Bendera (Agar Terbaca Normal dari Kedua Arah)
+function makeFlippedTexture(srcCanvas) {
+    const c = document.createElement('canvas');
+    c.width = srcCanvas.width;
+    c.height = srcCanvas.height;
+    const ctx = c.getContext('2d');
+    ctx.translate(c.width, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(srcCanvas, 0, 0);
+    const tex = new THREE.CanvasTexture(c);
+    tex.wrapS = THREE.ClampToEdgeWrapping;
+    tex.wrapT = THREE.ClampToEdgeWrapping;
+    return tex;
+}
+
+// Helper Membuat Bendera Kain Dua Sisi (Dual-Sided Non-Mirrored Waved Cloth)
+function createDualSidedWavingFlag(texFront, texBack, width = 1.95, height = 1.30, phaseOffset = 0) {
+    const flagGroup = new THREE.Group();
+
+    // Sisi Depan (Front Face)
+    const geoFront = new THREE.PlaneGeometry(width, height, 24, 12);
+    geoFront.translate(width / 2, 0, 0); // Titik pivot di tiang (x = 0)
+
+    const posF = geoFront.attributes.position;
+    for (let i = 0; i < posF.count; i++) {
+        const u = posF.getX(i) / width;
+        const ripple = Math.sin(u * 5.2 + phaseOffset) * (0.12 * u);
+        posF.setZ(i, ripple);
+    }
+    geoFront.computeVertexNormals();
+
+    const matFront = new THREE.MeshStandardMaterial({
+        map: texFront,
+        side: THREE.FrontSide,
+        roughness: 0.65,
+        metalness: 0.05
+    });
+    const meshFront = new THREE.Mesh(geoFront, matFront);
+    meshFront.position.z = 0.003;
+    meshFront.castShadow = true;
+    flagGroup.add(meshFront);
+
+    // Sisi Belakang (Back Face — Menggunakan tekstur pre-flipped sehingga saat dilihat dari belakang teks tetap terbaca normal!)
+    const geoBack = geoFront.clone();
+    const matBack = new THREE.MeshStandardMaterial({
+        map: texBack,
+        side: THREE.BackSide,
+        roughness: 0.65,
+        metalness: 0.05
+    });
+    const meshBack = new THREE.Mesh(geoBack, matBack);
+    meshBack.position.z = -0.003;
+    meshBack.castShadow = true;
+    flagGroup.add(meshBack);
+
+    animatedFlags.push({
+        front: meshFront,
+        back: meshBack,
+        width: width,
+        phase: phaseOffset
+    });
+
+    return flagGroup;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PAPAN NAMA SIGNBOARD GERBANG "SELAMAT DATANG" (DUAL-VIEW HD CANVAS TEXTURE)
+// Menampilkan tulisan SELAMAT DATANG yang megah di KEDUA sisi gerbang
+// ─────────────────────────────────────────────────────────────────────────────
+
+// 1. Sisi Luar (Menghadap Lalu Lintas Masuk / Inbound dari Arah Luar -Z)
+const signCanvasInbound = document.createElement('canvas');
+signCanvasInbound.width = 2048;
+signCanvasInbound.height = 256;
+const sci = signCanvasInbound.getContext('2d');
+
+const gradIn = sci.createLinearGradient(0, 0, 2048, 0);
+gradIn.addColorStop(0, '#013D43');
+gradIn.addColorStop(0.2, '#014D54');
+gradIn.addColorStop(0.5, '#087F8A');
+gradIn.addColorStop(0.8, '#0CA1AF');
+gradIn.addColorStop(1, '#013D43');
+sci.fillStyle = gradIn;
+sci.fillRect(0, 0, 2048, 256);
+
+sci.strokeStyle = '#FACC15';
+sci.lineWidth = 10;
+sci.strokeRect(10, 10, 2028, 236);
+sci.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+sci.lineWidth = 3;
+sci.strokeRect(22, 22, 2004, 212);
+
+sci.fillStyle = '#FEF08A';
+sci.font = 'bold 36px sans-serif';
+sci.textAlign = 'center';
+sci.fillText('✈ INJOURNEY AIRPORTS • LOGISTICS & INTERMODAL HUB', 1024, 68);
+
+sci.fillStyle = '#FFFFFF';
+sci.font = '900 86px sans-serif';
+sci.shadowColor = 'rgba(0, 0, 0, 0.7)';
+sci.shadowBlur = 14;
+sci.shadowOffsetY = 4;
+sci.fillText('SELAMAT DATANG', 1024, 156);
+
+sci.shadowColor = 'transparent';
+sci.fillStyle = '#E0F2FE';
+sci.font = 'bold 40px sans-serif';
+sci.fillText('AIR CARGO INTERMODAL TERMINAL', 1024, 216);
+
+const signTexInbound = new THREE.CanvasTexture(signCanvasInbound);
+const signMeshInbound = new THREE.Mesh(
+    new THREE.PlaneGeometry(21.0, 1.25),
+    new THREE.MeshBasicMaterial({ map: signTexInbound })
+);
+signMeshInbound.rotation.y = Math.PI; // Menghadap arah luar (-Z) ke arah jalan kedatangan truk
+signMeshInbound.position.set(-4.0, 7.8, -0.62);
+mainEntranceGroup.add(signMeshInbound);
+
+// 2. Sisi Dalam (Menghadap ke Dalam Kawasan Terminal / +Z)
+const signCanvasOutbound = document.createElement('canvas');
+signCanvasOutbound.width = 2048;
+signCanvasOutbound.height = 256;
+const sco = signCanvasOutbound.getContext('2d');
+
+const gradOut = sco.createLinearGradient(0, 0, 2048, 0);
+gradOut.addColorStop(0, '#0B1736');
+gradOut.addColorStop(0.3, '#014D54');
+gradOut.addColorStop(0.7, '#087F8A');
+gradOut.addColorStop(1, '#0B1736');
+sco.fillStyle = gradOut;
+sco.fillRect(0, 0, 2048, 256);
+
+sco.strokeStyle = '#FACC15';
+sco.lineWidth = 10;
+sco.strokeRect(10, 10, 2028, 236);
+sco.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+sco.lineWidth = 3;
+sco.strokeRect(22, 22, 2004, 212);
+
+sco.fillStyle = '#FEF08A';
+sco.font = 'bold 36px sans-serif';
+sco.textAlign = 'center';
+sco.fillText('✈ AIR CARGO INTERMODAL TERMINAL', 1024, 68);
+
+sco.fillStyle = '#FFFFFF';
+sco.font = '900 86px sans-serif';
+sco.shadowColor = 'rgba(0, 0, 0, 0.7)';
+sco.shadowBlur = 14;
+sco.shadowOffsetY = 4;
+sco.fillText('SELAMAT DATANG', 1024, 156);
+
+sco.shadowColor = 'transparent';
+sco.fillStyle = '#E0F2FE';
+sco.font = 'bold 40px sans-serif';
+sco.fillText('PINTU GERBANG UTAMA • INJOURNEY AIRPORTS', 1024, 216);
+
+const signTexOutbound = new THREE.CanvasTexture(signCanvasOutbound);
+const signMeshOutbound = new THREE.Mesh(
+    new THREE.PlaneGeometry(21.0, 1.25),
+    new THREE.MeshBasicMaterial({ map: signTexOutbound })
+);
+signMeshOutbound.position.set(-4.0, 7.8, 0.62); // Menghadap arah dalam (+Z)
+mainEntranceGroup.add(signMeshOutbound);
+
+// Lampu Sorot LED Portal (Downlights)
+const gantryLight = new THREE.PointLight(0xFFFFFF, 1.2, 35);
+gantryLight.position.set(-4.0, 7.0, 1.5);
+mainEntranceGroup.add(gantryLight);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PLAZA MONUMEN 3 TIANG BENDERA RESMI (INDONESIA, INJOURNEY, BUMN)
+// Tertata rapi, megah, proporsional, dan berkibar alami ditiup angin
+// ─────────────────────────────────────────────────────────────────────────────
+
+// 1. Texture Bendera Merah Putih (Proporsi Resmi Kenegaraan 3:2)
+const idFlagCanvas = document.createElement('canvas');
+idFlagCanvas.width = 512;
+idFlagCanvas.height = 341;
+const idCtx = idFlagCanvas.getContext('2d');
+idCtx.fillStyle = '#DC2626'; // Merah Bendera RI
+idCtx.fillRect(0, 0, 512, 171);
+idCtx.fillStyle = '#FFFFFF'; // Putih Bendera RI
+idCtx.fillRect(0, 170, 512, 171);
+idCtx.strokeStyle = 'rgba(0, 0, 0, 0.12)';
+idCtx.lineWidth = 2;
+idCtx.strokeRect(0, 0, 512, 341);
+const idFlagTex = new THREE.CanvasTexture(idFlagCanvas);
+const idFlagTexRev = makeFlippedTexture(idFlagCanvas);
+
+// 2. Texture Bendera Korporat InJourney Airports
+const ijFlagCanvas = document.createElement('canvas');
+ijFlagCanvas.width = 512;
+ijFlagCanvas.height = 341;
+const ijCtx = ijFlagCanvas.getContext('2d');
+const ijGrad = ijCtx.createLinearGradient(0, 0, 512, 341);
+ijGrad.addColorStop(0, '#014D54');
+ijGrad.addColorStop(0.5, '#087F8A');
+ijGrad.addColorStop(1, '#0CA1AF');
+ijCtx.fillStyle = ijGrad;
+ijCtx.fillRect(0, 0, 512, 341);
+ijCtx.strokeStyle = '#FACC15';
+ijCtx.lineWidth = 8;
+ijCtx.strokeRect(8, 8, 496, 325);
+ijCtx.fillStyle = '#FFFFFF';
+ijCtx.font = 'bold 42px sans-serif';
+ijCtx.textAlign = 'center';
+ijCtx.fillText('injourney', 256, 145);
+ijCtx.font = 'bold 26px sans-serif';
+ijCtx.fillStyle = '#E0F2FE';
+ijCtx.fillText('AIRPORTS', 256, 192);
+ijCtx.font = 'bold 15px sans-serif';
+ijCtx.fillStyle = '#FACC15';
+ijCtx.fillText('INDONESIA AVIATION & TOURISM', 256, 235);
+const ijFlagTex = new THREE.CanvasTexture(ijFlagCanvas);
+const ijFlagTexRev = makeFlippedTexture(ijFlagCanvas);
+
+// 3. Texture Bendera BUMN / Kargo Logistik
+const bumnFlagCanvas = document.createElement('canvas');
+bumnFlagCanvas.width = 512;
+bumnFlagCanvas.height = 341;
+const bCtx = bumnFlagCanvas.getContext('2d');
+bCtx.fillStyle = '#0D1C42';
+bCtx.fillRect(0, 0, 512, 341);
+bCtx.strokeStyle = '#0CA1AF';
+bCtx.lineWidth = 8;
+bCtx.strokeRect(8, 8, 496, 325);
+bCtx.fillStyle = '#FFFFFF';
+bCtx.font = 'bold 44px sans-serif';
+bCtx.textAlign = 'center';
+bCtx.fillText('BUMN', 256, 140);
+bCtx.font = 'bold 22px sans-serif';
+bCtx.fillStyle = '#38BDF8';
+bCtx.fillText('AIR CARGO LOGISTICS', 256, 185);
+bCtx.font = 'bold 15px sans-serif';
+bCtx.fillStyle = '#94A3B8';
+bCtx.fillText('INTERMODAL TERMINAL', 256, 225);
+const bumnFlagTex = new THREE.CanvasTexture(bumnFlagCanvas);
+const bumnFlagTexRev = makeFlippedTexture(bumnFlagCanvas);
+
+// Podium Monumental Bertingkat di Sisi Barat Luar Gerbang (X = -21.0, Z = -1.5)
+const flagPlazaGroup = new THREE.Group();
+flagPlazaGroup.position.set(-21.0, 0, -1.5);
+
+// Tingkat 1: Pedestal Beton Arsitektural
+const podT1 = new THREE.Mesh(new THREE.BoxGeometry(6.6, 0.35, 3.4), MAT.concreteCurb);
+podT1.position.set(0, 0.175, 0);
+podT1.receiveShadow = true;
+flagPlazaGroup.add(podT1);
+
+// Tingkat 2: Granit Gelap & Trim Aksen InJourney Teal
+const podT2 = new THREE.Mesh(new THREE.BoxGeometry(6.0, 0.25, 2.8), MAT.metalDark);
+podT2.position.set(0, 0.45, 0);
+podT2.receiveShadow = true;
+flagPlazaGroup.add(podT2);
+
+const podTrim = new THREE.Mesh(new THREE.BoxGeometry(6.05, 0.06, 2.85), MAT.injourneyTeal);
+podTrim.position.set(0, 0.58, 0);
+flagPlazaGroup.add(podTrim);
+
+// Konfigurasi 3 Tiang Bendera:
+// - Kiri: InJourney Airports (Tinggi 10.0m)
+// - Tengah: Merah Putih Indonesia (Tinggi 11.4m, Tertinggi & Gagah di pusat kehormatan)
+// - Kanan: BUMN Kargo Logistik (Tinggi 10.0m)
+const flagSpecs = [
+    {
+        name: 'InJourney',
+        relX: -2.2,
+        poleHeight: 10.0,
+        flagTopY: 8.9,
+        texFront: ijFlagTex,
+        texBack: ijFlagTexRev,
+        phase: 0.5
+    },
+    {
+        name: 'Indonesia',
+        relX: 0.0,
+        poleHeight: 11.4,
+        flagTopY: 10.3,
+        texFront: idFlagTex,
+        texBack: idFlagTexRev,
+        phase: 0.0
+    },
+    {
+        name: 'BUMN',
+        relX: 2.2,
+        poleHeight: 10.0,
+        flagTopY: 8.9,
+        texFront: bumnFlagTex,
+        texBack: bumnFlagTexRev,
+        phase: 1.0
+    }
+];
+
+const goldBallMat = new THREE.MeshStandardMaterial({ color: 0xF59E0B, metalness: 0.88, roughness: 0.18 });
+
+flagSpecs.forEach(spec => {
+    // Dudukan Flange Tiang Stainless Steel
+    const fFlange = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.32, 0.18, 16), MAT.metalSilver);
+    fFlange.position.set(spec.relX, 0.65, 0);
+    fFlange.castShadow = true;
+    flagPlazaGroup.add(fFlange);
+
+    // Tiang Bendera Tirus Stainless Steel Berkilau
+    const fPole = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.075, spec.poleHeight, 16), MAT.metalSilver);
+    fPole.position.set(spec.relX, 0.65 + spec.poleHeight / 2, 0);
+    fPole.castShadow = true;
+    flagPlazaGroup.add(fPole);
+
+    // Bola Pucuk Tiang Emas (Gold Brass Finial Ball)
+    const fBall = new THREE.Mesh(new THREE.SphereGeometry(0.13, 16, 16), goldBallMat);
+    fBall.position.set(spec.relX, 0.65 + spec.poleHeight + 0.12, 0);
+    flagPlazaGroup.add(fBall);
+
+    // Tali Kerekan Bendera (Halyard)
+    const fRope = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, spec.poleHeight - 0.5, 6), MAT.metalDark);
+    fRope.position.set(spec.relX + 0.08, 0.65 + (spec.poleHeight - 0.5) / 2, 0);
+    flagPlazaGroup.add(fRope);
+
+    // Bendera Berkibar Alami Dua Sisi (Dual-Sided Non-Mirrored Waved Cloth) — Terbaca Normal dari Kedua Arah
+    const flagObj = createDualSidedWavingFlag(spec.texFront, spec.texBack, 1.95, 1.30, spec.phase);
+    flagObj.position.set(spec.relX + 0.05, spec.flagTopY, 0);
+    flagObj.rotation.y = Math.PI * 0.38; // Berkibar mengarah ke depan (+Z)
+    flagPlazaGroup.add(flagObj);
+
+    // Lampu Sorot Bawah Podium (Ground Uplight Fixture)
+    const spotFixture = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, 0.15, 12), MAT.metalDark);
+    spotFixture.position.set(spec.relX, 0.65, 0.6);
+    flagPlazaGroup.add(spotFixture);
+
+    const uplight = new THREE.PointLight(0xFFF7ED, 0.85, 14);
+    uplight.position.set(spec.relX, 1.2, 0.7);
+    flagPlazaGroup.add(uplight);
+});
+
+mainEntranceGroup.add(flagPlazaGroup);
+
+// 4. Rambu Delineator Reflektif Penutup Ujung Jalan
+[-15.0, 6.8].forEach(dx => {
+    const delPost = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 1.2, 8), MAT.metalDark);
+    delPost.position.set(dx, 0.6, 0.5);
+    mainEntranceGroup.add(delPost);
+
+    const chevron = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.8, 0.05), new THREE.MeshBasicMaterial({ color: 0xFACC15 }));
+    chevron.position.set(dx, 0.9, 0.5);
+    mainEntranceGroup.add(chevron);
+});
+
+// 5. Pohon Palem Tropis Hias di Bahu Jalan
+[-19.5, 11.5].forEach(lx => {
+    for (let lz = 10; lz <= 60; lz += 15) {
+        const palmGroup = new THREE.Group();
+        palmGroup.position.set(lx, 0, lz);
+
+        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.26, 5.5, 8), new THREE.MeshStandardMaterial({ color: 0x78350F, roughness: 0.9 }));
+        trunk.position.y = 2.75;
+        trunk.castShadow = true;
+        palmGroup.add(trunk);
+
+        for (let a = 0; a < 6; a++) {
+            const frondAngle = (a / 6) * Math.PI * 2;
+            const frond = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.08, 2.8), new THREE.MeshStandardMaterial({ color: 0x15803D, roughness: 0.6 }));
+            frond.position.set(Math.sin(frondAngle) * 1.2, 5.3, Math.cos(frondAngle) * 1.2);
+            frond.rotation.y = frondAngle;
+            frond.rotation.x = 0.35;
+            palmGroup.add(frond);
+        }
+        mainEntranceGroup.add(palmGroup);
+    }
+});
+
+layoutGroup.add(mainEntranceGroup);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // POS PEMERIKSAAN KEAMANAN & GERBANG MASUK TERPADU (SECURITY GATEHOUSE COMPLEX)
@@ -2059,10 +2613,12 @@ function createAirportStreetLight(x, z, armAngle = 0) {
 }
 
 [
-    { x: -15.8, z: -150.0, a: -Math.PI / 2 },
-    { x: -15.8, z: -110.0, a: -Math.PI / 2 },
-    { x: 7.8,   z: -150.0, a: Math.PI / 2 },
-    { x: 7.8,   z: -110.0, a: Math.PI / 2 },
+    { x: -15.8, z: -130.0, a: -Math.PI / 2 },
+    { x: -15.8, z: -105.0, a: -Math.PI / 2 },
+    { x: -15.8, z: -80.0,  a: -Math.PI / 2 },
+    { x: 7.8,   z: -130.0, a: Math.PI / 2 },
+    { x: 7.8,   z: -105.0, a: Math.PI / 2 },
+    { x: 7.8,   z: -80.0,  a: Math.PI / 2 },
     { x: -46.5, z: -55.0,  a: -Math.PI / 2 },
     { x: 38.5,  z: -55.0,  a: Math.PI / 2 }
 ].forEach(sp => {
@@ -5797,15 +6353,6 @@ function createApronGroundSafetyEquipment() {
     windGroup.add(mast, beaconLight, sock);
     gseGroup.add(windGroup);
 
-    // 5. JET BLAST DEFLECTOR FENCE
-    const blastGroup = new THREE.Group();
-    blastGroup.position.set(92.0, 0, 10.0);
-    const blastPanel = new THREE.Mesh(new THREE.BoxGeometry(0.18, 3.2, 56.0), new THREE.MeshStandardMaterial({ color: 0x94A3B8, metalness: 0.8, roughness: 0.3 }));
-    blastPanel.position.y = 1.6;
-    blastPanel.rotation.z = 0.22;
-    blastGroup.add(blastPanel);
-    gseGroup.add(blastGroup);
-
     return gseGroup;
 }
 airsideGroup.add(createApronGroundSafetyEquipment());
@@ -6073,14 +6620,23 @@ function resetLiveSimulation(fullReset = true) {
 const targetCamPos = new THREE.Vector3(-38, 32, -45);
 const targetCamLook = new THREE.Vector3(12, 3, -2);
 
-function setCameraView(mode) {
-    simCameraMode = mode;
+function setCameraViewUI(mode) {
     ['cam-follow', 'cam-iso', 'cam-dock', 'cam-xray', 'cam-scale', 'cam-plane'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.remove('active');
     });
     const cur = document.getElementById('cam-' + mode);
     if (cur) cur.classList.add('active');
+}
+
+function setCameraView(mode) {
+    simCameraMode = mode;
+    setCameraViewUI(mode);
+
+    if (mode === 'follow' || mode === 'free') {
+        isCamTransitioning = false;
+        return;
+    }
 
     if (mode === 'iso') {
         smoothCam(-38, 32, -45, 12, 3, -2);
@@ -6102,6 +6658,7 @@ function resetCameraAngle() {
 function smoothCam(px, py, pz, tx, ty, tz) {
     targetCamPos.set(px, py, pz);
     targetCamLook.set(tx, ty, tz);
+    isCamTransitioning = true;
 }
 
 function jumpToProcessStep(stepNum) {
@@ -6292,10 +6849,14 @@ function animate() {
         updateSimulationPipeline(dt);
     }
 
-    // Kamera Lerp Halus
-    if (simCameraMode !== 'follow') {
-        camera.position.lerp(targetCamPos, dt * 3.5);
-        controls.target.lerp(targetCamLook, dt * 3.5);
+    // Kamera Lerp Halus (Hanya saat transisi klik tombol preset, tidak melawan mouse drag user)
+    if (isCamTransitioning && !isUserInteracting) {
+        camera.position.lerp(targetCamPos, dt * 4.2);
+        controls.target.lerp(targetCamLook, dt * 4.2);
+        // Selesai transisi saat sudah sangat dekat, berikan kendali mouse 100% bebas kepada user
+        if (camera.position.distanceTo(targetCamPos) < 0.25 && controls.target.distanceTo(targetCamLook) < 0.25) {
+            isCamTransitioning = false;
+        }
     }
 
     // Putar Roller Konveyor saat kargo sedang bergerak di atasnya
@@ -6335,6 +6896,26 @@ function animate() {
         planeAviationLights.strobeWingR.material.color.setHex(strobeColor);
     }
 
+    // Kibaran Bendera Realistis di Gerbang Utama (Wind Flutter Animation - Dual Sided)
+    if (typeof animatedFlags !== 'undefined' && animatedFlags.length) {
+        const flagTime = Date.now() * 0.0045;
+        animatedFlags.forEach(f => {
+            const posF = f.front.geometry.attributes.position;
+            const posB = f.back.geometry.attributes.position;
+            const w = f.width;
+            for (let i = 0; i < posF.count; i++) {
+                const u = posF.getX(i) / w; // 0 di tiang, 1 di ujung bebas bendera
+                const ripple = Math.sin(u * 5.2 - flagTime * 3.8 + f.phase) * (0.13 * u);
+                posF.setZ(i, ripple);
+                posB.setZ(i, ripple);
+            }
+            f.front.geometry.computeVertexNormals();
+            f.back.geometry.computeVertexNormals();
+            f.front.geometry.attributes.position.needsUpdate = true;
+            f.back.geometry.attributes.position.needsUpdate = true;
+        });
+    }
+
     controls.update();
     renderer.render(scene, camera);
 }
@@ -6368,7 +6949,7 @@ function updateSimulationPipeline(dt) {
         const currentSpeed = (1.0 - Math.abs(easedT - 0.5) * 1.4);
         truckWheels.forEach(w => { w.rotation.x += dt * 4.5 * Math.max(0.25, currentSpeed); });
 
-        if (simCameraMode === 'follow') {
+        if (simCameraMode === 'follow' && !isUserInteracting) {
             camera.position.lerp(new THREE.Vector3(-14.0, 7.5, curZ - 14.0), dt * 2.8);
             controls.target.lerp(new THREE.Vector3(-5.0, 2.2, curZ + 3.0), dt * 2.8);
         }
@@ -6410,7 +6991,7 @@ function updateSimulationPipeline(dt) {
             }
         }
 
-        if (simCameraMode === 'follow') {
+        if (simCameraMode === 'follow' && !isUserInteracting) {
             camera.position.lerp(new THREE.Vector3(8.0, 9.5, -26.0), dt * 2.8);
             controls.target.lerp(new THREE.Vector3(-5.0, 2.5, -32.5), dt * 2.8);
         }
@@ -6450,7 +7031,7 @@ function updateSimulationPipeline(dt) {
             xrayScanLight.intensity = 0;
         }
 
-        if (simCameraMode === 'follow') {
+        if (simCameraMode === 'follow' && !isUserInteracting) {
             camera.position.lerp(new THREE.Vector3(4.5, 6.2, easedZ + 5.5), dt * 2.8);
             controls.target.lerp(new THREE.Vector3(-5.0, 1.6, easedZ), dt * 2.8);
         }
@@ -6496,7 +7077,7 @@ function updateSimulationPipeline(dt) {
 
             redAlarmStrobe.intensity = (Math.sin(Date.now() * 0.02) > 0) ? 6.5 : 0.8;
 
-            if (simCameraMode === 'follow') {
+            if (simCameraMode === 'follow' && !isUserInteracting) {
                 camera.position.lerp(new THREE.Vector3(curX - 7.0, 7.5, -7.5), dt * 2.8);
                 controls.target.lerp(new THREE.Vector3(curX, 1.8, -16.5), dt * 2.8);
             }
@@ -6543,7 +7124,7 @@ function updateSimulationPipeline(dt) {
                 }
             }
 
-            if (simCameraMode === 'follow') {
+            if (simCameraMode === 'follow' && !isUserInteracting) {
                 camera.position.lerp(new THREE.Vector3(activeCargoGroup.position.x + 8.5, 8.5, activeCargoGroup.position.z + 9.5), dt * 2.8);
                 controls.target.lerp(new THREE.Vector3(activeCargoGroup.position.x, 1.6, activeCargoGroup.position.z), dt * 2.8);
             }
@@ -6579,7 +7160,7 @@ function updateSimulationPipeline(dt) {
             document.getElementById('telemetry-scale').textContent = dynamicKg.toFixed(1) + ' kg';
         }
 
-        if (simCameraMode === 'follow') {
+        if (simCameraMode === 'follow' && !isUserInteracting) {
             camera.position.lerp(new THREE.Vector3(curX - 7.5, 7.5, 17.5), dt * 2.8);
             controls.target.lerp(new THREE.Vector3(curX, 1.8, 8.0), dt * 2.8);
         }
@@ -6664,7 +7245,7 @@ function updateSimulationPipeline(dt) {
             document.getElementById('telemetry-door').textContent = 'HOLD TRANSFER (' + Math.round(subT * 100) + '%)';
         }
 
-        if (simCameraMode === 'follow') {
+        if (simCameraMode === 'follow' && !isUserInteracting) {
             camera.position.lerp(new THREE.Vector3(50.0, 9.5, -4.0), dt * 2.8);
             controls.target.lerp(new THREE.Vector3(68.0, 3.85, 8.0), dt * 2.8);
         }

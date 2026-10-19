@@ -26,33 +26,36 @@ $cargoStmt = $db->query("
 $cargos = $cargoStmt->fetchAll();
 
 $pageTitle = 'Executive & Operations Dashboard';
-$bodyClass = 'bg-batik-canvas text-slate-800';
+$bodyClass = 'bg-[#F8FAFC] text-slate-800';
 include __DIR__ . '/includes/header.php';
 ?>
 
-<div class="relative w-full overflow-x-hidden min-h-screen">
+<div class="relative w-full overflow-x-hidden min-h-screen bg-[#F8FAFC]">
 
-    <!-- SISI KIRI: Motif Batik InJourney HANYA di margin samping kiri (tidak masuk ke tengah) -->
-    <div class="fixed left-0 top-16 bottom-0 pointer-events-none select-none z-0 overflow-hidden hidden xl:block"
-         style="width: max(0px, calc((100vw - 1280px) / 2));" aria-hidden="true">
-        <img src="assets/img/injourney/pattern-green-BTZ3yksm.png" 
-             alt="" 
-             class="absolute top-6 left-0 w-[420px] max-w-none opacity-80 transform -scale-x-100">
+    <!-- ═══════════════════════════════════════════════════════════════════════════
+         MOTIF BATIK INJOURNEY RESMI (SISI KIRI & KANAN MENGALIR KE BAWAH)
+         Continuous Full-Height InJourney Kawung Flanks — Mengalir Rapi dari Atas ke Bawah
+         ═══════════════════════════════════════════════════════════════════════════ -->
+
+    <!-- Kolom Motif Sisi Kiri (Full Height Mengalir ke Bawah, Mirrored Symmetrical) -->
+    <div class="absolute inset-y-0 left-0 w-48 sm:w-64 lg:w-80 xl:w-96 pointer-events-none select-none z-0 overflow-hidden" aria-hidden="true">
+        <div class="w-full h-full opacity-90 transform -scale-x-100 origin-center"
+             style="background-image: url('assets/img/injourney/pattern-green-BTZ3yksm.png'); background-repeat: repeat-y; background-position: right top; background-size: 100% auto;">
+        </div>
     </div>
 
-    <!-- SISI KANAN: Motif Batik InJourney HANYA di margin samping kanan (tidak masuk ke tengah) -->
-    <div class="fixed right-0 top-16 bottom-0 pointer-events-none select-none z-0 overflow-hidden hidden xl:block"
-         style="width: max(0px, calc((100vw - 1280px) / 2));" aria-hidden="true">
-        <img src="assets/img/injourney/pattern-green-BTZ3yksm.png" 
-             alt="" 
-             class="absolute top-6 right-0 w-[420px] max-w-none opacity-80">
+    <!-- Kolom Motif Sisi Kanan (Full Height Mengalir ke Bawah, Natural Orientation) -->
+    <div class="absolute inset-y-0 right-0 w-48 sm:w-64 lg:w-80 xl:w-96 pointer-events-none select-none z-0 overflow-hidden" aria-hidden="true">
+        <div class="w-full h-full opacity-90"
+             style="background-image: url('assets/img/injourney/pattern-green-BTZ3yksm.png'); background-repeat: repeat-y; background-position: right top; background-size: 100% auto;">
+        </div>
     </div>
 
     <!-- KONTEN UTAMA DASHBOARD (Tengah) -->
     <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
     
-    <!-- Top Greeting & Header Bar (InJourney Style) -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-gray-200 gap-4">
+    <!-- Top Greeting & Header Bar (InJourney Executive Card) -->
+    <div class="bg-white p-6 rounded-2xl border border-gray-200/90 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
             <div class="flex items-center space-x-2.5">
                 <span class="w-2.5 h-6 rounded-full bg-gradient-to-b from-[#0CA1AF] to-[#087F8A]"></span>
