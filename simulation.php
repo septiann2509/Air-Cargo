@@ -203,7 +203,7 @@ include __DIR__ . '/includes/header.php';
                     <?php
                     $stagesConfig = [
                         1 => ['icon' => 'fa-truck', 'name' => '1. Kedatangan Truk', 'sub' => 'TMS / TAS Gate'],
-                        2 => ['icon' => 'fa-qrcode', 'name' => '2. Scan RFID Gate', 'sub' => 'High-Speed AIDC'],
+                        2 => ['icon' => 'fa-code', 'name' => '2. Ingest JSON Data', 'sub' => 'AIDC JSON Stream'],
                         3 => ['icon' => 'fa-laptop-code', 'name' => '3. Registrasi CMS', 'sub' => 'e-AWB Matching'],
                         4 => ['icon' => 'fa-shield-halved', 'name' => '4. X-Ray AVSEC', 'sub' => 'Dual-View Scan'],
                         5 => ['icon' => 'fa-scale-balanced', 'name' => '5. Penimbangan', 'sub' => 'Smart ULD Scale'],
@@ -472,7 +472,7 @@ include __DIR__ . '/includes/header.php';
                 <div class="bg-white p-4 rounded-2xl border border-gray-200/90 shadow-sm flex items-center justify-between">
                     <div>
                         <span class="text-slate-400 text-[10px] font-bold uppercase tracking-wider block">Alokasi Dock Slot</span>
-                        <span class="text-2xl font-black text-emerald-600 font-mono mt-1 block">Dock 1-4 <span class="text-xs text-slate-500 font-sans font-normal">Siap</span></span>
+                        <span id="tms-dock-summary-stat" class="text-2xl font-black text-emerald-600 font-mono mt-1 block">2/4 Terisi <span class="text-xs text-slate-500 font-sans font-normal">2 Kosong</span></span>
                     </div>
                     <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg">
                         <i class="fa-solid fa-warehouse"></i>
@@ -505,91 +505,242 @@ include __DIR__ . '/includes/header.php';
                     
                     <!-- Visual Dock Allocation Cards -->
                     <div class="bg-white p-6 rounded-2xl border border-gray-200/90 shadow-sm">
-                        <div class="flex items-center justify-between pb-3 mb-4 border-b border-gray-100">
-                            <h3 class="text-xs font-bold text-[#0D1C42] uppercase tracking-wider flex items-center">
-                                <i class="fa-solid fa-dolly text-[#087F8A] mr-2 text-sm"></i>
-                                Status Live Terminal Cargo Docks (Inbound Unloading Bay)
-                            </h3>
-                            <span class="text-[10px] font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-bold">4 Docks Terpasang</span>
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 mb-4 border-b border-gray-100 gap-2">
+                            <div>
+                                <h3 class="text-xs font-bold text-[#0D1C42] uppercase tracking-wider flex items-center">
+                                    <i class="fa-solid fa-dolly text-[#087F8A] mr-2 text-sm"></i>
+                                    Status Live Terminal Cargo Docks (Inbound Unloading Bay)
+                                </h3>
+                                <p class="text-[10px] text-slate-500 mt-0.5">Klik langsung kartu dock bertanda <strong class="text-emerald-700">KOSONG</strong> untuk memilih alokasi bongkar</p>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span id="tms-dock-occupied-badge" class="text-[10px] font-mono text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200 font-bold">2 Penuh</span>
+                                <span id="tms-dock-available-badge" class="text-[10px] font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 font-bold">2 Kosong</span>
+                            </div>
                         </div>
 
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                            <div class="p-3.5 rounded-xl border border-emerald-300 bg-emerald-50/40 text-center relative overflow-hidden">
-                                <span class="text-[10px] font-bold text-emerald-700 block uppercase font-mono">DOCK 01</span>
-                                <div class="my-2 text-2xl text-emerald-600"><i class="fa-solid fa-truck"></i></div>
-                                <span class="text-xs font-bold text-[#0D1C42] block" id="tms-dock1-plate">B 9482 KXT</span>
-                                <span class="text-[9px] text-emerald-700 font-medium block mt-0.5">Bongkar Pallet SSCC</span>
+                        <!-- 4 Interactive Dock Cards -->
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="tmsDockCardsContainer">
+                            <!-- DOCK 01: PENUH -->
+                            <div id="dock-card-DOCK-01" onclick="handleDockCardClick('DOCK-01')" class="p-3.5 rounded-xl border border-rose-300 bg-rose-50/60 text-center transition-all cursor-pointer hover:border-rose-400 hover:shadow-md relative overflow-hidden group select-none" title="Klik untuk lihat rincian armada">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[10px] font-bold text-rose-800 uppercase font-mono">DOCK 01</span>
+                                    <span id="dock-badge-DOCK-01" class="text-[8.5px] px-1.5 py-0.5 rounded font-extrabold uppercase bg-rose-200 text-rose-800 border border-rose-300">PENUH</span>
+                                </div>
+                                <div id="dock-icon-DOCK-01" class="my-2 text-2xl text-rose-500 group-hover:scale-105 transition-transform">
+                                    <i class="fa-solid fa-truck-ramp-box"></i>
+                                </div>
+                                <span id="dock-plate-DOCK-01" class="text-xs font-bold text-rose-950 block font-mono">B 9182 KXA</span>
+                                <span id="dock-status-DOCK-01" class="text-[9px] text-rose-700 font-bold block mt-0.5">
+                                    <i class="fa-solid fa-circle-exclamation mr-1"></i>Sedang Bongkar
+                                </span>
+                                <span class="text-[8.5px] text-rose-500 font-semibold block mt-1">Sisa ±12 mnt &bull; Klik Info</span>
                             </div>
-                            <div class="p-3.5 rounded-xl border border-gray-200 bg-slate-50 text-center">
-                                <span class="text-[10px] font-bold text-slate-500 block uppercase font-mono">DOCK 02</span>
-                                <div class="my-2 text-2xl text-slate-300"><i class="fa-solid fa-circle-check"></i></div>
-                                <span class="text-xs font-bold text-slate-400 block">KOSONG</span>
-                                <span class="text-[9px] text-slate-400 font-medium block mt-0.5">Standby Slot</span>
+
+                            <!-- DOCK 02: KOSONG / TERPILIH -->
+                            <div id="dock-card-DOCK-02" onclick="handleDockCardClick('DOCK-02')" class="p-3.5 rounded-xl border-2 border-[#0CA1AF] bg-teal-50/70 text-center transition-all shadow-md ring-2 ring-teal-400/30 cursor-pointer relative overflow-hidden group select-none" title="Alokasi terpilih kargo saat ini">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[10px] font-bold text-[#087F8A] uppercase font-mono">DOCK 02</span>
+                                    <span id="dock-badge-DOCK-02" class="text-[8.5px] px-1.5 py-0.5 rounded font-extrabold uppercase bg-teal-100 text-[#087F8A] border border-teal-300">TERPILIH</span>
+                                </div>
+                                <div id="dock-icon-DOCK-02" class="my-2 text-2xl text-[#087F8A] group-hover:scale-105 transition-transform">
+                                    <i class="fa-solid fa-truck"></i>
+                                </div>
+                                <span id="dock-plate-DOCK-02" class="text-xs font-black text-[#0D1C42] block font-mono">B 9482 XX</span>
+                                <span id="dock-status-DOCK-02" class="text-[9px] text-teal-800 font-bold block mt-0.5">
+                                    <i class="fa-solid fa-circle-check mr-1 text-emerald-600"></i>Alokasi Bongkar Anda
+                                </span>
+                                <span class="text-[8.5px] text-[#087F8A] font-semibold block mt-1">Dock Aktif Kargo</span>
                             </div>
-                            <div class="p-3.5 rounded-xl border border-teal-200 bg-teal-50/30 text-center">
-                                <span class="text-[10px] font-bold text-[#087F8A] block uppercase font-mono">DOCK 03</span>
-                                <div class="my-2 text-2xl text-[#087F8A]"><i class="fa-solid fa-clock"></i></div>
-                                <span class="text-xs font-bold text-[#0D1C42] block">B 9123 PO</span>
-                                <span class="text-[9px] text-[#087F8A] font-medium block mt-0.5">Terjadwal (TAS Slot)</span>
+
+                            <!-- DOCK 03: PENUH -->
+                            <div id="dock-card-DOCK-03" onclick="handleDockCardClick('DOCK-03')" class="p-3.5 rounded-xl border border-rose-300 bg-rose-50/60 text-center transition-all cursor-pointer hover:border-rose-400 hover:shadow-md relative overflow-hidden group select-none" title="Klik untuk lihat rincian armada">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[10px] font-bold text-rose-800 uppercase font-mono">DOCK 03</span>
+                                    <span id="dock-badge-DOCK-03" class="text-[8.5px] px-1.5 py-0.5 rounded font-extrabold uppercase bg-rose-200 text-rose-800 border border-rose-300">PENUH</span>
+                                </div>
+                                <div id="dock-icon-DOCK-03" class="my-2 text-2xl text-rose-500 group-hover:scale-105 transition-transform">
+                                    <i class="fa-solid fa-truck-ramp-box"></i>
+                                </div>
+                                <span id="dock-plate-DOCK-03" class="text-xs font-bold text-rose-950 block font-mono">B 4412 PQL</span>
+                                <span id="dock-status-DOCK-03" class="text-[9px] text-rose-700 font-bold block mt-0.5">
+                                    <i class="fa-solid fa-circle-exclamation mr-1"></i>Sedang Bongkar
+                                </span>
+                                <span class="text-[8.5px] text-rose-500 font-semibold block mt-1">Sisa ±25 mnt &bull; Klik Info</span>
                             </div>
-                            <div class="p-3.5 rounded-xl border border-gray-200 bg-slate-50 text-center">
-                                <span class="text-[10px] font-bold text-slate-500 block uppercase font-mono">DOCK 04</span>
-                                <div class="my-2 text-2xl text-slate-300"><i class="fa-solid fa-circle-check"></i></div>
-                                <span class="text-xs font-bold text-slate-400 block">KOSONG</span>
-                                <span class="text-[9px] text-slate-400 font-medium block mt-0.5">Standby Slot</span>
+
+                            <!-- DOCK 04: KOSONG / TERSEDIA -->
+                            <div id="dock-card-DOCK-04" onclick="handleDockCardClick('DOCK-04')" class="p-3.5 rounded-xl border-2 border-dashed border-emerald-300 bg-emerald-50/20 text-center transition-all cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 hover:shadow-md relative overflow-hidden group select-none" title="Klik untuk memilih dock ini">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[10px] font-bold text-emerald-700 uppercase font-mono">DOCK 04</span>
+                                    <span id="dock-badge-DOCK-04" class="text-[8.5px] px-1.5 py-0.5 rounded font-extrabold uppercase bg-emerald-100 text-emerald-700 border border-emerald-200">KOSONG</span>
+                                </div>
+                                <div id="dock-icon-DOCK-04" class="my-2 text-2xl text-emerald-500 group-hover:scale-110 transition-transform">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                </div>
+                                <span id="dock-plate-DOCK-04" class="text-xs font-bold text-emerald-700 block font-mono">TERSEDIA</span>
+                                <span id="dock-status-DOCK-04" class="text-[9px] text-emerald-700 font-semibold block mt-0.5">Standby Leveler</span>
+                                <span class="text-[8.5px] text-emerald-600 font-bold block mt-1 group-hover:underline">Klik untuk Pilih &rarr;</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Active Cargo's Truck Check-In & Action Console -->
-                    <div class="bg-white p-6 rounded-2xl border border-gray-200/90 shadow-sm">
-                        <div class="flex items-center justify-between pb-3 mb-4 border-b border-gray-100">
-                            <h3 class="text-xs font-bold text-[#0D1C42] uppercase tracking-wider flex items-center">
-                                <i class="fa-solid fa-id-card-clip text-[#087F8A] mr-2 text-sm"></i>
-                                Data Armada Truk Kargo Terpilih
-                            </h3>
-                            <span id="tms-cargo-stage-badge" class="text-[10px] font-mono text-[#087F8A] bg-teal-50 px-2.5 py-1 rounded-full border border-teal-200 font-bold">
-                                Tahap 1
-                            </span>
-                        </div>
-
-                        <!-- Truck Detail Grid -->
-                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-5 text-xs">
-                            <div class="p-3 rounded-xl bg-slate-50 border border-gray-200">
-                                <span class="text-[10px] text-slate-400 block uppercase font-bold">Nomor Plat Polisi</span>
-                                <span id="tms-truck-plate" class="text-sm font-mono font-extrabold text-[#0D1C42] block mt-0.5">-</span>
+                    <!-- Active Cargo's Truck Check-In & Action Console (Input Mandiri Staff) -->
+                    <div class="bg-white p-6 rounded-2xl border border-gray-200/90 shadow-sm relative overflow-hidden">
+                        
+                        <!-- Header with Input Badge & Quick Preset Button -->
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 mb-4 border-b border-gray-100 gap-2">
+                            <div class="flex items-center space-x-2">
+                                <i class="fa-solid fa-id-card-clip text-[#087F8A] text-base"></i>
+                                <h3 class="text-xs font-bold text-[#0D1C42] uppercase tracking-wider">
+                                    Data Armada Truk Kargo Terpilih
+                                </h3>
+                                <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200 uppercase tracking-wide">
+                                    Input Staff Operasional
+                                </span>
                             </div>
-                            <div class="p-3 rounded-xl bg-slate-50 border border-gray-200">
-                                <span class="text-[10px] text-slate-400 block uppercase font-bold">Nama Supir Terdaftar</span>
-                                <span id="tms-truck-driver" class="font-bold text-slate-800 block mt-0.5">-</span>
-                            </div>
-                            <div class="p-3 rounded-xl bg-slate-50 border border-gray-200">
-                                <span class="text-[10px] text-slate-400 block uppercase font-bold">Vendor Transportasi</span>
-                                <span id="tms-truck-transporter" class="font-bold text-slate-800 block mt-0.5">-</span>
-                            </div>
-                            <div class="p-3 rounded-xl bg-slate-50 border border-gray-200">
-                                <span class="text-[10px] text-slate-400 block uppercase font-bold">Alokasi Dock Unloading</span>
-                                <span id="tms-truck-dock" class="font-mono font-bold text-emerald-700 block mt-0.5">-</span>
-                            </div>
-                            <div class="p-3 rounded-xl bg-slate-50 border border-gray-200">
-                                <span class="text-[10px] text-slate-400 block uppercase font-bold">Kode Booking TAS</span>
-                                <span id="tms-truck-booking" class="font-mono font-bold text-[#087F8A] block mt-0.5">-</span>
-                            </div>
-                            <div class="p-3 rounded-xl bg-slate-50 border border-gray-200">
-                                <span class="text-[10px] text-slate-400 block uppercase font-bold">Status TAS Gate</span>
-                                <span id="tms-truck-status" class="inline-block mt-0.5 px-2.5 py-0.5 rounded-full font-bold text-[10px] bg-teal-50 text-[#087F8A] border border-teal-200">
-                                    ARRIVED
+                            <div class="flex items-center space-x-2">
+                                <button type="button" onclick="presetTMSTruckData()" class="px-2.5 py-1 rounded-lg text-[10px] font-bold text-[#087F8A] bg-teal-50 hover:bg-teal-100 border border-teal-200 transition-all flex items-center gap-1 shadow-sm" title="Isi Preset Otomatis">
+                                    <i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i>
+                                    <span>Isi Preset Cepat</span>
+                                </button>
+                                <span id="tms-cargo-stage-badge" class="text-[10px] font-mono text-[#087F8A] bg-teal-50 px-2.5 py-1 rounded-full border border-teal-200 font-bold">
+                                    Tahap 1
                                 </span>
                             </div>
                         </div>
 
-                        <!-- TMS Interactive Triggers -->
-                        <div class="pt-2 flex flex-wrap items-center gap-3">
-                            <button onclick="executeStageAction(1, 'CLEARED')" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-bold text-xs shadow-md shadow-teal-500/25 transition-all flex items-center transform hover:-translate-y-0.5">
-                                <i class="fa-solid fa-truck mr-2"></i>
-                                <span>Verifikasi Kedatangan Truk di Gate (Tahap 1)</span>
-                            </button>
-                            <button onclick="switchSystemDashboard('cms')" class="px-4 py-2.5 rounded-xl bg-teal-50 hover:bg-teal-100 text-[#087F8A] text-xs font-bold border border-teal-200 shadow-sm transition-all flex items-center">
+                        <!-- Quick Preset Truck Selector (Beda Truk -> Otomatis Beda Kargo & Beda JSON) -->
+                        <div class="mb-4 p-3 bg-slate-50/90 rounded-xl border border-gray-200">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-2 mb-2 border-b border-gray-200/80 gap-1">
+                                <span class="text-[10px] font-bold text-slate-600 uppercase tracking-wider flex items-center">
+                                    <i class="fa-solid fa-truck-fast text-[#087F8A] mr-1.5 text-xs"></i>
+                                    Pilih Armada Truk (Otomatis Generate Muatan &amp; JSON Spesifik di CMS):
+                                </span>
+                                <span class="text-[9px] text-[#087F8A] font-bold bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
+                                    Simulasi Multi-Armada
+                                </span>
+                            </div>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                <button type="button" onclick="selectTruckPreset('B 8888 KGO')" class="p-2.5 rounded-xl bg-white hover:bg-teal-50/60 border border-gray-200 hover:border-teal-300 text-left transition-all shadow-xs group cursor-pointer">
+                                    <div class="flex items-center justify-between">
+                                        <span class="font-mono font-bold text-[#0D1C42] text-xs group-hover:text-[#087F8A]">B 8888 KGO</span>
+                                        <span class="text-[8.5px] px-1.5 py-0.2 rounded font-bold bg-teal-50 text-[#087F8A]">Truk 1</span>
+                                    </div>
+                                    <div class="text-[10px] text-slate-700 font-semibold truncate mt-0.5">Tekstil Ekspor</div>
+                                    <div class="text-[9px] text-slate-400">50 Koli &bull; 350 kg</div>
+                                </button>
+                                <button type="button" onclick="selectTruckPreset('B 9182 KXA')" class="p-2.5 rounded-xl bg-white hover:bg-teal-50/60 border border-gray-200 hover:border-teal-300 text-left transition-all shadow-xs group cursor-pointer">
+                                    <div class="flex items-center justify-between">
+                                        <span class="font-mono font-bold text-[#0D1C42] text-xs group-hover:text-[#087F8A]">B 9182 KXA</span>
+                                        <span class="text-[8.5px] px-1.5 py-0.2 rounded font-bold bg-emerald-50 text-emerald-700">Truk 2</span>
+                                    </div>
+                                    <div class="text-[10px] text-slate-700 font-semibold truncate mt-0.5">Farmasi &amp; Vaksin</div>
+                                    <div class="text-[9px] text-slate-400">30 Koli &bull; 185 kg</div>
+                                </button>
+                                <button type="button" onclick="selectTruckPreset('B 4412 PQL')" class="p-2.5 rounded-xl bg-white hover:bg-teal-50/60 border border-gray-200 hover:border-teal-300 text-left transition-all shadow-xs group cursor-pointer">
+                                    <div class="flex items-center justify-between">
+                                        <span class="font-mono font-bold text-[#0D1C42] text-xs group-hover:text-[#087F8A]">B 4412 PQL</span>
+                                        <span class="text-[8.5px] px-1.5 py-0.2 rounded font-bold bg-blue-50 text-blue-700">Truk 3</span>
+                                    </div>
+                                    <div class="text-[10px] text-slate-700 font-semibold truncate mt-0.5">Komponen Chip</div>
+                                    <div class="text-[9px] text-slate-400">60 Koli &bull; 420 kg</div>
+                                </button>
+                                <button type="button" onclick="selectTruckPreset('B 7777 WXY')" class="p-2.5 rounded-xl bg-white hover:bg-teal-50/60 border border-gray-200 hover:border-teal-300 text-left transition-all shadow-xs group cursor-pointer">
+                                    <div class="flex items-center justify-between">
+                                        <span class="font-mono font-bold text-[#0D1C42] text-xs group-hover:text-[#087F8A]">B 7777 WXY</span>
+                                        <span class="text-[8.5px] px-1.5 py-0.2 rounded font-bold bg-amber-50 text-amber-700">Truk 4</span>
+                                    </div>
+                                    <div class="text-[10px] text-slate-700 font-semibold truncate mt-0.5">Buah Segar (Perishable)</div>
+                                    <div class="text-[9px] text-slate-400">45 Koli &bull; 260 kg</div>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Truck Input Form Grid (Dapat diinput sendiri oleh staff) -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 mb-5 text-xs">
+                            
+                            <!-- Input 1: Nomor Plat Polisi -->
+                            <div class="p-3.5 rounded-xl bg-slate-50 border border-gray-200 focus-within:border-[#0CA1AF] focus-within:bg-teal-50/20 transition-all">
+                                <label for="input-tms-plate" class="text-[10px] text-slate-500 block uppercase font-bold tracking-wider mb-1">
+                                    <i class="fa-solid fa-car text-[#087F8A] mr-1"></i> Nomor Plat Polisi
+                                </label>
+                                <input type="text" id="input-tms-plate" oninput="handlePlateInput(this.value)" class="w-full bg-white border border-gray-300 focus:border-[#087F8A] focus:ring-1 focus:ring-[#087F8A] rounded-lg px-3 py-1.5 text-xs font-mono font-black text-[#0D1C42] uppercase focus:outline-none transition-all shadow-sm" placeholder="Contoh: B 9482 XX" value="B 9482 XX">
+                            </div>
+
+                            <!-- Input 2: Nama Supir Terdaftar -->
+                            <div class="p-3.5 rounded-xl bg-slate-50 border border-gray-200 focus-within:border-[#0CA1AF] focus-within:bg-teal-50/20 transition-all">
+                                <label for="input-tms-driver" class="text-[10px] text-slate-500 block uppercase font-bold tracking-wider mb-1">
+                                    <i class="fa-solid fa-user text-[#087F8A] mr-1"></i> Nama Supir Terdaftar
+                                </label>
+                                <input type="text" id="input-tms-driver" class="w-full bg-white border border-gray-300 focus:border-[#087F8A] focus:ring-1 focus:ring-[#087F8A] rounded-lg px-3 py-1.5 text-xs font-bold text-slate-800 focus:outline-none transition-all shadow-sm" placeholder="Contoh: Suryadi Pratama" value="Suryadi Pratama">
+                            </div>
+
+                            <!-- Input 3: Vendor Transportasi -->
+                            <div class="p-3.5 rounded-xl bg-slate-50 border border-gray-200 focus-within:border-[#0CA1AF] focus-within:bg-teal-50/20 transition-all">
+                                <label for="input-tms-transporter" class="text-[10px] text-slate-500 block uppercase font-bold tracking-wider mb-1">
+                                    <i class="fa-solid fa-building text-[#087F8A] mr-1"></i> Vendor Transportasi
+                                </label>
+                                <input type="text" id="input-tms-transporter" class="w-full bg-white border border-gray-300 focus:border-[#087F8A] focus:ring-1 focus:ring-[#087F8A] rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-800 focus:outline-none transition-all shadow-sm" placeholder="Contoh: PT Intermodal Logistik Sejahtera" value="PT Intermodal Logistik Sejahtera">
+                            </div>
+
+                            <!-- Input 4: Alokasi Dock Unloading -->
+                            <div class="p-3.5 rounded-xl bg-slate-50 border border-gray-200 focus-within:border-[#0CA1AF] focus-within:bg-teal-50/20 transition-all">
+                                <div class="flex items-center justify-between mb-1">
+                                    <label for="input-tms-dock" class="text-[10px] text-slate-500 block uppercase font-bold tracking-wider">
+                                        <i class="fa-solid fa-warehouse text-[#087F8A] mr-1"></i> Alokasi Dock Unloading
+                                    </label>
+                                    <span class="text-[9px] font-bold text-slate-400">Pilih / Klik Kartu</span>
+                                </div>
+                                <select id="input-tms-dock" onchange="handleDockSelectChange(this.value)" class="w-full bg-white border border-gray-300 focus:border-[#087F8A] focus:ring-1 focus:ring-[#087F8A] rounded-lg px-3 py-1.5 text-xs font-mono font-bold text-[#087F8A] focus:outline-none cursor-pointer transition-all shadow-sm">
+                                    <option value="DOCK-01" disabled class="text-rose-600 bg-rose-50 font-semibold">DOCK-01 (PENUH - B 9182 KXA Sedang Bongkar)</option>
+                                    <option value="DOCK-02" selected class="text-emerald-700 font-bold">DOCK-02 (KOSONG - Siap Digunakan)</option>
+                                    <option value="DOCK-03" disabled class="text-rose-600 bg-rose-50 font-semibold">DOCK-03 (PENUH - B 4412 PQL Sedang Bongkar)</option>
+                                    <option value="DOCK-04" class="text-emerald-700 font-bold">DOCK-04 (KOSONG - Siap Digunakan)</option>
+                                </select>
+                            </div>
+
+                            <!-- Input 5: Kode Booking TAS -->
+                            <div class="p-3.5 rounded-xl bg-slate-50 border border-gray-200 focus-within:border-[#0CA1AF] focus-within:bg-teal-50/20 transition-all">
+                                <div class="flex items-center justify-between mb-1">
+                                    <label for="input-tms-booking" class="text-[10px] text-slate-500 block uppercase font-bold tracking-wider">
+                                        <i class="fa-solid fa-barcode text-[#087F8A] mr-1"></i> Kode Booking TAS
+                                    </label>
+                                    <button type="button" onclick="generateRandomTASBooking()" class="text-[9px] text-[#087F8A] hover:underline font-bold flex items-center gap-1" title="Generate Kode Acak">
+                                        <i class="fa-solid fa-dice text-[10px]"></i> Acak
+                                    </button>
+                                </div>
+                                <input type="text" id="input-tms-booking" class="w-full bg-white border border-gray-300 focus:border-[#087F8A] focus:ring-1 focus:ring-[#087F8A] rounded-lg px-3 py-1.5 text-xs font-mono font-bold text-[#087F8A] focus:outline-none transition-all shadow-sm" placeholder="Contoh: TAS-BOOK-9482" value="TAS-BOOK-9482">
+                            </div>
+
+                            <!-- Input 6: Status TAS Gate -->
+                            <div class="p-3.5 rounded-xl bg-slate-50 border border-gray-200 focus-within:border-[#0CA1AF] focus-within:bg-teal-50/20 transition-all">
+                                <label for="input-tms-status" class="text-[10px] text-slate-500 block uppercase font-bold tracking-wider mb-1">
+                                    <i class="fa-solid fa-shield text-[#087F8A] mr-1"></i> Status TAS Gate
+                                </label>
+                                <select id="input-tms-status" class="w-full bg-white border border-gray-300 focus:border-[#087F8A] focus:ring-1 focus:ring-[#087F8A] rounded-lg px-3 py-1.5 text-xs font-extrabold text-teal-800 focus:outline-none cursor-pointer transition-all shadow-sm">
+                                    <option value="ARRIVED" selected>ARRIVED (Tiba di Gerbang)</option>
+                                    <option value="SCHEDULED">SCHEDULED (Terjadwal)</option>
+                                    <option value="UNLOADING">UNLOADING (Sedang Bongkar)</option>
+                                    <option value="COMPLETED">COMPLETED (Selesai Bongkar)</option>
+                                </select>
+                            </div>
+
+                        </div>
+
+                        <!-- TMS Action Buttons -->
+                        <div class="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100">
+                            <div class="flex flex-wrap items-center gap-2.5">
+                                <button type="button" onclick="submitTMSCheckIn()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-bold text-xs shadow-md shadow-teal-500/25 transition-all flex items-center transform hover:-translate-y-0.5">
+                                    <i class="fa-solid fa-truck mr-2"></i>
+                                    <span>Verifikasi Kedatangan Truk di Gate (Tahap 1)</span>
+                                </button>
+                                <button type="button" onclick="presetTMSTruckData()" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-600 hover:text-[#087F8A] text-xs font-bold border border-gray-300 shadow-sm transition-colors flex items-center">
+                                    <i class="fa-solid fa-rotate-left mr-1.5 text-xs"></i>
+                                    <span>Reset Form</span>
+                                </button>
+                            </div>
+                            <button type="button" onclick="switchSystemDashboard('cms')" class="px-4 py-2.5 rounded-xl bg-teal-50 hover:bg-teal-100 text-[#087F8A] text-xs font-bold border border-teal-200 shadow-sm transition-all flex items-center">
                                 <span>Lanjut ke Dashboard CMS (Tahap 2 &amp; 3)</span>
                                 <i class="fa-solid fa-arrow-right ml-1.5 text-xs"></i>
                             </button>
@@ -603,7 +754,7 @@ include __DIR__ . '/includes/header.php';
                                 <i class="fa-solid fa-list-check text-[#087F8A] mr-2 text-sm"></i>
                                 Log Antrean Kedatangan Truk (Database: truck_arrivals)
                             </h3>
-                            <span class="text-[10px] font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-gray-200 font-bold"><?= count($trucks) ?> Armada</span>
+                            <span id="tms-truck-count-badge" class="text-[10px] font-mono text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full border border-gray-200 font-bold"><?= count($trucks) ?> Armada</span>
                         </div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-left text-xs">
@@ -617,7 +768,7 @@ include __DIR__ . '/includes/header.php';
                                         <th class="py-2.5 px-3">Status</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-gray-100 text-slate-700">
+                                <tbody id="tmsTruckArrivalsTbody" class="divide-y divide-gray-100 text-slate-700">
                                     <?php foreach ($trucks as $trk): ?>
                                         <tr class="hover:bg-slate-50/70 transition-colors">
                                             <td class="py-2 px-3 font-mono font-bold text-[#0D1C42]"><?= htmlspecialchars($trk['truck_plate']) ?></td>
@@ -698,7 +849,7 @@ include __DIR__ . '/includes/header.php';
                                 </span>
                             </div>
                             <p class="text-xs text-slate-500 mt-0.5">
-                                High-Speed Barcode/RFID Tunnel Ingest, Validasi GS1 SSCC 18-Digit, &amp; Pencocokan Dokumen Electronic Air Waybill (e-AWB).
+                                AIDC Inbound Data Ingestion (Payload JSON), Validasi GS1 SSCC 18-Digit, &amp; Pencocokan Dokumen Electronic Air Waybill (e-AWB).
                             </p>
                         </div>
                     </div>
@@ -713,12 +864,12 @@ include __DIR__ . '/includes/header.php';
                 <!-- 4-Layer Architecture Pill Strip -->
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4 text-[11px]">
                     <div class="p-3 rounded-xl bg-slate-50 border border-gray-200">
-                        <span class="text-[9px] uppercase font-bold text-slate-400 block tracking-wider">Layer 1 (Hardware)</span>
-                        <span class="font-bold text-[#0D1C42] block mt-0.5">High-Speed Scanner (2.5 m/s, IP65)</span>
+                        <span class="text-[9px] uppercase font-bold text-slate-400 block tracking-wider">Layer 1 (Ingest Format)</span>
+                        <span class="font-bold text-[#0D1C42] block mt-0.5">JSON Payload (AIDC Inbound)</span>
                     </div>
                     <div class="p-3 rounded-xl bg-slate-50 border border-gray-200">
                         <span class="text-[9px] uppercase font-bold text-slate-400 block tracking-wider">Layer 2 (Network)</span>
-                        <span class="font-bold text-[#0D1C42] block mt-0.5">Industrial Ethernet (Profinet/TCP)</span>
+                        <span class="font-bold text-[#0D1C42] block mt-0.5">Industrial Ethernet (REST / MQTT)</span>
                     </div>
                     <div class="p-3 rounded-xl bg-slate-50 border border-gray-200">
                         <span class="text-[9px] uppercase font-bold text-slate-400 block tracking-wider">Layer 3 (Software)</span>
@@ -735,11 +886,11 @@ include __DIR__ . '/includes/header.php';
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
                 <div class="bg-white p-4 rounded-2xl border border-gray-200/90 shadow-sm flex items-center justify-between">
                     <div>
-                        <span class="text-slate-400 text-[10px] font-bold uppercase tracking-wider block">Conveyor Ingest Speed</span>
-                        <span class="text-2xl font-black text-[#0D1C42] font-mono mt-1 block">2.5 <span class="text-xs text-slate-500 font-sans font-normal">m/s IP65</span></span>
+                        <span class="text-slate-400 text-[10px] font-bold uppercase tracking-wider block">Format Stream Ingest</span>
+                        <span class="text-2xl font-black text-[#0D1C42] font-mono mt-1 block">JSON <span class="text-xs text-slate-500 font-sans font-normal">Payload</span></span>
                     </div>
                     <div class="w-10 h-10 rounded-xl bg-teal-50 text-[#087F8A] flex items-center justify-center text-lg">
-                        <i class="fa-solid fa-qrcode"></i>
+                        <i class="fa-solid fa-code"></i>
                     </div>
                 </div>
                 <div class="bg-white p-4 rounded-2xl border border-gray-200/90 shadow-sm flex items-center justify-between">
@@ -776,53 +927,94 @@ include __DIR__ . '/includes/header.php';
                 <!-- Left Column (7 cols) -->
                 <div class="lg:col-span-7 space-y-6">
                     
-                    <!-- Scanner & e-AWB Workstation Card -->
-                    <div class="bg-white p-6 rounded-2xl border border-gray-200/90 shadow-sm">
-                        <div class="flex items-center justify-between pb-3 mb-4 border-b border-gray-100">
-                            <h3 class="text-xs font-bold text-[#0D1C42] uppercase tracking-wider flex items-center">
-                                <i class="fa-solid fa-qrcode text-[#087F8A] mr-2 text-sm"></i>
-                                Pemindaian Gerbang &amp; Pencocokan e-AWB
-                            </h3>
-                            <span class="text-[10px] font-mono text-[#087F8A] bg-teal-50 px-2 py-0.5 rounded border border-teal-200 font-bold">Tahap 2 &amp; 3</span>
+                    <!-- Scanner & e-AWB Workstation Card (JSON Ingestion) -->
+                    <div class="bg-white p-6 rounded-2xl border border-gray-200/90 shadow-sm relative overflow-hidden">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 mb-4 border-b border-gray-100 gap-2">
+                            <div class="flex items-center space-x-2">
+                                <i class="fa-solid fa-code text-[#087F8A] text-base"></i>
+                                <h3 class="text-xs font-bold text-[#0D1C42] uppercase tracking-wider">
+                                    Pemindaian Inbound Data Ingest (JSON) &amp; Pencocokan e-AWB
+                                </h3>
+                            </div>
+                            <span id="cms-scanner-status-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 uppercase tracking-wide">
+                                <i class="fa-solid fa-hourglass-start mr-1"></i>Menunggu Ingest JSON
+                            </span>
                         </div>
 
-                        <!-- Visual Tunnel Scanner Graphic -->
-                        <div class="p-5 rounded-xl bg-gradient-to-br from-slate-50 to-teal-50/40 border border-gray-200 mb-5 flex flex-col items-center justify-center shadow-inner">
-                            <div class="relative w-full max-w-md h-16 rounded-xl bg-white border-2 border-[#0CA1AF] flex items-center justify-between px-4 overflow-hidden mb-3 shadow-md">
-                                <div class="absolute inset-x-0 h-0.5 bg-[#0CA1AF] shadow-[0_0_12px_#0CA1AF] animate-pulse"></div>
-                                <div class="flex items-center space-x-2 text-[#087F8A] text-xs font-bold">
-                                    <i class="fa-solid fa-barcode text-lg"></i>
-                                    <span>RFID UHF Tunnel Scanner (865MHz)</span>
+                        <!-- JSON Ingestion Stream Console (Menggantikan Hardware Fisik RFID dengan Data JSON) -->
+                        <div class="p-4 rounded-xl bg-[#0A1628] border border-slate-800 mb-5 shadow-inner relative overflow-hidden">
+                            <div class="flex items-center justify-between pb-2.5 mb-2.5 border-b border-slate-800 text-xs font-mono">
+                                <div class="flex items-center space-x-2">
+                                    <span class="flex h-2.5 w-2.5 relative">
+                                        <span id="cms-json-indicator-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                        <span id="cms-json-indicator-dot" class="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                                    </span>
+                                    <span class="text-slate-200 font-bold text-[11px] tracking-wide">STREAM: AIDC_INBOUND_INGEST.json</span>
+                                    <span class="text-[10px] text-teal-400 bg-teal-950/60 px-1.5 py-0.5 rounded border border-teal-800/60">application/json</span>
                                 </div>
-                                <span class="text-[10px] font-mono text-emerald-700 font-bold bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-200">2.5 m/s TUNNEL</span>
+                                <div class="flex items-center space-x-2">
+                                    <span id="cms-json-status-tag" class="text-[10px] font-mono text-amber-300 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-800/80">STANDBY - WAITING JSON INGEST</span>
+                                    <span class="hidden sm:inline-block text-[10px] font-mono text-slate-400 bg-slate-800/60 px-2 py-0.5 rounded border border-slate-700">REST API / MQTT</span>
+                                </div>
                             </div>
-                            <div class="flex flex-wrap items-center justify-center gap-3 text-xs font-mono">
-                                <span class="text-slate-500 font-medium">Captured Primary Key (SSCC):</span>
-                                <span id="cms-captured-sscc" class="text-[#087F8A] font-bold bg-white px-3 py-1 rounded-lg border border-teal-200 shadow-sm font-mono">-</span>
+
+                            <!-- JSON Raw Viewer -->
+                            <pre id="cms-json-payload-display" class="font-mono text-[11px] leading-relaxed text-emerald-400 bg-[#060D1A] p-3.5 rounded-xl border border-slate-800/90 overflow-x-auto max-h-52 scrollbar-thin select-all"><code>// Memuat stream JSON pemindaian...</code></pre>
+
+                            <!-- Console Bottom Metadata -->
+                            <div class="mt-3 pt-2.5 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2.5 text-xs font-mono">
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-slate-400 text-[11px]">Primary Key (SSCC):</span>
+                                    <span id="cms-captured-sscc" class="text-slate-400 font-semibold bg-slate-800/80 px-2.5 py-0.5 rounded border border-slate-700 font-mono italic text-[11px]">[ Menunggu Ingest JSON ]</span>
+                                </div>
+                                <div id="cms-gs1-pill-strip" class="hidden flex flex-wrap items-center gap-2 text-[10.5px]">
+                                    <span class="bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/70 text-emerald-400 font-mono">AI (01) GTIN: <strong id="cms-gs1-gtin">-</strong></span>
+                                    <span class="bg-teal-950/60 px-2 py-0.5 rounded border border-teal-800/70 text-teal-300 font-mono">Batch: <strong id="cms-gs1-batch">-</strong></span>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Interactive Action Triggers -->
-                        <div class="pt-1 flex flex-wrap items-center gap-3">
-                            <button onclick="executeStageAction(2, 'CLEARED')" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-bold text-xs shadow-md shadow-teal-500/25 transition-all flex items-center transform hover:-translate-y-0.5">
-                                <i class="fa-solid fa-barcode mr-2"></i>
-                                <span>Pindai Tag RFID &amp; Baca SSCC (Tahap 2)</span>
-                            </button>
-                            <button onclick="executeStageAction(3, 'CLEARED')" class="px-5 py-2.5 rounded-xl bg-white hover:bg-teal-50 text-[#087F8A] hover:text-[#0CA1AF] text-xs font-bold border border-teal-300 shadow-sm transition-all flex items-center transform hover:-translate-y-0.5">
-                                <i class="fa-solid fa-laptop-code mr-2"></i>
-                                <span>Validasi &amp; Registrasi e-AWB di CMS (Tahap 3)</span>
+                        <!-- Sequential Action Buttons: Step 1 (Ingest JSON) -> Step 2 (Validate e-AWB) -->
+                        <div class="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100">
+                            <div class="flex flex-wrap items-center gap-2.5">
+                                <!-- Tombol Tahap 2: Ingest Data Pemindaian JSON -->
+                                <button type="button" id="btn-cms-scan-rfid" onclick="executeStage2Scan()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-bold text-xs shadow-md shadow-teal-500/25 transition-all flex items-center transform hover:-translate-y-0.5 cursor-pointer">
+                                    <i class="fa-solid fa-code mr-2 text-sm"></i>
+                                    <span id="btn-cms-scan-text">Kirim / Ingest Payload JSON (Tahap 2)</span>
+                                </button>
+
+                                <!-- Tombol Tahap 3: Validasi e-AWB (Awalnya Terkunci) -->
+                                <button type="button" id="btn-cms-validate-awb" onclick="executeStage3Validate()" class="px-5 py-2.5 rounded-xl bg-slate-100 text-slate-400 text-xs font-bold border border-gray-200 cursor-not-allowed shadow-none flex items-center transition-all opacity-70">
+                                    <i id="btn-cms-validate-icon" class="fa-solid fa-lock mr-2 text-slate-400"></i>
+                                    <span id="btn-cms-validate-text">Validasi &amp; Registrasi e-AWB (Terkunci - Ingest JSON Dulu)</span>
+                                </button>
+                            </div>
+
+                            <button type="button" onclick="switchSystemDashboard('tms')" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-600 hover:text-[#087F8A] text-xs font-bold border border-gray-300 shadow-sm transition-colors flex items-center">
+                                <i class="fa-solid fa-arrow-left mr-1.5 text-xs"></i>
+                                <span>Kembali ke TMS</span>
                             </button>
                         </div>
                     </div>
 
+                    <?php
+                    // Filter cargos yang telah tervalidasi e-AWB dan teregistrasi di CMS (Stage >= 3)
+                    $cmsRegisteredCargos = array_filter($cargos, function($cg) {
+                        return (int)$cg['current_stage'] >= 3;
+                    });
+                    ?>
+
                     <!-- Inbound Cargo Ingestion Queue Table -->
                     <div class="bg-white p-6 rounded-2xl border border-gray-200/90 shadow-sm">
                         <div class="flex items-center justify-between pb-3 mb-3 border-b border-gray-100">
-                            <h3 class="text-xs font-bold text-[#0D1C42] uppercase tracking-wider flex items-center">
-                                <i class="fa-solid fa-boxes-stacked text-[#087F8A] mr-2 text-sm"></i>
-                                Antrean Masuk Kargo di CMS (Database: cargo_shipments)
-                            </h3>
-                            <span class="text-[10px] font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-gray-200 font-bold"><?= count($cargos) ?> Shipment</span>
+                            <div>
+                                <h3 class="text-xs font-bold text-[#0D1C42] uppercase tracking-wider flex items-center">
+                                    <i class="fa-solid fa-boxes-stacked text-[#087F8A] mr-2 text-sm"></i>
+                                    Antrean Masuk Kargo di CMS (Database: cargo_shipments)
+                                </h3>
+                                <p class="text-[10px] text-slate-500 mt-0.5">Kargo otomatis masuk ke antrean ini setelah divalidasi dan registrasi di e-AWB (Tahap 3)</p>
+                            </div>
+                            <span id="cms-cargo-count-badge" class="text-[10px] font-mono text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full border border-gray-200 font-bold"><?= count($cmsRegisteredCargos) ?> Shipment</span>
                         </div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-left text-xs">
@@ -836,21 +1028,33 @@ include __DIR__ . '/includes/header.php';
                                         <th class="py-2.5 px-3">Status</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-gray-100 text-slate-700">
-                                    <?php foreach (array_slice($cargos, 0, 5) as $cg): ?>
-                                        <tr class="hover:bg-slate-50/70 transition-colors">
-                                            <td class="py-2 px-3 font-mono font-bold text-[#0D1C42]"><?= htmlspecialchars($cg['awb_number']) ?></td>
-                                            <td class="py-2 px-3 font-mono text-[11px] text-[#087F8A]"><?= htmlspecialchars($cg['sscc']) ?></td>
-                                            <td class="py-2 px-3 truncate max-w-[120px]"><?= htmlspecialchars($cg['description']) ?></td>
-                                            <td class="py-2 px-3 text-slate-500 truncate max-w-[120px]"><?= htmlspecialchars($cg['shipper']) ?></td>
-                                            <td class="py-2 px-3 font-bold text-[#087F8A]">Tahap <?= htmlspecialchars($cg['current_stage']) ?></td>
-                                            <td class="py-2 px-3">
-                                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-50 text-[#087F8A] border border-teal-200">
-                                                    <?= htmlspecialchars($cg['status']) ?>
-                                                </span>
+                                <tbody id="cmsCargoQueueTbody" class="divide-y divide-gray-100 text-slate-700">
+                                    <?php if (empty($cmsRegisteredCargos)): ?>
+                                        <tr id="cms-empty-queue-row">
+                                            <td colspan="6" class="py-8 text-center text-slate-400">
+                                                <div class="w-12 h-12 rounded-2xl bg-slate-50 border border-gray-200 text-slate-400 flex items-center justify-center text-xl mx-auto mb-2">
+                                                    <i class="fa-solid fa-inbox"></i>
+                                                </div>
+                                                <span class="font-bold text-[#0D1C42] block text-xs">Belum Ada Antrean Kargo Terdaftar di CMS</span>
+                                                <span class="text-[11px] text-slate-400 mt-0.5 block">Kargo akan masuk ke antrean ini secara otomatis setelah berhasil dipindai via Ingest JSON (Tahap 2) &amp; divalidasi registrasi e-AWB (Tahap 3).</span>
                                             </td>
                                         </tr>
-                                    <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <?php foreach ($cmsRegisteredCargos as $cg): ?>
+                                            <tr class="hover:bg-slate-50/70 transition-colors">
+                                                <td class="py-2 px-3 font-mono font-bold text-[#0D1C42]"><?= htmlspecialchars($cg['awb_number']) ?></td>
+                                                <td class="py-2 px-3 font-mono text-[11px] text-[#087F8A] font-bold"><?= htmlspecialchars($cg['sscc']) ?></td>
+                                                <td class="py-2 px-3 truncate max-w-[120px]"><?= htmlspecialchars($cg['description']) ?></td>
+                                                <td class="py-2 px-3 text-slate-500 truncate max-w-[120px]"><?= htmlspecialchars($cg['shipper']) ?></td>
+                                                <td class="py-2 px-3 font-bold text-[#087F8A]">Tahap <?= htmlspecialchars($cg['current_stage']) ?></td>
+                                                <td class="py-2 px-3">
+                                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-50 text-[#087F8A] border border-teal-200">
+                                                        <?= htmlspecialchars($cg['status']) ?>
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
                                 </tbody>
                             </table>
                         </div>
@@ -999,35 +1203,41 @@ include __DIR__ . '/includes/header.php';
                 <!-- Left Column: Dual-View Console & CSD Certificate (7 cols) -->
                 <div class="lg:col-span-7 space-y-6">
                     
-                    <!-- Dual-View Visual Screening Console -->
+                    <!-- AVSEC X-Ray Screening Stream Console (Menggantikan Hardware Fisik dengan Data JSON) -->
                     <div class="bg-white p-6 rounded-2xl border border-gray-200/90 shadow-sm">
-                        <div class="flex items-center justify-between pb-3 mb-4 border-b border-gray-100">
-                            <h3 class="text-xs font-bold text-[#0D1C42] uppercase tracking-wider flex items-center">
-                                <i class="fa-solid fa-x-ray text-[#087F8A] mr-2 text-sm"></i>
-                                Visual Konsol Sinar-X Dual-View (320kV Spectrum)
-                            </h3>
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 mb-4 border-b border-gray-100 gap-2">
+                            <div class="flex items-center space-x-2">
+                                <i class="fa-solid fa-shield-halved text-[#087F8A] text-base"></i>
+                                <h3 class="text-xs font-bold text-[#0D1C42] uppercase tracking-wider">
+                                    Pemeriksaan Keamanan AVSEC (Data Stream JSON &amp; Sertifikasi CSD)
+                                </h3>
+                            </div>
                             <span id="avsec-status-indicator" class="text-[10px] font-mono px-3 py-1 rounded-full font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                                 STATUS: CLEARED
                             </span>
                         </div>
 
-                        <!-- Density Color Spectrum Indicator -->
-                        <div class="grid grid-cols-3 gap-2 mb-4 text-[11px] text-center">
-                            <div class="p-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-900">
-                                <span class="font-bold block text-xs">Organik (Oranye)</span>
-                                <span class="text-[9px] text-amber-700">Makanan, Tekstil, Farmasi (Z=7-8)</span>
+                        <!-- Dark JSON Stream Console for AVSEC -->
+                        <div class="p-4 rounded-xl bg-[#0A1628] border border-slate-800 mb-5 shadow-inner relative overflow-hidden">
+                            <div class="flex items-center justify-between pb-2.5 mb-2.5 border-b border-slate-800 text-xs font-mono">
+                                <div class="flex items-center space-x-2">
+                                    <span class="flex h-2.5 w-2.5 relative">
+                                        <span id="avsec-json-indicator-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                        <span id="avsec-json-indicator-dot" class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                                    </span>
+                                    <span class="text-slate-200 font-bold text-[11px] tracking-wide">STREAM: AVSEC_XRAY_SECURITY_EVALUATION.json</span>
+                                    <span class="text-[10px] text-teal-400 bg-teal-950/60 px-1.5 py-0.5 rounded border border-teal-800/60">ICAO Annex 17 / JSON</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span id="avsec-json-status-tag" class="text-[10px] font-mono text-emerald-300 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/80">LIVE SCREENING ACTIVE</span>
+                                </div>
                             </div>
-                            <div class="p-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-900">
-                                <span class="font-bold block text-xs">Campuran (Hijau)</span>
-                                <span class="text-[9px] text-emerald-700">Aluminium, Kaca, Baterai Ringan</span>
-                            </div>
-                            <div class="p-2 rounded-lg bg-blue-50 border border-blue-200 text-blue-900">
-                                <span class="font-bold block text-xs">Anorganik (Biru)</span>
-                                <span class="text-[9px] text-blue-700">Baja, Tembaga, Kepadatan Tinggi (Z>18)</span>
-                            </div>
+
+                            <!-- JSON Raw Viewer for AVSEC -->
+                            <pre id="avsec-json-stream-display" class="font-mono text-[11px] leading-relaxed text-emerald-400 bg-[#060D1A] p-3.5 rounded-xl border border-slate-800/90 overflow-x-auto max-h-56 scrollbar-thin select-all"><code>// Memuat stream data keamanan AVSEC...</code></pre>
                         </div>
 
-                        <!-- Interactive CSD Certificate Card / Suspect Vault Warning -->
+                        <!-- Interactive CSD Certificate Card (Ditampilkan saat CLEARED) -->
                         <div id="avsec-certificate-wrap" class="p-5 rounded-2xl border border-emerald-300 bg-emerald-50/50 shadow-sm mb-5">
                             <div class="flex items-start justify-between">
                                 <div class="flex items-center space-x-3">
@@ -1046,19 +1256,41 @@ include __DIR__ . '/includes/header.php';
                             </div>
                             <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4 pt-3 border-t border-emerald-200/80 text-[11px] text-slate-700">
                                 <div><span class="text-slate-400 block text-[9px] font-bold">PETUGAS SCREENER:</span> <strong id="avsec-inspector-id">AVSEC-OPR-07</strong></div>
-                                <div><span class="text-slate-400 block text-[9px] font-bold">METODE SCREENING:</span> <strong>XRY (Dual-View)</strong></div>
+                                <div><span class="text-slate-400 block text-[9px] font-bold">METODE SCREENING:</span> <strong>XRY (Dual-View 320kV)</strong></div>
                                 <div><span class="text-slate-400 block text-[9px] font-bold">WAKTU CLEARANCE:</span> <strong id="avsec-clearance-time">LIVE VALIDATED</strong></div>
                             </div>
                         </div>
 
-                        <!-- Suspect Warning Box (Hidden by default, shown when SUSPECT) -->
-                        <div id="avsec-suspect-warning-wrap" class="p-5 rounded-2xl border-2 border-rose-400 bg-rose-50 shadow-md mb-5 hidden animate-pulse">
-                            <div class="flex items-center space-x-3 text-rose-700">
-                                <i class="fa-solid fa-triangle-exclamation text-3xl"></i>
+                        <!-- Suspect Warning & Ruang Khusus Karantina Box (Ditampilkan saat SUSPECT) -->
+                        <div id="avsec-suspect-warning-wrap" class="p-5 rounded-2xl border-2 border-rose-400 bg-rose-50 shadow-md mb-5 hidden">
+                            <div class="flex items-start space-x-3 text-rose-700 mb-3">
+                                <i class="fa-solid fa-triangle-exclamation text-3xl mt-0.5 animate-bounce"></i>
                                 <div>
-                                    <h4 class="text-sm font-black text-rose-800">PERINGATAN AVSEC: KARGO DITAHAN DI RUANG KARANTINA</h4>
-                                    <p class="text-xs text-rose-600 mt-0.5">Terdeteksi anomali kepadatan tinggi mencurigakan. Diverter spur aktif, kargo terkunci otomatis!</p>
+                                    <h4 class="text-sm font-black text-rose-800">PERINGATAN AVSEC: KARGO DIKUNCI DI RUANG KHUSUS KARANTINA</h4>
+                                    <p class="text-xs text-rose-600 mt-0.5">Terdeteksi anomali kepadatan tinggi (Z &gt; 20). Kargo diisolasi otomatis di ruang karantina dan dilarang masuk apron!</p>
                                 </div>
+                            </div>
+                            
+                            <div class="p-3 bg-white/90 rounded-xl border border-rose-200 text-xs text-slate-700 mb-3 space-y-1">
+                                <div class="font-bold text-rose-800 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-shield text-rose-600"></i>
+                                    <span>SOP Penanganan Khusus Ruang Karantina:</span>
+                                </div>
+                                <p class="text-[11.5px] text-slate-600">
+                                    Silakan tentukan tindak lanjut kargo: lakukan <strong>pemeriksaan fisik sekunder</strong> untuk me-release jika aman, atau <strong>tolak kargo</strong> untuk dikembalikan ke truk pengangkut asal.
+                                </p>
+                            </div>
+
+                            <!-- Tombol Penanganan Khusus Karantina -->
+                            <div class="flex flex-wrap items-center gap-2.5">
+                                <button type="button" onclick="executeStageAction(4, 'RELEASE')" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition-all flex items-center">
+                                    <i class="fa-solid fa-user-shield mr-1.5"></i>
+                                    <span>Pemeriksaan Fisik Sekunder (Hand Search / ETD) &rarr; Rilis CLEARED</span>
+                                </button>
+                                <button type="button" onclick="executeStageAction(4, 'RETURN_TO_TRUCK')" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-black text-white font-bold text-xs shadow-sm transition-all flex items-center">
+                                    <i class="fa-solid fa-truck-arrow-right mr-1.5"></i>
+                                    <span>Tolak &amp; Kembalikan Barang ke Truk Semula</span>
+                                </button>
                             </div>
                         </div>
 
@@ -1070,7 +1302,7 @@ include __DIR__ . '/includes/header.php';
                             </button>
                             <button onclick="executeStageAction(4, 'SUSPECT')" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-bold text-xs shadow-md shadow-rose-500/25 transition-all flex items-center transform hover:-translate-y-0.5">
                                 <i class="fa-solid fa-triangle-exclamation mr-1.5"></i>
-                                <span>Simulasi Temuan Bahaya (SUSPECT)</span>
+                                <span>Simulasi Temuan Bahaya (SUSPECT &amp; Masuk Karantina)</span>
                             </button>
                         </div>
                     </div>
@@ -1259,46 +1491,68 @@ include __DIR__ . '/includes/header.php';
                 <!-- Left Column: Workstation & Controls (7 cols) -->
                 <div class="lg:col-span-7 space-y-6">
                     
-                    <!-- Smart Floor Scale & ULD Build-Up Workstation Card -->
+                    <!-- Smart Floor Scale & ULD Build-Up Workstation Card (Menggantikan Timbangan Fisik dengan Data JSON) -->
                     <div class="bg-white p-6 rounded-2xl border border-gray-200/90 shadow-sm">
-                        <div class="flex items-center justify-between pb-3 mb-4 border-b border-gray-100">
-                            <h3 class="text-xs font-bold text-[#0D1C42] uppercase tracking-wider flex items-center">
-                                <i class="fa-solid fa-boxes-packing text-[#087F8A] mr-2 text-sm"></i>
-                                Penimbangan Smart Scale, ULD Consolidation, &amp; Flight Loading
-                            </h3>
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 mb-4 border-b border-gray-100 gap-2">
+                            <div class="flex items-center space-x-2">
+                                <i class="fa-solid fa-scale-balanced text-[#087F8A] text-base"></i>
+                                <h3 class="text-xs font-bold text-[#0D1C42] uppercase tracking-wider">
+                                    Penimbangan Smart Scale, ULD Consolidation, &amp; Parameter Muat Pesawat
+                                </h3>
+                            </div>
                             <span class="text-[10px] font-mono text-[#087F8A] bg-teal-50 px-2 py-0.5 rounded border border-teal-200 font-bold">Tahap 5, 6, &amp; 7</span>
                         </div>
 
-                        <!-- 3-Col Visual Cards: Scale, ULD, and CoG -->
+                        <!-- Dark JSON Stream Console for Smart Scale -->
+                        <div class="p-4 rounded-xl bg-[#0A1628] border border-slate-800 mb-5 shadow-inner relative overflow-hidden">
+                            <div class="flex items-center justify-between pb-2.5 mb-2.5 border-b border-slate-800 text-xs font-mono">
+                                <div class="flex items-center space-x-2">
+                                    <span class="flex h-2.5 w-2.5 relative">
+                                        <span id="lb-json-indicator-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
+                                        <span id="lb-json-indicator-dot" class="relative inline-flex rounded-full h-2.5 w-2.5 bg-teal-500"></span>
+                                    </span>
+                                    <span class="text-slate-200 font-bold text-[11px] tracking-wide">STREAM: SMART_SCALE_WEIGHT_ACQUISITION.json</span>
+                                    <span class="text-[10px] text-teal-400 bg-teal-950/60 px-1.5 py-0.5 rounded border border-teal-800/60">OIML R76 / TCP</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span id="lb-json-status-tag" class="text-[10px] font-mono text-teal-300 bg-teal-950/60 px-2 py-0.5 rounded border border-teal-800/80">SCALE SYNC ACTIVE</span>
+                                </div>
+                            </div>
+
+                            <!-- JSON Raw Viewer for Scale & Weight -->
+                            <pre id="lb-json-stream-display" class="font-mono text-[11px] leading-relaxed text-emerald-400 bg-[#060D1A] p-3.5 rounded-xl border border-slate-800/90 overflow-x-auto max-h-56 scrollbar-thin select-all"><code>// Memuat stream penimbangan Smart Floor Scale...</code></pre>
+                        </div>
+
+                        <!-- 3-Col Visual Cards: Parameter & Kriteria Batas Berat -->
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
                             
-                            <!-- Scale Visual -->
-                            <div class="p-4 rounded-xl bg-[#0D1C42] text-white text-center shadow-md">
-                                <span class="text-[9px] uppercase tracking-wider text-teal-300 font-bold block">15T Smart Floor Scale</span>
-                                <div id="lb-scale-weight" class="text-2xl font-black font-mono text-amber-400 my-1">- KG</div>
-                                <span class="text-[9px] text-emerald-400 font-mono">Load Cell IP68 &bull; &plusmn;1kg</span>
-                                <div class="mt-2 text-[10px] text-slate-300 border-t border-slate-700 pt-1.5">
-                                    Deklarasi: <strong id="lb-scale-declared" class="text-white">-</strong>
-                                </div>
-                            </div>
-
-                            <!-- ULD Container Visual -->
-                            <div class="p-4 rounded-xl bg-teal-50/60 border border-teal-200 text-center shadow-sm">
-                                <span class="text-[9px] uppercase tracking-wider text-[#087F8A] font-bold block">Kontainer Pesawat ULD</span>
-                                <div id="lb-uld-code" class="text-base font-black font-mono text-[#0D1C42] my-1 truncate">AKE-12345-GA</div>
-                                <span class="text-[10px] font-semibold text-[#087F8A] block">Tipe AKE &bull; Komp: AFT-LOWER-1</span>
-                                <div class="mt-2 text-[10px] text-slate-600 border-t border-teal-200/60 pt-1.5">
-                                    Maks: <strong class="text-[#0D1C42]">1588.0 kg</strong>
-                                </div>
-                            </div>
-
-                            <!-- Center of Gravity (CoG) Visual -->
+                            <!-- Scale Visual: Toleransi -->
                             <div class="p-4 rounded-xl bg-slate-50 border border-gray-200 text-center shadow-sm">
-                                <span class="text-[9px] uppercase tracking-wider text-slate-500 font-bold block">Center of Gravity (CoG)</span>
-                                <div class="text-2xl font-black font-mono text-emerald-600 my-1">28.4%</div>
-                                <span class="text-[9px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Optimal Flight Trim</span>
+                                <span class="text-[9px] uppercase tracking-wider text-slate-500 font-bold block">Toleransi Timbangan</span>
+                                <div id="lb-scale-weight" class="text-2xl font-black font-mono text-[#0D1C42] my-1">- KG</div>
+                                <span class="text-[9px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Batas Toleransi &plusmn;5%</span>
+                                <div class="mt-2 text-[10px] text-slate-600 border-t border-gray-200 pt-1.5">
+                                    Deklarasi e-AWB: <strong id="lb-scale-declared" class="text-[#0D1C42]">-</strong>
+                                </div>
+                            </div>
+
+                            <!-- ULD Container Visual: Max Berat ULD -->
+                            <div class="p-4 rounded-xl bg-teal-50/60 border border-teal-200 text-center shadow-sm">
+                                <span class="text-[9px] uppercase tracking-wider text-[#087F8A] font-bold block">Batas Beban Kontainer ULD</span>
+                                <div id="lb-uld-code" class="text-base font-black font-mono text-[#0D1C42] my-1 truncate">AKE-12345-GA</div>
+                                <span class="text-[10px] font-bold text-[#087F8A] block">Batas Maks: 1.588 kg (AKE)</span>
+                                <div class="mt-2 text-[10px] text-slate-600 border-t border-teal-200/60 pt-1.5">
+                                    Status: <strong class="text-emerald-700 font-bold">Layak Dimuat</strong>
+                                </div>
+                            </div>
+
+                            <!-- Aircraft Limit & Center of Gravity (CoG) Visual -->
+                            <div class="p-4 rounded-xl bg-slate-50 border border-gray-200 text-center shadow-sm">
+                                <span class="text-[9px] uppercase tracking-wider text-slate-500 font-bold block">Batas Muatan Pesawat &amp; Trim</span>
+                                <div class="text-2xl font-black font-mono text-emerald-600 my-1">18.500 KG</div>
+                                <span class="text-[9px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Boeing 737-800F (GA-707)</span>
                                 <div class="mt-2 text-[10px] text-slate-500 border-t border-gray-200 pt-1.5">
-                                    Batas Aman: 18% - 34% MAC
+                                    CoG: <strong>28.4% MAC (Trim Optimal)</strong>
                                 </div>
                             </div>
 

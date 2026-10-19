@@ -84,7 +84,7 @@ CREATE TABLE `cargo_shipments` (
     `uld_id` VARCHAR(50) NULL,
     `scan_time` DATETIME NULL,
     `current_stage` INT NOT NULL DEFAULT 1,
-    `status` ENUM('REGISTERED', 'SCANNED', 'SECURITY_CHECK', 'CLEARED', 'SUSPECT', 'WEIGHED', 'ALLOCATED', 'LOADED') NOT NULL DEFAULT 'REGISTERED',
+    `status` ENUM('REGISTERED', 'SCANNED', 'SECURITY_CHECK', 'CLEARED', 'SUSPECT', 'RETURNED_TO_TRUCK', 'WEIGHED', 'ALLOCATED', 'LOADED') NOT NULL DEFAULT 'REGISTERED',
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (`truck_arrival_id`) REFERENCES `truck_arrivals`(`id`) ON DELETE SET NULL,
     FOREIGN KEY (`uld_id`) REFERENCES `uld_containers`(`id`) ON DELETE SET NULL
@@ -96,7 +96,7 @@ CREATE TABLE `security_checks` (
     `id` VARCHAR(50) PRIMARY KEY,
     `cargo_id` VARCHAR(50) NOT NULL,
     `scanner_type` VARCHAR(100) NOT NULL DEFAULT 'Dual-View High-Energy X-Ray (180x180cm)',
-    `xray_result` ENUM('CLEARED', 'SUSPECT') NOT NULL DEFAULT 'CLEARED',
+    `xray_result` ENUM('CLEARED', 'SUSPECT', 'RETURNED_TO_TRUCK') NOT NULL DEFAULT 'CLEARED',
     `inspector_id` VARCHAR(50) NOT NULL DEFAULT 'AVSEC-OPR-07',
     `csd_number` VARCHAR(50) NULL COMMENT 'Consignment Security Declaration Number',
     `check_time` DATETIME NOT NULL,
