@@ -568,10 +568,6 @@ include __DIR__ . '/includes/header.php';
 
         <!-- FLOATING TOP BAR 2: CAMERA PRESETS & FULLSCREEN (POJOK KANAN ATAS) -->
         <div class="absolute top-3 right-4 z-20 flex items-center gap-1 p-1 rounded-xl bg-slate-900/90 backdrop-blur-md border border-teal-500/30 shadow-2xl">
-            <a href="cargo_input.php" class="cam-btn text-teal-300 hover:text-white" title="Input Kargo Baru">
-                <i class="fa-solid fa-plus text-xs"></i>
-                <span class="hidden md:inline">Input Kargo</span>
-            </a>
             <button onclick="toggleAudio()" id="btn-audio" class="cam-btn text-white" title="Toggle Efek Audio">
                 <i class="fa-solid fa-volume-high text-teal-300 text-xs"></i>
             </button>
@@ -584,13 +580,17 @@ include __DIR__ . '/includes/header.php';
                 <i class="fa-solid fa-cube text-xs"></i>
                 <span class="hidden xl:inline">Isometrik</span>
             </button>
-            <button onclick="setCameraView('dock')" id="cam-dock" class="cam-btn" title="Fokus Area Truk &amp; RFID">
+            <button onclick="setCameraView('dock')" id="cam-dock" class="cam-btn" title="Fokus Area Truk Docking">
                 <i class="fa-solid fa-truck text-xs"></i>
-                <span class="hidden 2xl:inline">Truk &amp; Gate</span>
+                <span class="hidden 2xl:inline">Truk</span>
+            </button>
+            <button onclick="setCameraView('rfid')" id="cam-rfid" class="cam-btn" title="Fokus Gerbang Portal RFID">
+                <i class="fa-solid fa-wifi text-xs text-teal-300"></i>
+                <span class="hidden 2xl:inline">RFID</span>
             </button>
             <button onclick="setCameraView('xray')" id="cam-xray" class="cam-btn" title="Fokus X-Ray AVSEC &amp; Karantina">
                 <i class="fa-solid fa-shield-halved text-xs"></i>
-                <span class="hidden 2xl:inline">X-Ray &amp; Karantina</span>
+                <span class="hidden 2xl:inline">X-Ray</span>
             </button>
             <button onclick="setCameraView('scale')" id="cam-scale" class="cam-btn" title="Fokus Timbangan ULD">
                 <i class="fa-solid fa-scale-balanced text-xs"></i>
@@ -714,6 +714,11 @@ include __DIR__ . '/includes/header.php';
         <!-- BOTTOM RIGHT TELEMETRY READOUT -->
         <div class="absolute bottom-4 right-4 z-20 flex items-center gap-2 pointer-events-none">
             <div class="hud-chip flex items-center gap-3.5 text-xs bg-slate-900/95 border border-teal-500/40 shadow-[0_8px_32px_rgba(0,0,0,0.65)] backdrop-blur-xl">
+                <div class="px-1 text-center">
+                    <span class="text-[8.5px] text-teal-300 block font-black uppercase tracking-wider">RFID AIDC</span>
+                    <span id="telemetry-rfid" class="font-black text-emerald-400 font-mono text-xs">STANDBY</span>
+                </div>
+                <div class="h-6 w-px bg-teal-500/30"></div>
                 <div class="px-1 text-center">
                     <span class="text-[8.5px] text-teal-300 block font-black uppercase tracking-wider">AVSEC X-RAY</span>
                     <span id="telemetry-xray" class="font-black text-emerald-400 font-mono text-xs">CLEARED</span>
@@ -3646,11 +3651,6 @@ function createCompleteDenahFloorMarkings() {
     markGroup.add(createHandPalletJack(6.5, -2.5, -Math.PI / 3));
 
     // 9. GROUND SUPPORT EQUIPMENT (GSE) APRON PESAWAT BOEING 777F
-    // Kereta Gandeng Kontainer Dolly (3 Unit)
-    markGroup.add(createContainerDolly(58.0, 22.0, Math.PI / 2));
-    markGroup.add(createContainerDolly(58.0, 26.5, Math.PI / 2));
-    markGroup.add(createContainerDolly(58.0, 31.0, Math.PI / 2));
-
     // Aviation Safety Cones mengelilingi Pesawat Boeing 777F
     [
         [46.5, 25.5], [101.5, 25.5],  // Wingtips Kiri & Kanan (Clearance Stand 12R Bebas Dinding)
@@ -4291,9 +4291,14 @@ signsGroup.add(dockDecal);
 // ─────────────────────────────────────────────────────────────────────────────
 // 5. GERBANG SCAN RFID AIDC (Z = -27.0)
 // ─────────────────────────────────────────────────────────────────────────────
+let rfidScanCurtain = null;
+let rfidPointLight = null;
+let rfidBeaconMat = new THREE.MeshBasicMaterial({ color: 0x0CA1AF });
+
 const rfidPortalGroup = new THREE.Group();
 rfidPortalGroup.position.set(-5.0, 0, -27.0);
 
+// Tiang Penyangga Kiri & Kanan (InJourney Teal & Baja Industri)
 const pPostL = new THREE.Mesh(new THREE.BoxGeometry(0.4, 5.6, 0.4), MAT.injourneyTeal);
 pPostL.position.set(-3.2, 2.8, 0);
 const pPostR = new THREE.Mesh(new THREE.BoxGeometry(0.4, 5.6, 0.4), MAT.injourneyTeal);
@@ -4301,27 +4306,84 @@ pPostR.position.set(3.2, 2.8, 0);
 const pArch = new THREE.Mesh(new THREE.BoxGeometry(6.8, 0.45, 0.45), MAT.injourneyTeal);
 pArch.position.set(0, 5.5, 0);
 
+// Basis Pondasi Tiang Portal Baja Hitam
+[-3.2, 3.2].forEach(bx => {
+    const pBase = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.15, 0.85), MAT.metalDark);
+    pBase.position.set(bx, 0.075, 0);
+    rfidPortalGroup.add(pBase);
+});
+
+// Bilah Emisi Sinar Laser Scan Cyan Neon
 const scanBarMat = new THREE.MeshBasicMaterial({ color: 0x00F5FF });
 const scanBarL = new THREE.Mesh(new THREE.BoxGeometry(0.12, 3.8, 0.12), scanBarMat);
 scanBarL.position.set(-2.9, 2.8, 0);
 const scanBarR = new THREE.Mesh(new THREE.BoxGeometry(0.12, 3.8, 0.12), scanBarMat);
 scanBarR.position.set(2.9, 2.8, 0);
 
-const rfidWaveGeo = new THREE.RingGeometry(0.2, 3.4, 32);
+// Tirai Laser Scan Holografik Transparan (Menyala saat kargo melintas)
+const curtainGeo = new THREE.PlaneGeometry(5.6, 4.0);
+const curtainMat = new THREE.MeshBasicMaterial({
+    color: 0x00F5FF,
+    transparent: true,
+    opacity: 0,
+    side: THREE.DoubleSide
+});
+rfidScanCurtain = new THREE.Mesh(curtainGeo, curtainMat);
+rfidScanCurtain.position.set(0, 2.8, 0);
+
+// 4 Antena Patch Array High-Speed RFID Tunnel (2 Kiri, 2 Kanan)
+[-3.0, 3.0].forEach(ax => {
+    [1.8, 3.8].forEach(ay => {
+        const patch = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.8, 0.8), new THREE.MeshStandardMaterial({ color: 0xE2E8F0, roughness: 0.3 }));
+        patch.position.set(ax, ay, 0);
+        const patchLed = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.08, 0.16), new THREE.MeshBasicMaterial({ color: 0x00F5FF }));
+        patchLed.position.set(ax, ay, 0.35);
+        rfidPortalGroup.add(patch, patchLed);
+    });
+});
+
+// Sensor Fotoelektrik Inframerah (Detektor Kedatangan Koli)
+[-3.0, 3.0].forEach(sx => {
+    const eye = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.16, 0.14), MAT.metalDark);
+    eye.position.set(sx, 0.75, 0);
+    const eyeLens = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.06, 0.06), new THREE.MeshBasicMaterial({ color: 0xEF4444 }));
+    eyeLens.position.set(sx, 0.75, 0);
+    rfidPortalGroup.add(eye, eyeLens);
+});
+
+// Lampu Beacon Indikator & Spotlight Terang di Atas Gerbang
+const beaconPole = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.4), MAT.metalSilver);
+beaconPole.position.set(0, 5.85, 0);
+const beaconBulb = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.22, 16), rfidBeaconMat);
+beaconBulb.position.set(0, 6.1, 0);
+rfidPointLight = new THREE.PointLight(0x00F5FF, 0, 16, 1.2);
+rfidPointLight.position.set(0, 5.0, 0);
+
+// Gelombang Denyut Pemindai Nirkabel di Lantai (Local Position = 0, 0.05, 0)
+const rfidWaveGeo = new THREE.RingGeometry(0.3, 3.4, 32);
 const rfidWaveMat = new THREE.MeshBasicMaterial({ color: 0x00F5FF, transparent: true, opacity: 0, side: THREE.DoubleSide });
 const rfidWaveMesh = new THREE.Mesh(rfidWaveGeo, rfidWaveMat);
 rfidWaveMesh.rotation.x = Math.PI / 2;
 rfidWaveMesh.position.set(0, 0.05, 0);
 
-const rfidPlaque = makeMountedSignboard("AIDC RFID SCANNER", "SSCC-18 READER", 5.2, 0.7, "#0CA1AF");
-rfidPlaque.position.set(0, 5.5, -0.25);
+// Papan Nama Signboard Dua Sisi (Menghadap Selatan & Menghadap Utara)
+const rfidPlaqueSouth = makeMountedSignboard("AIDC RFID SCANNER", "GS1 SSCC-18 MANIFEST VALIDATOR", 5.2, 0.7, "#0CA1AF");
+rfidPlaqueSouth.position.set(0, 5.5, 0.25);
+
+const rfidPlaqueNorth = makeMountedSignboard("AIDC RFID SCANNER", "GS1 SSCC-18 MANIFEST VALIDATOR", 5.2, 0.7, "#0CA1AF");
+rfidPlaqueNorth.position.set(0, 5.5, -0.25);
+rfidPlaqueNorth.rotation.y = Math.PI;
 
 const rfidFloorDecal = makeFloorDecal("AIDC RFID PORTAL", "AUTOMATED SCANNER", 5.2, 2.2, "#0CA1AF");
 rfidFloorDecal.position.set(-5.0, 0.035, -27.0);
 signsGroup.add(rfidFloorDecal);
 
-rfidPortalGroup.add(pPostL, pPostR, pArch, scanBarL, scanBarR, rfidWaveMesh, rfidPlaque);
+rfidPortalGroup.add(pPostL, pPostR, pArch, scanBarL, scanBarR, rfidScanCurtain, beaconPole, beaconBulb, rfidPointLight, rfidWaveMesh, rfidPlaqueSouth, rfidPlaqueNorth);
 rfidGroup.add(rfidPortalGroup);
+
+bindInteractive(pPostL, 'rfid');
+bindInteractive(pPostR, 'rfid');
+bindInteractive(pArch, 'rfid');
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 6. JARINGAN KONVEYOR KONTINU & PNEUMATIC DIVERTER ARM
@@ -4503,12 +4565,13 @@ conveyorGroup.add(createCornerTransferBed(-5.0, 8.0, 2.8));
 // 8. Segmen Penghubung Masuk ke Meja Perakitan ULD (Dari X = -3.6 ke X = -2.2 pada Z = 8.0)
 conveyorGroup.add(createConveyorSegment(-2.9, 8.0, 1.4, 2.4));
 
-// 9. Konveyor Transfer Central Storage ke Smart Floor Scale 15T (Dari X = 2.2 ke X = 35.0 pada Z = 8.0)
-// Panjang 32.8m, center X = 18.6
-conveyorGroup.add(createConveyorSegment(18.6, 8.0, 32.8, 2.4));
+// 9. Konveyor Transfer Central Storage ke Smart Floor Scale 15T (Dari X = 2.2 ke X = 32.5 pada Z = 8.0)
+// Panjang 30.3m, center X = 17.35, bertemu presisi di bibir timbangan tanpa tumpang tindih
+conveyorGroup.add(createConveyorSegment(17.35, 8.0, 30.3, 2.4));
 
-// 10. Rel Transfer Timbangan ke Gerbang Airside & High-Loader (Dari X = 37.0 ke X = 63.0 pada Z = 8.0)
-conveyorGroup.add(createConveyorSegment(50.0, 8.0, 26.0, 2.4));
+// 10. Rel Transfer Timbangan ke Gerbang Airside & High-Loader (Dari X = 37.5 ke X = 60.0 pada Z = 8.0)
+// Panjang 22.5m, center X = 48.75, mulai tepat dari bibir keluar timbangan hingga platform High-Loader
+conveyorGroup.add(createConveyorSegment(48.75, 8.0, 22.5, 2.4));
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 7. TEROWONGAN X-RAY SCREENING (LINES 1, 2, 3) & STASIUN OPERATOR AVSEC
@@ -4980,100 +5043,378 @@ storageGroup.add(createConvexSafetyMirror(-20.0, 0.0, -Math.PI / 4));
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 10. SMART FLOOR SCALE 15 TON & DIGITAL DISPLAY (X = 35.0, Z = 8.0)
+// MODEL RESMI TIMBANGAN LANTAI ULD BANDARA (IATA / OIML R76 CERTIFIED WEIGHBRIDGE)
 // ─────────────────────────────────────────────────────────────────────────────
+let scaleStackLightGreen = null;
+let scaleStackLightYellow = null;
+let scaleStackLightRed = null;
+let scaleStatusRing = null;
+
+function createWeighbridgeDeckTexture() {
+    const c = document.createElement('canvas');
+    c.width = 1024;
+    c.height = 768;
+    const ctx = c.getContext('2d');
+
+    // 1. Plat Dasar Baja Hitam Pekat (Deep Industrial Black Steel)
+    ctx.fillStyle = '#0B0F17';
+    ctx.fillRect(0, 0, 1024, 768);
+
+    // 2. Tekstur Timbul Plat Bordes / Diamond Treadplate Hitam Karbon
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.035)';
+    for (let y = 12; y < 768; y += 24) {
+        for (let x = 12; x < 1024; x += 24) {
+            ctx.beginPath();
+            ctx.ellipse(x, y, 6, 2, Math.PI / 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(x + 12, y + 12, 6, 2, -Math.PI / 4, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    // 3. Perimeter Border Hitam Metalik & Garis Belang Gelap (Sleek Dark Graphite Border)
+    const bThickness = 32;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, 0, 1024, bThickness);
+    ctx.rect(0, 768 - bThickness, 1024, bThickness);
+    ctx.rect(0, 0, bThickness, 768);
+    ctx.rect(1024 - bThickness, 0, bThickness, 768);
+    ctx.clip();
+
+    ctx.fillStyle = '#070A0F';
+    ctx.fillRect(0, 0, 1024, 768);
+
+    for (let i = -768; i < 1024 + 768; i += 32) {
+        ctx.beginPath();
+        ctx.strokeStyle = '#1E293B';
+        ctx.lineWidth = 16;
+        ctx.moveTo(i, 0);
+        ctx.lineTo(i + 768, 768);
+        ctx.stroke();
+    }
+    ctx.restore();
+
+    // Garis Lis Baja Gelap Bagian Dalam
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(bThickness + 4, bThickness + 4, 1024 - (bThickness + 4) * 2, 768 - (bThickness + 4) * 2);
+
+    // 4. Marka Sasaran Titik Pusat Berat (Center of Gravity / CoG Target) Minimalis Perak / Slate
+    const cx = 512, cy = 384;
+    // Lingkaran Target Luar
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.2)';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 180, 0, Math.PI * 2);
+    ctx.stroke();
+    // Lingkaran Target Tengah
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.35)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 90, 0, Math.PI * 2);
+    ctx.stroke();
+    // Titik Pusat Bullseye Slate
+    ctx.fillStyle = 'rgba(148, 163, 184, 0.45)';
+    ctx.beginPath();
+    ctx.arc(cx, cy, 12, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Garis Silang Crosshairs Perak Halus
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(80, cy); ctx.lineTo(944, cy);
+    ctx.moveTo(cx, 60); ctx.lineTo(cx, 708);
+    ctx.stroke();
+
+    // Garis Skala Pengukuran (Tick Marks) pada Crosshairs
+    for (let d = -300; d <= 300; d += 60) {
+        if (d === 0) continue;
+        ctx.beginPath();
+        ctx.moveTo(cx + d, cy - 8); ctx.lineTo(cx + d, cy + 8);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(cx - 8, cy + d); ctx.lineTo(cx + 8, cy + d);
+        ctx.stroke();
+    }
+
+    // 5. 4 Bracket Siku Sudut Pemosisi Kontainer ULD [ L ] (Warna Perak Gelap)
+    const bx1 = 160, bx2 = 864, by1 = 120, by2 = 648;
+    const lLen = 80;
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.45)';
+    ctx.lineWidth = 6;
+    ctx.lineCap = 'square';
+    ctx.beginPath(); ctx.moveTo(bx1 + lLen, by1); ctx.lineTo(bx1, by1); ctx.lineTo(bx1, by1 + lLen); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(bx2 - lLen, by1); ctx.lineTo(bx2, by1); ctx.lineTo(bx2, by1 + lLen); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(bx1 + lLen, by2); ctx.lineTo(bx1, by2); ctx.lineTo(bx1, by2 - lLen); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(bx2 - lLen, by2); ctx.lineTo(bx2, by2); ctx.lineTo(bx2, by2 - lLen); ctx.stroke();
+
+    // 6. Stensil Teks Tipografi Hitam/Abu-Abu Elegan
+    ctx.fillStyle = '#64748B';
+    ctx.font = 'bold 22px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('SMART ULD WEIGHBRIDGE 15T — HEAVY DUTY DECK', cx, 66);
+
+    ctx.fillStyle = '#475569';
+    ctx.font = 'bold 16px monospace';
+    ctx.fillText('MAX CAPACITY: 15,000 KG | VERIFIED OIML R76 CLASS III | S/N: WBG-15T-08', cx, 722);
+
+    // Panah Alur Masuk & Keluar Muted
+    ctx.fillStyle = 'rgba(148, 163, 184, 0.35)';
+    ctx.font = 'bold 18px monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText('◀ INFEED', 46, cy - 8);
+    ctx.textAlign = 'right';
+    ctx.fillText('OUTFEED ▶', 978, cy - 8);
+
+    const tex = new THREE.CanvasTexture(c);
+    tex.anisotropy = 8;
+    return tex;
+}
+
 function createDetailedSmartScale() {
     const sc = new THREE.Group();
     sc.position.set(35.0, 0, 8.0);
 
-    const pitBase = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.08, 4.8), new THREE.MeshStandardMaterial({ color: 0x09090B }));
+    // 1. Pit Frame / Dudukan Pondasi Timbangan Lantai Hitam Pekat
+    const pitBase = new THREE.Mesh(
+        new THREE.BoxGeometry(5.4, 0.08, 4.0),
+        new THREE.MeshStandardMaterial({ color: 0x07090E, roughness: 0.95 })
+    );
     pitBase.position.y = 0.04;
-    sc.add(pitBase);
 
-    // 4 Unit Sensor Load Cell
-    [[-2.2, -1.9], [2.2, -1.9], [-2.2, 1.9], [2.2, 1.9]].forEach(([cx, cz]) => {
-        const cell = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.18, 16), MAT.metalDark);
-        cell.position.set(cx, 0.12, cz);
-        sc.add(cell);
+    const pitRim = new THREE.Mesh(new THREE.BoxGeometry(5.48, 0.09, 4.08), MAT.metalDark);
+    pitRim.position.y = 0.045;
+    sc.add(pitBase, pitRim);
+
+    // 2. 4 Unit Sensor Load Cell Canister Baja Hitam / Dark Carbon Steel di 4 Sudut
+    const loadCellMat = new THREE.MeshStandardMaterial({ color: 0x18181B, metalness: 0.8, roughness: 0.3 });
+    [[-2.25, -1.55], [2.25, -1.55], [-2.25, 1.55], [2.25, 1.55]].forEach(([cx, cz]) => {
+        const cell = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.22, 16), loadCellMat);
+        cell.position.set(cx, 0.14, cz);
+        const cellFlange = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.04, 0.38), MAT.metalDark);
+        cellFlange.position.set(cx, 0.04, cz);
+        // Kabel Grounding / Signal Conduit Fleksibel
+        const conduit = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.55, 8), MAT.metalDark);
+        conduit.position.set(cx + (cx > 0 ? -0.2 : 0.2), 0.08, cz);
+        sc.add(cell, cellFlange, conduit);
     });
 
-    const deck = new THREE.Mesh(new THREE.BoxGeometry(5.0, 0.24, 4.4), new THREE.MeshStandardMaterial({ color: 0x111827, metalness: 0.5, roughness: 0.4 }));
-    deck.position.y = 0.19;
+    // Kotak Sambungan Summing Card / Junction Box Sensor (Hitam Pekat)
+    const jBox = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.22, 0.14), new THREE.MeshStandardMaterial({ color: 0x18181B, metalness: 0.6, roughness: 0.4 }));
+    jBox.position.set(-2.0, 0.18, -1.95);
+    sc.add(jBox);
 
-    const topPlate = new THREE.Mesh(new THREE.BoxGeometry(4.9, 0.02, 4.3), new THREE.MeshStandardMaterial({ color: 0x0A0F1D }));
-    topPlate.position.y = 0.315;
+    // 3. Meja Timbang Mengambang Baja Hitam Pekat (Deep Black Floating Deck)
+    const deckH = 0.26;
+    const deckY = 0.35;
+    const deck = new THREE.Mesh(
+        new THREE.BoxGeometry(5.0, deckH, 3.6),
+        new THREE.MeshStandardMaterial({ color: 0x090D16, metalness: 0.7, roughness: 0.35 })
+    );
+    deck.position.y = deckY;
+    deck.castShadow = true;
+    deck.receiveShadow = true;
 
-    // Rol Baja Karbon Hitam di Meja Timbang
-    for (let rx = -2.0; rx <= 2.0; rx += 0.4) {
-        const rol = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 4.1, 16), MAT.metalDark);
-        rol.rotateX(Math.PI / 2);
-        rol.position.set(rx, 0.33, 0);
-        sc.add(rol);
+    // Pelat Baja Permukaan Timbangan dengan Tekstur Hitam Metalik & Stensil Monokrom
+    const topPlateMat = new THREE.MeshStandardMaterial({
+        map: createWeighbridgeDeckTexture(),
+        roughness: 0.35,
+        metalness: 0.65
+    });
+    const topPlate = new THREE.Mesh(new THREE.PlaneGeometry(5.0, 3.6), topPlateMat);
+    topPlate.rotation.x = -Math.PI / 2;
+    topPlate.position.set(0, deckY + deckH / 2 + 0.01, 0);
+    sc.add(deck, topPlate);
+
+    // 4. Grid Unit Bola Transfer Baja Hitam / Dark Titanium Ball Units
+    const btuCupGeo = new THREE.CylinderGeometry(0.065, 0.065, 0.02, 12);
+    const btuBallGeo = new THREE.SphereGeometry(0.045, 12, 12);
+    const btuBallMat = new THREE.MeshStandardMaterial({ color: 0x27272A, metalness: 0.9, roughness: 0.2 });
+    for (let bx = -1.8; bx <= 1.8; bx += 0.6) {
+        for (let bz = -1.2; bz <= 1.2; bz += 0.6) {
+            const cup = new THREE.Mesh(btuCupGeo, MAT.metalDark);
+            cup.position.set(bx, deckY + deckH / 2 + 0.015, bz);
+            const ball = new THREE.Mesh(btuBallGeo, btuBallMat);
+            ball.position.set(bx, deckY + deckH / 2 + 0.038, bz);
+            sc.add(cup, ball);
+        }
     }
 
-    // Pagar Pengaman Samping Kuning
-    [-2.2, 2.2].forEach(rz => {
-        const curb = new THREE.Mesh(new THREE.BoxGeometry(5.0, 0.22, 0.14), MAT.yellowSafety);
-        curb.position.set(0, 0.40, rz);
+    // 5. Penahan Roda Pneumatik Baja Hitam Industrial (Hitam Metalik, Bukan Kuning)
+    [-2.35, 2.35].forEach(cx => {
+        [-0.9, 0.9].forEach(cz => {
+            const chock = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.12, 0.42), MAT.metalDark);
+            chock.position.set(cx, deckY + deckH / 2 + 0.06, cz);
+            const cyl = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.16, 8), MAT.metalDark);
+            cyl.position.set(cx, deckY + deckH / 2 - 0.04, cz);
+            sc.add(chock, cyl);
+        });
+    });
+
+    // 6. Lis Pengaman Samping Baja Hitam Industrial (Hitam Metalik, Bukan Kuning)
+    [-1.76, 1.76].forEach(cz => {
+        const curb = new THREE.Mesh(new THREE.BoxGeometry(5.0, 0.12, 0.08), MAT.metalDark);
+        curb.position.set(0, deckY + deckH / 2 + 0.06, cz);
         sc.add(curb);
     });
 
-    // Marka Crosshair CoG
-    const crossX = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 0.08), new THREE.MeshBasicMaterial({ color: 0xE2E8F0 }));
-    crossX.rotation.x = -Math.PI / 2;
-    crossX.position.set(0, 0.335, 0);
-    const crossZ = new THREE.Mesh(new THREE.PlaneGeometry(0.08, 3.2), new THREE.MeshBasicMaterial({ color: 0xE2E8F0 }));
-    crossZ.rotation.x = -Math.PI / 2;
-    crossZ.position.set(0, 0.335, 0);
-    sc.add(deck, topPlate, crossX, crossZ);
+    // 7. Kios Terminal Display Digital & Menara Lampu Status Andon
+    const kioskGroup = new THREE.Group();
+    kioskGroup.position.set(0, 0, -2.35);
 
-    // Menara Display Digital LED Timbangan
+    // Tiang Pedestal Baja Hitam
     const tower = new THREE.Mesh(new THREE.BoxGeometry(0.35, 3.2, 0.35), MAT.metalDark);
-    tower.position.set(0, 1.6, -2.8);
-    const screenBox = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.35, 0.22), MAT.metalDark);
-    screenBox.position.set(0, 3.3, -2.7);
-    screenBox.rotation.x = 0.12;
+    tower.position.y = 1.6;
+    const towerBase = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.08, 0.85), MAT.metalDark);
+    towerBase.position.y = 0.04;
+    kioskGroup.add(tower, towerBase);
 
+    // Housing Layar Display Monitor Hitam
+    const screenBox = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.3, 0.28), MAT.metalDark);
+    screenBox.position.set(0, 3.2, 0);
+    kioskGroup.add(screenBox);
+
+    // Kanvas Tekstur LED High-Resolution (512x256)
     const scaleCanvas = document.createElement('canvas');
     scaleCanvas.width = 512;
     scaleCanvas.height = 256;
     const scaleCtx = scaleCanvas.getContext('2d');
     const scaleTex = new THREE.CanvasTexture(scaleCanvas);
-    const scaleDisplayMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 1.2), new THREE.MeshBasicMaterial({ map: scaleTex }));
-    scaleDisplayMesh.position.set(0, 3.3, -2.58);
-    scaleDisplayMesh.rotation.x = 0.12;
 
+    // Layar Sisi Depan
+    const screenFront = new THREE.Mesh(new THREE.PlaneGeometry(2.05, 1.15), new THREE.MeshBasicMaterial({ map: scaleTex }));
+    screenFront.position.set(0, 3.2, 0.145);
+    screenFront.rotation.x = 0.12;
+
+    // Layar Sisi Belakang
+    const screenBack = new THREE.Mesh(new THREE.PlaneGeometry(2.05, 1.15), new THREE.MeshBasicMaterial({ map: scaleTex }));
+    screenBack.position.set(0, 3.2, -0.145);
+    screenBack.rotation.y = Math.PI;
+    screenBack.rotation.x = -0.12;
+    kioskGroup.add(screenFront, screenBack);
+
+    // Menara Lampu Sinyal Industri 3-Tingkat
+    const stackPole = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.6, 12), MAT.metalSilver);
+    stackPole.position.set(0, 4.05, 0);
+    scaleStackLightRed = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.13, 14), new THREE.MeshBasicMaterial({ color: 0x450A0A }));
+    scaleStackLightRed.position.set(0, 4.45, 0);
+    scaleStackLightYellow = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.13, 14), new THREE.MeshBasicMaterial({ color: 0x78350F }));
+    scaleStackLightYellow.position.set(0, 4.30, 0);
+    scaleStackLightGreen = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.13, 14), new THREE.MeshBasicMaterial({ color: 0x052E16 }));
+    scaleStackLightGreen.position.set(0, 4.15, 0);
+    kioskGroup.add(stackPole, scaleStackLightRed, scaleStackLightYellow, scaleStackLightGreen);
+
+    // Pemindai Barcode / Optical e-AWB Scanner pada Tiang Kios
+    const scannerArm = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.04, 0.04), MAT.metalSilver);
+    scannerArm.position.set(0.28, 1.9, 0.12);
+    const scannerHead = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.18, 0.12), MAT.metalDark);
+    scannerHead.position.set(0.48, 1.9, 0.12);
+    kioskGroup.add(scannerArm, scannerHead);
+
+    sc.add(kioskGroup);
+
+    // 8. Garis Cahaya Status Lantai Neon Minimalis (Dark Slate / Subtle Accent)
+    const glowPts = [
+        new THREE.Vector3(-2.7, 0.05, -2.05),
+        new THREE.Vector3(2.7, 0.05, -2.05),
+        new THREE.Vector3(2.7, 0.05, 2.05),
+        new THREE.Vector3(-2.7, 0.05, 2.05),
+        new THREE.Vector3(-2.7, 0.05, -2.05)
+    ];
+    const glowGeo = new THREE.BufferGeometry().setFromPoints(glowPts);
+    const glowMat = new THREE.LineBasicMaterial({ color: 0x334155, linewidth: 2 });
+    scaleStatusRing = new THREE.Line(glowGeo, glowMat);
+    sc.add(scaleStatusRing);
+
+    // Fungsi Update Tampilan LED & Lampu Andon Real-Time
     window._updateScaleTex = function(weight, maxWeight, status = 'IDLE') {
         scaleCtx.fillStyle = '#060D1A';
         scaleCtx.fillRect(0, 0, 512, 256);
-        scaleCtx.strokeStyle = (status === 'OVERWEIGHT') ? '#EF4444' : ((status === 'PASS') ? '#10B981' : '#0CA1AF');
+
+        const isPass = (status === 'PASS');
+        const isOver = (status === 'OVERWEIGHT');
+        const isWeigh = (status === 'WEIGHING');
+        const statusCol = isOver ? '#EF4444' : (isPass ? '#10B981' : (isWeigh ? '#F59E0B' : '#0CA1AF'));
+
+        // Bingkai Luar Neon
+        scaleCtx.strokeStyle = statusCol;
         scaleCtx.lineWidth = 6;
         scaleCtx.strokeRect(6, 6, 500, 244);
 
+        // Header Band InJourney
+        scaleCtx.fillStyle = 'rgba(12, 161, 175, 0.15)';
+        scaleCtx.fillRect(10, 10, 492, 42);
+
         scaleCtx.fillStyle = '#0CA1AF';
-        scaleCtx.font = 'bold 22px monospace';
-        scaleCtx.fillText('SMART FLOOR SCALE 15T', 24, 42);
-
-        scaleCtx.fillStyle = (status === 'OVERWEIGHT') ? '#EF4444' : (status === 'PASS' ? '#10B981' : '#FDE047');
-        scaleCtx.font = '900 52px monospace';
-        scaleCtx.fillText(`${weight.toFixed(1)} KG`, 24, 115);
-
-        scaleCtx.fillStyle = '#94A3B8';
         scaleCtx.font = 'bold 20px monospace';
-        scaleCtx.fillText(`MAX RATING : ${maxWeight.toFixed(0)} KG`, 24, 165);
+        scaleCtx.textAlign = 'left';
+        scaleCtx.fillText('✈ SMART ULD FLOOR SCALE 15T (OIML R76)', 22, 38);
 
-        scaleCtx.fillStyle = (status === 'OVERWEIGHT') ? '#EF4444' : (status === 'PASS' ? '#10B981' : '#38BDF8');
-        scaleCtx.font = 'bold 26px monospace';
-        scaleCtx.fillText(`STATUS : ${status}`, 24, 215);
+        // Angka Berat Digital LED Utama
+        scaleCtx.fillStyle = statusCol;
+        scaleCtx.font = '900 56px monospace';
+        scaleCtx.fillText(`${weight.toFixed(1)} KG`, 22, 115);
+
+        // Spesifikasi Penimbangan (Max Gross, Tare, Net)
+        scaleCtx.fillStyle = '#94A3B8';
+        scaleCtx.font = 'bold 18px monospace';
+        scaleCtx.fillText(`MAX GROSS : ${maxWeight.toFixed(0)} KG`, 22, 155);
+        scaleCtx.fillText(`TARE : 120.0 KG  |  NET : ${Math.max(0, weight - 120).toFixed(1)} KG`, 22, 185);
+
+        // Badge Status Interaktif
+        scaleCtx.fillStyle = isOver ? 'rgba(239, 68, 68, 0.25)' : (isPass ? 'rgba(16, 185, 129, 0.25)' : 'rgba(12, 161, 175, 0.25)');
+        scaleCtx.fillRect(20, 202, 472, 36);
+        scaleCtx.strokeStyle = statusCol;
+        scaleCtx.lineWidth = 2;
+        scaleCtx.strokeRect(20, 202, 472, 36);
+
+        scaleCtx.fillStyle = statusCol;
+        scaleCtx.font = '900 22px monospace';
+        const statusText = isOver ? '⛔ STATUS: REJECT (OVERWEIGHT)' : (isPass ? '✔ STATUS: PASS (TOLERANCE OK)' : (isWeigh ? '● STATUS: WEIGHING IN PROGRESS...' : '● STATUS: SYSTEM READY'));
+        scaleCtx.fillText(statusText, 32, 228);
 
         scaleTex.needsUpdate = true;
+
+        // Sinkronisasi Lampu Andon 3-Warna
+        if (scaleStackLightGreen && scaleStackLightYellow && scaleStackLightRed) {
+            if (isPass) {
+                scaleStackLightGreen.material.color.setHex(0x10B981);
+                scaleStackLightYellow.material.color.setHex(0x78350F);
+                scaleStackLightRed.material.color.setHex(0x450A0A);
+            } else if (isOver) {
+                scaleStackLightGreen.material.color.setHex(0x052E16);
+                scaleStackLightYellow.material.color.setHex(0x78350F);
+                scaleStackLightRed.material.color.setHex(0xEF4444);
+            } else if (isWeigh) {
+                scaleStackLightGreen.material.color.setHex(0x052E16);
+                scaleStackLightYellow.material.color.setHex(0xF59E0B);
+                scaleStackLightRed.material.color.setHex(0x450A0A);
+            } else {
+                scaleStackLightGreen.material.color.setHex(0x052E16);
+                scaleStackLightYellow.material.color.setHex(0x78350F);
+                scaleStackLightRed.material.color.setHex(0x450A0A);
+            }
+        }
+
+        // Sinkronisasi Ring Sinar Neon di Lantai
+        if (scaleStatusRing) {
+            const ringCol = isOver ? 0xEF4444 : (isPass ? 0x10B981 : (isWeigh ? 0xF59E0B : 0x334155));
+            scaleStatusRing.material.color.setHex(ringCol);
+        }
     };
     window._updateScaleTex(0, 1588, 'IDLE');
 
-    const scaleFloorDecal = makeFloorDecal("15,000 KG ULD SCALE", "CENTRAL WEIGHING & BALANCE", 6.2, 4.0, "#A855F7");
+    const scaleFloorDecal = makeFloorDecal("15,000 KG ULD SCALE", "CENTRAL WEIGHING & BALANCE", 6.2, 4.0, "#334155");
     scaleFloorDecal.position.set(35.0, 0.035, 8.0);
     signsGroup.add(scaleFloorDecal);
 
-    sc.add(tower, screenBox, scaleDisplayMesh);
+    bindInteractive(deck, 'scale');
+    bindInteractive(tower, 'scale');
+    bindInteractive(screenBox, 'scale');
+
     return sc;
 }
 
@@ -6725,10 +7066,20 @@ function resetLiveSimulation(fullReset = true) {
     if (updateHighLoaderScissors) updateHighLoaderScissors(0.55);
     if (planeCargoDoorHatch) planeCargoDoorHatch.rotation.z = (fullReset ? 0 : -Math.PI * 0.42);
 
-    // Reset Lights
+    // Reset Lights & RFID
     redAlarmStrobe.intensity = 0;
     xrayScanLight.intensity = 0;
     xrBeaconMat.color.setHex(0x10B981);
+    if (typeof rfidBeaconMat !== 'undefined' && rfidBeaconMat) rfidBeaconMat.color.setHex(0x0CA1AF);
+    if (typeof rfidScanCurtain !== 'undefined' && rfidScanCurtain) rfidScanCurtain.visible = false;
+    if (typeof rfidWaveMesh !== 'undefined' && rfidWaveMesh) rfidWaveMesh.material.opacity = 0;
+    if (typeof rfidPointLight !== 'undefined' && rfidPointLight) rfidPointLight.intensity = 0;
+
+    const telemR = document.getElementById('telemetry-rfid');
+    if (telemR) {
+        telemR.textContent = 'STANDBY';
+        telemR.className = 'font-black text-emerald-400 font-mono text-xs';
+    }
     document.getElementById('telemetry-door').textContent = 'STANDBY';
     document.getElementById('telemetry-elevator').textContent = '0.55 m';
 
@@ -6754,7 +7105,7 @@ const targetCamPos = new THREE.Vector3(-38, 32, -45);
 const targetCamLook = new THREE.Vector3(12, 3, -2);
 
 function setCameraViewUI(mode) {
-    ['cam-follow', 'cam-iso', 'cam-dock', 'cam-xray', 'cam-scale', 'cam-plane'].forEach(id => {
+    ['cam-follow', 'cam-iso', 'cam-dock', 'cam-rfid', 'cam-xray', 'cam-scale', 'cam-plane'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.remove('active');
     });
@@ -6774,7 +7125,9 @@ function setCameraView(mode) {
     if (mode === 'iso') {
         smoothCam(-38, 32, -45, 12, 3, -2);
     } else if (mode === 'dock') {
-        smoothCam(-22, 14, -50, -5, 2.5, -30);
+        smoothCam(-18, 9, -58, -5, 2.5, -42);
+    } else if (mode === 'rfid') {
+        smoothCam(3.5, 5.8, -20.5, -5.0, 2.0, -27.0);
     } else if (mode === 'xray') {
         smoothCam(-14, 12, -28, 5, 2, -18);
     } else if (mode === 'scale') {
@@ -6842,13 +7195,22 @@ function jumpToProcessStep(stepNum) {
     } else if (stepNum === 2) {
         truckGroup.rotation.y = Math.PI;
         truckGroup.position.set(-5.0, 0, -42.15);
-        truckBedPallet.visible = true;
-        truckBedBox.visible = true;
-        tDoorL.rotation.y = -Math.PI * 0.45;
-        tDoorR.rotation.y = Math.PI * 0.45;
-        activeCargoGroup.visible = false;
-        setCameraView('dock');
-        addSimLog(`⏩ [JUMP] Melompat ke Tahap 2: Docking Bay 2 & Scan RFID.`);
+        truckBedPallet.visible = false;
+        truckBedBox.visible = false;
+        tDoorL.rotation.y = -Math.PI * 0.65;
+        tDoorR.rotation.y = Math.PI * 0.65;
+        activeCargoGroup.visible = true;
+        activeCargoGroup.position.set(-5.0, 0.65, -27.0);
+        palWoodGroup.visible = true;
+        palUldGroup.visible = false;
+        if (typeof rfidBeaconMat !== 'undefined' && rfidBeaconMat) rfidBeaconMat.color.setHex(0x10B981);
+        const telemR = document.getElementById('telemetry-rfid');
+        if (telemR) {
+            telemR.textContent = 'VERIFIED';
+            telemR.className = 'font-black text-emerald-400 font-mono text-xs';
+        }
+        setCameraView('rfid');
+        addSimLog(`⏩ [JUMP] Melompat ke Tahap 2: Validasi RFID Portal & Pembongkaran Kargo.`);
     } else if (stepNum === 3) {
         truckGroup.rotation.y = Math.PI;
         truckGroup.position.set(-5.0, 0, -42.15);
@@ -6857,10 +7219,10 @@ function jumpToProcessStep(stepNum) {
         tDoorL.rotation.y = -Math.PI * 0.65;
         tDoorR.rotation.y = Math.PI * 0.65;
         activeCargoGroup.visible = true;
-        activeCargoGroup.position.set(-5.0, 0.65, -33.5);
+        activeCargoGroup.position.set(-5.0, 0.65, -27.0);
         palWoodGroup.visible = true;
         palUldGroup.visible = false;
-        setCameraView('dock');
+        setCameraView('xray');
         addSimLog(`⏩ [JUMP] Melompat ke Tahap 3: Pemeriksaan X-Ray AVSEC.`);
     } else if (stepNum === 4) {
         truckGroup.rotation.y = Math.PI;
@@ -7118,47 +7480,84 @@ function updateSimulationPipeline(dt) {
     }
 
     // ═════════════════════════════════════════════════════════════════════════
-    // FASE 2: SCAN RFID & MERAPAT DI DOCK BAY 2 (BUKA PINTU BELAKANG)
+    // FASE 2: BONGKAR KARGO & VALIDASI SCAN AIDC RFID PORTAL
     // ═════════════════════════════════════════════════════════════════════════
     else if (simPhase === 2) {
-        document.getElementById('hud-stage-name').innerHTML = 'TAHAP 2: VALIDASI RFID & BUKA PINTU DOK <span class="text-[8px] px-1.5 py-0.5 rounded bg-emerald-500/30 text-emerald-200 font-extrabold">VERIFIED</span>';
-        simProgress += dt * 0.085;
+        document.getElementById('hud-stage-name').innerHTML = 'TAHAP 2: VALIDASI RFID &amp; UNLOAD KARGO <span class="text-[8px] px-1.5 py-0.5 rounded bg-teal-500/30 text-teal-200 font-extrabold animate-pulse">SCANNING RFID</span>';
+        simProgress += dt * 0.075;
         truckGroup.position.z = -42.15;
 
-        if (simProgress < 0.40) {
-            // Pulse wave pemindai nirkabel RFID dermaga
-            const waveT = simProgress / 0.40;
-            rfidWaveMesh.position.set(-5.0, 0.05, -27.0);
-            rfidWaveMesh.material.opacity = Math.sin(waveT * Math.PI * 4) * 0.85;
-            rfidWaveMesh.scale.setScalar(1 + (waveT * 3.5) % 2.5);
-        } else {
-            rfidWaveMesh.material.opacity = 0;
-        }
-
-        // Pintu belakang trailer truk terbuka mulus ke samping luar (120 derajat)
-        const doorT = easeOutQuad(Math.min(1.0, simProgress * 1.4));
+        // Pintu belakang trailer truk terbuka mulus ke samping luar
+        const doorT = easeOutQuad(Math.min(1.0, simProgress * 2.5));
         tDoorL.rotation.y = THREE.MathUtils.lerp(0, -Math.PI * 0.65, doorT);
         tDoorR.rotation.y = THREE.MathUtils.lerp(0, Math.PI * 0.65, doorT);
 
-        if (simCameraMode === 'follow' && !isUserInteracting) {
-            camera.position.lerp(new THREE.Vector3(7.0, 8.5, -30.0), dt * 2.8);
-            controls.target.lerp(new THREE.Vector3(-5.0, 2.5, -36.0), dt * 2.8);
-        }
-
-        if (simProgress >= 1.0) {
-            tDoorL.rotation.y = -Math.PI * 0.65;
-            tDoorR.rotation.y = Math.PI * 0.65;
-
+        // Kargo dikeluarkan dari bak truk (-39.75) dan mengalir lurus ke gerbang RFID (-27.0)
+        if (simProgress > 0.10) {
             truckBedPallet.visible = false;
             truckBedBox.visible = false;
             activeCargoGroup.visible = true;
-            activeCargoGroup.position.set(-5.0, 0.65, -39.75); // Kargo mulai dari dalam bak trailer!
+            palWoodGroup.visible = true;
+            palUldGroup.visible = false;
+
+            const cargoT = (simProgress - 0.10) / 0.90;
+            const curZ = THREE.MathUtils.lerp(-39.75, -27.0, easeInOutQuad(Math.min(1.0, cargoT)));
+            activeCargoGroup.position.set(-5.0, 0.65, curZ);
+
+            // Efek Pemindaian RFID saat kargo mendekati & berada di portal (-31.0 s.d. -27.0)
+            if (curZ >= -31.0) {
+                const scanIntensity = Math.sin(Date.now() * 0.02) * 0.3 + 0.7;
+                rfidWaveMesh.visible = true;
+                rfidWaveMesh.position.set(0, 0.05, 0); // Presisi di tengah gerbang
+                rfidWaveMesh.material.opacity = scanIntensity;
+                rfidWaveMesh.scale.setScalar(1 + ((Date.now() * 0.003) % 2.2));
+
+                if (rfidScanCurtain) {
+                    rfidScanCurtain.visible = true;
+                    rfidScanCurtain.material.opacity = 0.28 + Math.sin(Date.now() * 0.025) * 0.2;
+                }
+                if (rfidBeaconMat) rfidBeaconMat.color.setHex(0x00F5FF);
+                if (rfidPointLight) rfidPointLight.intensity = 3.5;
+
+                const telemR = document.getElementById('telemetry-rfid');
+                if (telemR) {
+                    telemR.textContent = 'SCANNING...';
+                    telemR.className = 'font-black text-amber-300 font-mono text-xs animate-pulse';
+                }
+
+                if (curZ >= -28.5 && !activeCargoGroup._rfidBeeped) {
+                    activeCargoGroup._rfidBeeped = true;
+                    playSound('beep');
+                    addSimLog(`📡 [RFID SCAN] Tag GS1 SSCC terdeteksi di Portal AIDC: e-AWB ${activeCargoData.awb} valid!`);
+                }
+            }
+        }
+
+        // Kamera otomatis fokus ke Stasiun RFID Portal (Bebas Halangan Atap Truk!)
+        if (simCameraMode === 'follow' && !isUserInteracting) {
+            camera.position.lerp(new THREE.Vector3(3.5, 5.8, -20.5), dt * 2.8);
+            controls.target.lerp(new THREE.Vector3(-5.0, 2.0, -27.0), dt * 2.8);
+        }
+
+        if (simProgress >= 1.0) {
+            activeCargoGroup._rfidBeeped = false;
+            activeCargoGroup.position.set(-5.0, 0.65, -27.0);
+            if (rfidBeaconMat) rfidBeaconMat.color.setHex(0x10B981); // Hijau sukses verifikasi
+            if (rfidScanCurtain) rfidScanCurtain.visible = false;
+            if (rfidWaveMesh) rfidWaveMesh.material.opacity = 0;
+            if (rfidPointLight) rfidPointLight.intensity = 0;
+
+            const telemR = document.getElementById('telemetry-rfid');
+            if (telemR) {
+                telemR.textContent = 'VERIFIED';
+                telemR.className = 'font-black text-emerald-400 font-mono text-xs';
+            }
 
             simPhase = 3;
             simProgress = 0;
             updateStepperUI(3);
-            addSimLog(`📦 [UNLOAD] Pintu trailer dibuka. Kargo dikeluarkan dari bak truk ke feeder konveyor Bay 2.`);
-            showMilestone('BONGKAR KARGO', `Pintu trailer terbuka. Kargo meluncur dari bak truk ke konveyor.`);
+            addSimLog(`✅ [RFID VERIFIED] Tag RFID e-AWB ${activeCargoData.awb} lolos verifikasi. Meluncur ke Terowongan X-Ray Line 2.`);
+            showMilestone('VALIDASI RFID SELESAI', `e-AWB ${activeCargoData.awb} terverifikasi di CMS. Menuju X-Ray AVSEC.`, 'fa-wifi');
         }
     }
 
@@ -7169,19 +7568,9 @@ function updateSimulationPipeline(dt) {
         document.getElementById('hud-stage-name').innerHTML = 'TAHAP 3: PEMERIKSAAN X-RAY AVSEC <span class="text-[8px] px-1.5 py-0.5 rounded bg-amber-500/30 text-amber-200 font-extrabold">SCANNING</span>';
         simProgress += dt * 0.082;
 
-        // Kargo meluncur keluar dari dalam bak truk (-39.75), melewati pintu belakang (-35.75),
-        // melintasi feeder conveyor (-33.5), melintasi portal RFID (-27.0),
-        // masuk mesin X-Ray (-18.5) hingga keluar di (-16.5)!
-        const easedZ = THREE.MathUtils.lerp(-39.75, -16.5, easeInOutQuad(Math.min(1.0, simProgress)));
+        // Kargo meluncur dari Portal RFID (-27.0) masuk terowongan X-Ray Line 2 (-18.5) hingga keluar di (-16.5)!
+        const easedZ = THREE.MathUtils.lerp(-27.0, -16.5, easeInOutQuad(Math.min(1.0, simProgress)));
         activeCargoGroup.position.set(-5.0, 0.65, easedZ);
-
-        // AIDC RFID Scanner Beam saat kargo melintasi Z = -28.5 s.d. -25.5
-        if (easedZ >= -28.5 && easedZ <= -25.5) {
-            rfidWaveMesh.position.set(-5.0, 0.05, -27.0);
-            rfidWaveMesh.material.opacity = 0.8 + Math.sin(Date.now() * 0.03) * 0.2;
-        } else if (easedZ < -28.5) {
-            rfidWaveMesh.material.opacity = 0;
-        }
 
         // Laser scan beam dan lampu terowongan pemindai X-Ray
         if (easedZ >= -21.5 && easedZ <= -16.8) {
