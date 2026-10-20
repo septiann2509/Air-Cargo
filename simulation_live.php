@@ -449,10 +449,10 @@ include __DIR__ . '/includes/header.php';
                         <div class="step-circle" id="circle-1">1</div>
                         <div class="flex-1 min-w-0">
                             <div class="font-bold text-white flex items-center justify-between">
-                                <span>Truk Mengantar Kargo</span>
+                                <span>Truk Mundur ke Dermaga</span>
                                 <span class="step-status text-[9px] text-white/40 font-mono">STANDBY</span>
                             </div>
-                            <p class="text-[10px] text-white/60 truncate">Truk menuju Gerbang Terminal Bandara</p>
+                            <p class="text-[10px] text-white/60 truncate">Truk mundur merapat ke Dermaga Bay 2</p>
                         </div>
                     </div>
 
@@ -460,10 +460,10 @@ include __DIR__ . '/includes/header.php';
                         <div class="step-circle" id="circle-2">2</div>
                         <div class="flex-1 min-w-0">
                             <div class="font-bold text-white flex items-center justify-between">
-                                <span>Kedatangan &amp; Scan RFID</span>
+                                <span>Docking Bay 2 &amp; Scan RFID</span>
                                 <span class="step-status text-[9px] text-white/40 font-mono">PENDING</span>
                             </div>
-                            <p class="text-[10px] text-white/60 truncate">Validasi nirkabel GS1 SSCC-18 di portal</p>
+                            <p class="text-[10px] text-white/60 truncate">Merapat di dok, validasi RFID &amp; buka pintu</p>
                         </div>
                     </div>
 
@@ -471,10 +471,10 @@ include __DIR__ . '/includes/header.php';
                         <div class="step-circle" id="circle-3">3</div>
                         <div class="flex-1 min-w-0">
                             <div class="font-bold text-white flex items-center justify-between">
-                                <span>Pemeriksaan X-Ray AVSEC</span>
+                                <span>Bongkar Kargo &amp; X-Ray AVSEC</span>
                                 <span class="step-status text-[9px] text-white/40 font-mono">PENDING</span>
                             </div>
-                            <p class="text-[10px] text-white/60 truncate">Dual-view laser scan densitas fisik</p>
+                            <p class="text-[10px] text-white/60 truncate">Kargo meluncur ke feeder &amp; discan X-Ray</p>
                         </div>
                     </div>
 
@@ -4328,84 +4328,186 @@ rfidGroup.add(rfidPortalGroup);
 // ─────────────────────────────────────────────────────────────────────────────
 const animatedRollers = [];
 
-function createConveyorSegment(x, z, lenX, lenZ) {
+function createConveyorSegment(x, z, lenX, lenZ, options = {}) {
     const cg = new THREE.Group();
     cg.position.set(x, 0.4, z);
+
+    // Bed Utama Konveyor (Struktur Baja C-Channel Hitam Industri)
     const bed = new THREE.Mesh(new THREE.BoxGeometry(lenX, 0.25, lenZ), MAT.metalDark);
     bed.position.y = -0.12;
     bed.receiveShadow = true;
     cg.add(bed);
 
-    // Kaki Baja Konveyor
-    const numLegsX = Math.max(2, Math.round(lenX / 4.0));
-    const numLegsZ = Math.max(2, Math.round(lenZ / 4.0));
+    const isZAxis = (lenZ >= lenX);
+
+    // Rel Pengaman Samping Baja & Aksen Teal InJourney
+    if (isZAxis) {
+        [-lenX / 2 - 0.03, lenX / 2 + 0.03].forEach(px => {
+            const sideChannel = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.32, lenZ), MAT.metalDark);
+            sideChannel.position.set(px, 0.02, 0);
+            const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.065, 0.06, lenZ), MAT.injourneyTeal);
+            stripe.position.set(px, 0.12, 0);
+            cg.add(sideChannel, stripe);
+
+            if (options.rails !== false) {
+                const rail = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.16, lenZ), MAT.yellowSafety);
+                rail.position.set(px, 0.26, 0);
+                cg.add(rail);
+            }
+        });
+    } else {
+        [-lenZ / 2 - 0.03, lenZ / 2 + 0.03].forEach(pz => {
+            const sideChannel = new THREE.Mesh(new THREE.BoxGeometry(lenX, 0.32, 0.06), MAT.metalDark);
+            sideChannel.position.set(0, 0.02, pz);
+            const stripe = new THREE.Mesh(new THREE.BoxGeometry(lenX, 0.06, 0.065), MAT.injourneyTeal);
+            stripe.position.set(0, 0.12, pz);
+            cg.add(sideChannel, stripe);
+
+            if (options.rails !== false) {
+                const rail = new THREE.Mesh(new THREE.BoxGeometry(lenX, 0.16, 0.05), MAT.yellowSafety);
+                rail.position.set(0, 0.26, pz);
+                cg.add(rail);
+            }
+        });
+    }
+
+    // Kaki Baja Konveyor dengan Plat Landasan Lantai
+    const numLegsX = Math.max(2, Math.round(lenX / 3.8));
+    const numLegsZ = Math.max(2, Math.round(lenZ / 3.8));
     for (let ix = 0; ix < numLegsX; ix++) {
         for (let iz = 0; iz < numLegsZ; iz++) {
-            const lx = -lenX / 2 + 0.3 + (ix / Math.max(1, numLegsX - 1)) * (lenX - 0.6);
-            const lz = -lenZ / 2 + 0.3 + (iz / Math.max(1, numLegsZ - 1)) * (lenZ - 0.6);
-            const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.4, 8), MAT.metalDark);
+            const lx = -lenX / 2 + 0.25 + (ix / Math.max(1, numLegsX - 1)) * (lenX - 0.5);
+            const lz = -lenZ / 2 + 0.25 + (iz / Math.max(1, numLegsZ - 1)) * (lenZ - 0.5);
+            const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.4, 8), MAT.metalDark);
             leg.position.set(lx, -0.2, lz);
-            cg.add(leg);
+            const baseFoot = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.03, 0.18), MAT.metalDark);
+            baseFoot.position.set(lx, -0.39, lz);
+            cg.add(leg, baseFoot);
         }
     }
 
-    // Rollers Berputar
-    const isZAxis = (lenZ >= lenX);
+    // Rollers Berputar Presisi Stainless Steel
+    // Rotasi geometri langsung diterapkan di level BufferGeometry sehingga mesh.rotation selalu murni (0,0,0)
     if (isZAxis) {
-        for (let rz = -lenZ / 2 + 0.3; rz <= lenZ / 2 - 0.3; rz += 0.5) {
-            const rol = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, lenX - 0.1, 12), MAT.conveyorRoller);
-            rol.rotateZ(Math.PI / 2);
+        const rollerLen = lenX - 0.16;
+        const rollerGeo = new THREE.CylinderGeometry(0.055, 0.055, rollerLen, 14);
+        rollerGeo.rotateZ(Math.PI / 2); // Panjang silinder membentang sepanjang sumbu X
+
+        for (let rz = -lenZ / 2 + 0.25; rz <= lenZ / 2 - 0.25; rz += 0.38) {
+            const rol = new THREE.Mesh(rollerGeo, MAT.conveyorRoller);
             rol.position.set(0, 0.06, rz);
             cg.add(rol);
-            animatedRollers.push({ mesh: rol, axis: 'x' });
+            animatedRollers.push({ mesh: rol, axis: 'x', dir: 1 });
         }
     } else {
-        for (let rx = -lenX / 2 + 0.3; rx <= lenX / 2 - 0.3; rx += 0.5) {
-            const rol = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, lenZ - 0.1, 12), MAT.conveyorRoller);
-            rol.rotateX(Math.PI / 2);
+        const rollerLen = lenZ - 0.16;
+        const rollerGeo = new THREE.CylinderGeometry(0.055, 0.055, rollerLen, 14);
+        rollerGeo.rotateX(Math.PI / 2); // Panjang silinder membentang sepanjang sumbu Z
+
+        for (let rx = -lenX / 2 + 0.25; rx <= lenX / 2 - 0.25; rx += 0.38) {
+            const rol = new THREE.Mesh(rollerGeo, MAT.conveyorRoller);
             rol.position.set(rx, 0.06, 0);
             cg.add(rol);
-            animatedRollers.push({ mesh: rol, axis: 'z' });
+            animatedRollers.push({ mesh: rol, axis: 'z', dir: -1 });
         }
     }
     return cg;
 }
 
-// Feeder Dermaga 2 (-5, -34 s.d. -20)
-conveyorGroup.add(createConveyorSegment(-5.0, -27.0, 2.2, 14.0));
+// Meja Belokan Caster 90 Derajat (Omnidirectional Ball Transfer Corner Bed)
+function createCornerTransferBed(x, z, size = 2.8) {
+    const cbg = new THREE.Group();
+    cbg.position.set(x, 0.4, z);
 
-// Feeder Dermaga 1 (-26) & Feeder Dermaga 3 (22)
-conveyorGroup.add(createConveyorSegment(-26.0, -30.0, 2.2, 8.0));
-conveyorGroup.add(createConveyorSegment(22.0, -30.0, 2.2, 8.0));
+    // Bed Platform
+    const bed = new THREE.Mesh(new THREE.BoxGeometry(size, 0.25, size), MAT.metalDark);
+    bed.position.y = -0.12;
+    bed.receiveShadow = true;
+    cbg.add(bed);
 
-// Master Receiving Trunk Conveyor (Z = -31.0)
-conveyorGroup.add(createConveyorSegment(-2.0, -31.0, 48.0, 2.2));
+    // Plat Atas Kromium
+    const plate = new THREE.Mesh(new THREE.BoxGeometry(size - 0.1, 0.02, size - 0.1), MAT.metalSilver);
+    plate.position.y = 0.01;
+    cbg.add(plate);
 
-// Diverter Arm Pneumatik di X = -5.0, Z = -16.5
+    // Grid Bola Transfer Baja Multi-Arah (Omnidirectional Ball Casters)
+    const ballGeo = new THREE.SphereGeometry(0.048, 12, 10);
+    const spacing = 0.38;
+    for (let bx = -size / 2 + 0.35; bx <= size / 2 - 0.35; bx += spacing) {
+        for (let bz = -size / 2 + 0.35; bz <= size / 2 - 0.35; bz += spacing) {
+            const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.058, 0.058, 0.04, 10), MAT.metalDark);
+            cup.position.set(bx, 0.03, bz);
+            const ball = new THREE.Mesh(ballGeo, MAT.metalSilver);
+            ball.position.set(bx, 0.06, bz);
+            cbg.add(cup, ball);
+        }
+    }
+
+    // Pagar Pengarah Sudut Luar (Chamfer Deflector Guide 45 Derajat di Sudut Barat Daya)
+    const outRailW = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.35, size), MAT.metalDark);
+    outRailW.position.set(-size / 2 - 0.03, 0.12, 0);
+    const outRailS = new THREE.Mesh(new THREE.BoxGeometry(size, 0.35, 0.06), MAT.metalDark);
+    outRailS.position.set(0, 0.12, size / 2 + 0.03);
+    const deflector = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.38, 1.4), MAT.yellowSafety);
+    deflector.rotation.y = Math.PI / 4;
+    deflector.position.set(-size / 2 + 0.45, 0.14, size / 2 - 0.45);
+    cbg.add(outRailW, outRailS, deflector);
+
+    // Kaki Penopang
+    [-size / 2 + 0.3, size / 2 - 0.3].forEach(lx => {
+        [-size / 2 + 0.3, size / 2 - 0.3].forEach(lz => {
+            const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.4, 8), MAT.metalDark);
+            leg.position.set(lx, -0.2, lz);
+            cbg.add(leg);
+        });
+    });
+
+    return cbg;
+}
+
+// 1. Jalur Infeed Dermaga Muat Bay 2 (-5.0, Z = -35.5 s.d. -21.0)
+// Kargo dibongkar dari truk dan langsung mengalir lurus melintasi gerbang scan AIDC RFID (-27.0)
+conveyorGroup.add(createConveyorSegment(-5.0, -28.25, 2.4, 14.5));
+
+// 2. Jalur Feeder Dermaga 1 (-26.0) & Dermaga 3 (+22.0) — Rapi & Mandiri tanpa sambungan kusut
+conveyorGroup.add(createConveyorSegment(-26.0, -31.5, 2.4, 8.0));
+conveyorGroup.add(createConveyorSegment(22.0, -31.5, 2.4, 8.0));
+
+// 3. Jalur Internal Terowongan Mesin X-Ray Screening (Z = -21.0 s.d. -16.0)
+conveyorGroup.add(createConveyorSegment(-5.0, -18.5, 2.4, 5.0, { rails: false }));
+
+// 4. Diverter Arm Pneumatik di X = -5.0, Z = -16.5
 const diverterGroup = new THREE.Group();
 diverterGroup.position.set(-5.0, 0.5, -16.5);
 const divBase = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.45, 0.8), MAT.yellowSafety);
-divBase.position.set(-1.25, 0, 0);
+divBase.position.set(-1.35, 0, 0);
 const divPiston = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.065, 1.8, 12), MAT.metalSilver);
 divPiston.rotateZ(Math.PI / 2);
-divPiston.position.set(-0.35, 0, 0);
+divPiston.position.set(-0.45, 0, 0);
 const divArm = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.45, 1.8), MAT.redHazard);
 divArm.position.set(0.6, 0, 0);
 diverterGroup.add(divBase, divPiston, divArm);
 scene.add(diverterGroup);
 
-// Jalur Konveyor Isolasi Masuk ke Ruang Karantina (Location 3B di X = 22, Z = -16.5)
-conveyorGroup.add(createConveyorSegment(9.5, -16.5, 27.0, 2.2));
+// 5. Jalur Konveyor Isolasi Masuk ke Ruang Karantina (Location 3B di X = 22, Z = -16.5)
+// Membentang lurus & presisi ke timur (+X) dari X = -3.8 sampai pintu Ruang Karantina di X = 24.5
+conveyorGroup.add(createConveyorSegment(10.35, -16.5, 28.3, 2.4));
 
-// Konveyor Keluar X-Ray Menuju Central Storage
-conveyorGroup.add(createConveyorSegment(-5.0, -8.0, 2.2, 14.0));
-conveyorGroup.add(createConveyorSegment(-2.5, 0.0, 5.0, 2.2));
-conveyorGroup.add(createConveyorSegment(0.0, 4.0, 2.2, 8.0));
+// 6. Jalur Utama Kargo Aman (CLEARED) Keluar X-Ray LURUS Menuju Central Storage (Z = -16.0 s.d. Z = 6.6)
+// 100% Lurus tanpa zig-zag atau sambungan miring! (Panjang 22.6m, center Z = -4.7)
+conveyorGroup.add(createConveyorSegment(-5.0, -4.7, 2.4, 22.6));
 
-// Konveyor Transfer Central Storage ke Timbangan (Dari X = 0 ke X = 35.0, Z = 8.0)
-conveyorGroup.add(createConveyorSegment(17.5, 8.0, 35.0, 2.4));
+// 7. Meja Belokan Caster Bed 90 Derajat di Titik Pertemuan X = -5.0, Z = 8.0
+conveyorGroup.add(createCornerTransferBed(-5.0, 8.0, 2.8));
 
-// Rel Transfer Timbangan ke Gerbang Airside & High-Loader (Dari X = 37.0 ke X = 63.0, Z = 8.0)
+// 8. Segmen Penghubung Masuk ke Meja Perakitan ULD (Dari X = -3.6 ke X = -2.2 pada Z = 8.0)
+conveyorGroup.add(createConveyorSegment(-2.9, 8.0, 1.4, 2.4));
+
+// 9. Konveyor Transfer Central Storage ke Smart Floor Scale 15T (Dari X = 2.2 ke X = 35.0 pada Z = 8.0)
+// Panjang 32.8m, center X = 18.6
+conveyorGroup.add(createConveyorSegment(18.6, 8.0, 32.8, 2.4));
+
+// 10. Rel Transfer Timbangan ke Gerbang Airside & High-Loader (Dari X = 37.0 ke X = 63.0 pada Z = 8.0)
 conveyorGroup.add(createConveyorSegment(50.0, 8.0, 26.0, 2.4));
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -4784,8 +4886,11 @@ function createDetailedStorage() {
     }
 
     // Lis Pengaman Pembatas Kuning (Yellow Safety Rim)
-    const rimWest = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.25, 4.4), MAT.yellowSafety);
-    rimWest.position.set(-2.2, 0.44, 8.0);
+    // Memberikan bukaan presisi di sisi barat (X = -2.2) dan timur (X = 2.2) pada sumbu Z = 8.0 agar rel konveyor masuk & keluar mulus
+    const rimWestTop = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.25, 0.9), MAT.yellowSafety);
+    rimWestTop.position.set(-2.2, 0.44, 6.25);
+    const rimWestBottom = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.25, 0.9), MAT.yellowSafety);
+    rimWestBottom.position.set(-2.2, 0.44, 9.75);
     const rimSouth = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.25, 0.15), MAT.yellowSafety);
     rimSouth.position.set(0, 0.44, 10.2);
     const rimNorthLeft = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.25, 0.15), MAT.yellowSafety);
@@ -4796,7 +4901,7 @@ function createDetailedStorage() {
     rimEastTop.position.set(2.2, 0.44, 6.25);
     const rimEastBottom = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.25, 0.9), MAT.yellowSafety);
     rimEastBottom.position.set(2.2, 0.44, 9.75);
-    cs.add(rimWest, rimSouth, rimNorthLeft, rimNorthRight, rimEastTop, rimEastBottom);
+    cs.add(rimWestTop, rimWestBottom, rimSouth, rimNorthLeft, rimNorthRight, rimEastTop, rimEastBottom);
 
     // Tiang Sudut Pelindung Bumper Kuning
     [[-2.2, -2.2], [-2.2, 2.2], [2.2, 2.2]].forEach(([cx, cz]) => {
@@ -4983,10 +5088,10 @@ scaleGroup.add(createDetailedSmartScale());
 // ─────────────────────────────────────────────────────────────────────────────
 // 11. AIRSIDE GATE, SHUTTER & CARGO HIGH-LOADER GSE
 // ─────────────────────────────────────────────────────────────────────────────
-// Portal Gerbang Airside Pemisah Terminal & Apron (Tanpa Tembok Penghalang)
-const airsideGateFrame = new THREE.Mesh(new THREE.BoxGeometry(0.6, 4.8, 4.4), MAT.metalDark);
-airsideGateFrame.position.set(45.0, 2.4, 8.0);
-const airsideShutter = new THREE.Mesh(new THREE.BoxGeometry(0.2, 4.2, 3.8), new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.8 }));
+// Portal Gerbang Airside Pemisah Terminal & Apron (Dinding Solid Pemotong Rel Dihilangkan Total)
+// Jalur konveyor dari timbangan 15T menuju High-Loader & palka Boeing 777F kini 100% terbuka bersih tanpa hambatan fisik
+const airsideGateFrame = new THREE.Group();
+const airsideShutter = new THREE.Group();
 airsideShutter.position.set(45.0, 2.1, 8.0);
 airsideGroup.add(airsideGateFrame, airsideShutter);
 
@@ -6361,7 +6466,8 @@ airsideGroup.add(createApronGroundSafetyEquipment());
 // MOVING TRUCK MODEL (TRUK KONTENER DETAIL DENGAN HEADLIGHT & PINTU BUKA)
 // ─────────────────────────────────────────────────────────────────────────────
 const truckGroup = new THREE.Group();
-truckGroup.position.set(-5.0, 0, -65.0);
+truckGroup.rotation.y = Math.PI; // Truk menghadap keluar (arah jalan), siap mundur masuk ke dermaga
+truckGroup.position.set(-5.0, 0, -68.0);
 
 const tCab = new THREE.Mesh(new THREE.BoxGeometry(3.0, 3.2, 3.4), MAT.truckCabBlue);
 tCab.position.set(0, 2.0, 3.6);
@@ -6392,11 +6498,33 @@ tTrailer.position.set(0, 2.3, -2.4);
 const tStripe = new THREE.Mesh(new THREE.BoxGeometry(3.25, 0.6, 7.2), MAT.injourneyTeal);
 tStripe.position.set(0, 2.3, -2.4);
 
-// Pintu Belakang Trailer Truk yang Berengsel
-const tDoorL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 3.4, 1.5), MAT.metalDark);
-tDoorL.position.set(-1.62, 2.3, -6.4);
-const tDoorR = new THREE.Mesh(new THREE.BoxGeometry(0.08, 3.4, 1.5), MAT.metalDark);
-tDoorR.position.set(1.62, 2.3, -6.4);
+// Pintu Belakang Trailer Truk yang Berengsel Asli di Sisi Kiri & Kanan (Z = -6.4)
+const tDoorL = new THREE.Group();
+tDoorL.position.set(-1.58, 2.3, -6.4);
+const leafL = new THREE.Mesh(new THREE.BoxGeometry(1.54, 3.4, 0.08), MAT.metalDark);
+leafL.position.set(0.77, 0, 0);
+tDoorL.add(leafL);
+
+const tDoorR = new THREE.Group();
+tDoorR.position.set(1.58, 2.3, -6.4);
+const leafR = new THREE.Mesh(new THREE.BoxGeometry(1.54, 3.4, 0.08), MAT.metalDark);
+leafR.position.set(-0.77, 0, 0);
+tDoorR.add(leafR);
+
+// Lampu Belakang Trailer (Lampu Rem Merah & Lampu Mundur Putih Terang)
+const reverseLightMat = new THREE.MeshBasicMaterial({ color: 0x334155 });
+const reverseSpot = new THREE.SpotLight(0xFFFFFF, 0, 28, Math.PI / 4, 0.5);
+reverseSpot.position.set(0, 1.2, -6.5);
+reverseSpot.target.position.set(0, 0.0, -25.0);
+truckGroup.add(reverseSpot, reverseSpot.target);
+
+[-1.42, 1.42].forEach(tx => {
+    const bLight = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.35, 0.06), new THREE.MeshBasicMaterial({ color: 0xEF4444 }));
+    bLight.position.set(tx, 0.7, -6.43);
+    const rLight = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.25, 0.06), reverseLightMat);
+    rLight.position.set(tx - Math.sign(tx) * 0.26, 0.7, -6.43);
+    truckGroup.add(bLight, rLight);
+});
 
 // 6 Roda Truk Berputar
 const truckWheels = [];
@@ -6414,7 +6542,7 @@ wheelLocs.forEach(([wx, wy, wz]) => {
     truckWheels.push(wheel);
 });
 
-// Palet Kargo Bawaan di Dalam Bak Truk
+// Palet Kargo Bawaan di Dalam Bak Truk (Siap Diturunkan dari Belakang)
 const truckBedPallet = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.16, 1.8), MAT.palletWood);
 truckBedPallet.position.set(0, 0.7, -2.4);
 const truckBedBox = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.1, 1.5), MAT.cardboardBox);
@@ -6427,7 +6555,7 @@ scene.add(truckGroup);
 // ACTIVE CARGO UNIT (PALLET KAYU & KONTAINER ULD AKE KONTUR PESAWAT)
 // ─────────────────────────────────────────────────────────────────────────────
 const activeCargoGroup = new THREE.Group();
-activeCargoGroup.position.set(-5.0, 0.65, -30.0);
+activeCargoGroup.position.set(-5.0, 0.65, -39.75);
 activeCargoGroup.visible = false;
 
 // 1. Representasi Palet Kayu (Tahap Awal & Karantina)
@@ -6470,15 +6598,17 @@ scene.add(activeCargoGroup);
 // WAYPOINTS KOORDINAT PROSES
 // ─────────────────────────────────────────────────────────────────────────────
 const WAYPOINTS = {
-    truckStart: new THREE.Vector3(-5.0, 0, -65.0),
-    truckRfid:  new THREE.Vector3(-5.0, 0, -27.0),
-    truckDock:  new THREE.Vector3(-5.0, 0, -35.75),
+    truckStart: new THREE.Vector3(-5.0, 0, -68.0),
+    truckDock:  new THREE.Vector3(-5.0, 0, -42.15),
     
-    cargoUnload: new THREE.Vector3(-5.0, 0.65, -30.0),
-    cargoXrayIn: new THREE.Vector3(-5.0, 0.65, -21.0),
-    cargoXrayOut: new THREE.Vector3(-5.0, 0.65, -16.5),
+    cargoInTrailer: new THREE.Vector3(-5.0, 0.65, -39.75),
+    cargoUnload:    new THREE.Vector3(-5.0, 0.65, -33.5),
+    cargoRfid:      new THREE.Vector3(-5.0, 0.65, -27.0),
+    cargoXrayIn:    new THREE.Vector3(-5.0, 0.65, -21.0),
+    cargoXrayOut:   new THREE.Vector3(-5.0, 0.65, -16.5),
     
     cargoQuarantineTable: new THREE.Vector3(24.5, 1.05, -16.5),
+    cargoTurnCorner:    new THREE.Vector3(-5.0, 0.65, 8.0),
     cargoStorageCenter: new THREE.Vector3(0.0, 0.65, 8.0),
     cargoScalePlatform: new THREE.Vector3(35.0, 0.65, 8.0),
     cargoHighLoaderUp: new THREE.Vector3(63.0, 3.85, 8.0),
@@ -6567,16 +6697,19 @@ function resetLiveSimulation(fullReset = true) {
     simPhase = 0;
     simProgress = 0;
 
-    // Reset Truk
-    truckGroup.position.set(-5.0, 0, -65.0);
+    // Reset Truk (Posisi awal siap mundur ke dermaga)
+    truckGroup.rotation.y = Math.PI;
+    truckGroup.position.set(-5.0, 0, -68.0);
     truckBedPallet.visible = true;
     truckBedBox.visible = true;
     tDoorL.rotation.y = 0;
     tDoorR.rotation.y = 0;
+    if (typeof reverseSpot !== 'undefined') reverseSpot.intensity = 0;
+    if (typeof reverseLightMat !== 'undefined') reverseLightMat.color.setHex(0x334155);
 
-    // Reset Kargo
+    // Reset Kargo (Berada di dalam bak truk)
     activeCargoGroup.visible = false;
-    activeCargoGroup.position.copy(WAYPOINTS.cargoUnload);
+    activeCargoGroup.position.copy(WAYPOINTS.cargoInTrailer);
     palWoodGroup.visible = true;
     palUldGroup.visible = false;
 
@@ -6697,41 +6830,45 @@ function jumpToProcessStep(stepNum) {
     airsideShutter.position.y = 2.1;
 
     if (stepNum === 1) {
-        truckGroup.position.set(-5.0, 0, -65.0);
+        truckGroup.rotation.y = Math.PI;
+        truckGroup.position.set(-5.0, 0, -68.0);
         truckBedPallet.visible = true;
         truckBedBox.visible = true;
         tDoorL.rotation.y = 0;
         tDoorR.rotation.y = 0;
         activeCargoGroup.visible = false;
         setCameraView('dock');
-        addSimLog(`⏩ [JUMP] Melompat ke Tahap 1: Truk Mengantar Kargo.`);
+        addSimLog(`⏩ [JUMP] Melompat ke Tahap 1: Truk Mundur Merapat ke Dermaga.`);
     } else if (stepNum === 2) {
-        truckGroup.position.set(-5.0, 0, -27.0);
+        truckGroup.rotation.y = Math.PI;
+        truckGroup.position.set(-5.0, 0, -42.15);
         truckBedPallet.visible = true;
         truckBedBox.visible = true;
-        tDoorL.rotation.y = 0;
-        tDoorR.rotation.y = 0;
+        tDoorL.rotation.y = -Math.PI * 0.45;
+        tDoorR.rotation.y = Math.PI * 0.45;
         activeCargoGroup.visible = false;
         setCameraView('dock');
-        addSimLog(`⏩ [JUMP] Melompat ke Tahap 2: Kedatangan & Scan RFID.`);
+        addSimLog(`⏩ [JUMP] Melompat ke Tahap 2: Docking Bay 2 & Scan RFID.`);
     } else if (stepNum === 3) {
-        truckGroup.position.set(-5.0, 0, -35.75);
+        truckGroup.rotation.y = Math.PI;
+        truckGroup.position.set(-5.0, 0, -42.15);
         truckBedPallet.visible = false;
         truckBedBox.visible = false;
-        tDoorL.rotation.y = -Math.PI * 0.48;
-        tDoorR.rotation.y = Math.PI * 0.48;
+        tDoorL.rotation.y = -Math.PI * 0.65;
+        tDoorR.rotation.y = Math.PI * 0.65;
         activeCargoGroup.visible = true;
-        activeCargoGroup.position.set(-5.0, 0.65, -30.0);
+        activeCargoGroup.position.set(-5.0, 0.65, -33.5);
         palWoodGroup.visible = true;
         palUldGroup.visible = false;
-        setCameraView('xray');
+        setCameraView('dock');
         addSimLog(`⏩ [JUMP] Melompat ke Tahap 3: Pemeriksaan X-Ray AVSEC.`);
     } else if (stepNum === 4) {
-        truckGroup.position.set(-5.0, 0, -35.75);
+        truckGroup.rotation.y = Math.PI;
+        truckGroup.position.set(-5.0, 0, -42.15);
         truckBedPallet.visible = false;
         truckBedBox.visible = false;
-        tDoorL.rotation.y = -Math.PI * 0.48;
-        tDoorR.rotation.y = Math.PI * 0.48;
+        tDoorL.rotation.y = -Math.PI * 0.65;
+        tDoorR.rotation.y = Math.PI * 0.65;
         activeCargoGroup.visible = true;
         activeCargoGroup.position.set(-5.0, 0.65, -16.5);
         palWoodGroup.visible = true;
@@ -6745,11 +6882,12 @@ function jumpToProcessStep(stepNum) {
             addSimLog(`⏩ [JUMP] Melompat ke Tahap 4: Central Storage & Perakitan ULD.`);
         }
     } else if (stepNum === 5) {
-        truckGroup.position.set(-5.0, 0, -35.75);
+        truckGroup.rotation.y = Math.PI;
+        truckGroup.position.set(-5.0, 0, -42.15);
         truckBedPallet.visible = false;
         truckBedBox.visible = false;
-        tDoorL.rotation.y = -Math.PI * 0.48;
-        tDoorR.rotation.y = Math.PI * 0.48;
+        tDoorL.rotation.y = -Math.PI * 0.65;
+        tDoorR.rotation.y = Math.PI * 0.65;
         activeCargoGroup.visible = true;
         activeCargoGroup.position.set(0.0, 0.65, 8.0);
         palWoodGroup.visible = false;
@@ -6758,11 +6896,12 @@ function jumpToProcessStep(stepNum) {
         setCameraView('scale');
         addSimLog(`⏩ [JUMP] Melompat ke Tahap 5: Penimbangan ULD Lantai 15T.`);
     } else if (stepNum === 6) {
-        truckGroup.position.set(-5.0, 0, -35.75);
+        truckGroup.rotation.y = Math.PI;
+        truckGroup.position.set(-5.0, 0, -42.15);
         truckBedPallet.visible = false;
         truckBedBox.visible = false;
-        tDoorL.rotation.y = -Math.PI * 0.48;
-        tDoorR.rotation.y = Math.PI * 0.48;
+        tDoorL.rotation.y = -Math.PI * 0.65;
+        tDoorR.rotation.y = Math.PI * 0.65;
         activeCargoGroup.visible = true;
         activeCargoGroup.position.set(35.0, 0.65, 8.0);
         palWoodGroup.visible = false;
@@ -6807,9 +6946,9 @@ function updateTimelineHUD() {
 
     const stageNames = [
         '',
-        'Tahap 1: Inbound Truk ke Gerbang',
-        'Tahap 2: Scan RFID & Docking Bay 2',
-        'Tahap 3: Pemeriksaan X-Ray AVSEC',
+        'Tahap 1: Truk Mundur ke Dermaga',
+        'Tahap 2: Docking Bay 2 & Scan RFID',
+        'Tahap 3: Bongkar Kargo & X-Ray AVSEC',
         activeCargoData.xrayResult === 'SUSPECT' ? 'Tahap 3B: Isolasi Karantina' : 'Tahap 4: Storage & Build-up ULD',
         'Tahap 5: Penimbangan Smart Scale 15T',
         'Tahap 6: Elevasi High-Loader & Muat 777F'
@@ -6862,7 +7001,11 @@ function animate() {
     // Putar Roller Konveyor saat kargo sedang bergerak di atasnya
     if (simActive && !isSimPaused && simPhase >= 3 && simPhase <= 6) {
         animatedRollers.forEach(r => {
-            r.mesh.rotation[r.axis] += dt * 6.5;
+            if (r.axis === 'x') {
+                r.mesh.rotation.x += dt * 6.5 * (r.dir || 1);
+            } else if (r.axis === 'z') {
+                r.mesh.rotation.z += dt * 6.5 * (r.dir || 1);
+            }
         });
     }
 
@@ -6936,80 +7079,86 @@ function updateSimulationPipeline(dt) {
     if (typeof updateTimelineHUD === 'function') updateTimelineHUD();
 
     // ═════════════════════════════════════════════════════════════════════════
-    // FASE 1: TRUK MENGANTAR BARANG KE GERBANG RFID TERMINAL
+    // FASE 1: TRUK MUNDUR MERAPAT KE DERMAGA DOCK BAY 2
     // ═════════════════════════════════════════════════════════════════════════
     if (simPhase === 1) {
-        document.getElementById('hud-stage-name').innerHTML = 'TAHAP 1: TRUK MENGANTAR KARGO <span class="text-[8px] px-1.5 py-0.5 rounded bg-teal-500/30 text-teal-200 font-extrabold">INBOUND</span>';
-        simProgress += dt * 0.090;
+        document.getElementById('hud-stage-name').innerHTML = 'TAHAP 1: TRUK MUNDUR KE DERMAGA <span class="text-[8px] px-1.5 py-0.5 rounded bg-teal-500/30 text-teal-200 font-extrabold">REVERSING</span>';
+        simProgress += dt * 0.088;
 
         const easedT = easeInOutCubic(Math.min(1.0, simProgress));
-        const curZ = THREE.MathUtils.lerp(-65.0, -27.0, easedT);
+        // Truk mundur dari Z = -68.0 ke Z = -42.15 (posisi pantat trailer pas menyentuh karet bumper dok di Z = -35.75)
+        const curZ = THREE.MathUtils.lerp(-68.0, -42.15, easedT);
         truckGroup.position.z = curZ;
 
+        // Lampu mundur putih menyala terang & berkedip saat mundur
+        if (typeof reverseSpot !== 'undefined') reverseSpot.intensity = 2.8;
+        if (typeof reverseLightMat !== 'undefined') {
+            reverseLightMat.color.setHex((Math.sin(Date.now() * 0.015) > 0) ? 0xFFFFFF : 0xAAAAAA);
+        }
+
+        // Roda berputar mundur saat reversing
         const currentSpeed = (1.0 - Math.abs(easedT - 0.5) * 1.4);
-        truckWheels.forEach(w => { w.rotation.x += dt * 4.5 * Math.max(0.25, currentSpeed); });
+        truckWheels.forEach(w => { w.rotation.x -= dt * 4.5 * Math.max(0.25, currentSpeed); });
 
         if (simCameraMode === 'follow' && !isUserInteracting) {
-            camera.position.lerp(new THREE.Vector3(-14.0, 7.5, curZ - 14.0), dt * 2.8);
-            controls.target.lerp(new THREE.Vector3(-5.0, 2.2, curZ + 3.0), dt * 2.8);
+            camera.position.lerp(new THREE.Vector3(-14.0, 7.5, curZ - 10.0), dt * 2.8);
+            controls.target.lerp(new THREE.Vector3(-5.0, 2.2, curZ + 5.0), dt * 2.8);
         }
 
         if (simProgress >= 1.0) {
+            if (typeof reverseSpot !== 'undefined') reverseSpot.intensity = 0;
+            if (typeof reverseLightMat !== 'undefined') reverseLightMat.color.setHex(0x334155);
             simPhase = 2;
             simProgress = 0;
             updateStepperUI(2);
             playSound('beep');
-            addSimLog(`📡 [RFID GATE] Truk ${activeCargoData.truckPlate} tiba di Gerbang AIDC. Membaca Tag GS1 SSCC-18...`);
-            showMilestone('RFID TAG TERDETEKSI', `Plat: ${activeCargoData.truckPlate} • Tag SSCC Valid • Inbound Verified`);
+            addSimLog(`📡 [DOCKING BAY 2] Truk ${activeCargoData.truckPlate} berhasil mundur & merapat di Bay 2. Membaca Tag GS1 SSCC-18...`);
+            showMilestone('DOCKING BAY 2', `Truk ${activeCargoData.truckPlate} merapat mundur di Bay 2. Membaca RFID Manifest.`);
         }
     }
 
     // ═════════════════════════════════════════════════════════════════════════
-    // FASE 2: SCAN RFID & TRUK MUNDUR PARKIR KE DOCK BONGKAR (BAY 2)
+    // FASE 2: SCAN RFID & MERAPAT DI DOCK BAY 2 (BUKA PINTU BELAKANG)
     // ═════════════════════════════════════════════════════════════════════════
     else if (simPhase === 2) {
-        document.getElementById('hud-stage-name').innerHTML = 'TAHAP 2: VALIDASI RFID & DOCKING <span class="text-[8px] px-1.5 py-0.5 rounded bg-emerald-500/30 text-emerald-200 font-extrabold">VERIFIED</span>';
+        document.getElementById('hud-stage-name').innerHTML = 'TAHAP 2: VALIDASI RFID & BUKA PINTU DOK <span class="text-[8px] px-1.5 py-0.5 rounded bg-emerald-500/30 text-emerald-200 font-extrabold">VERIFIED</span>';
         simProgress += dt * 0.085;
+        truckGroup.position.z = -42.15;
 
-        if (simProgress < 0.35) {
-            // Pulse wave pemindai nirkabel RFID
-            const waveT = simProgress / 0.35;
+        if (simProgress < 0.40) {
+            // Pulse wave pemindai nirkabel RFID dermaga
+            const waveT = simProgress / 0.40;
+            rfidWaveMesh.position.set(-5.0, 0.05, -27.0);
             rfidWaveMesh.material.opacity = Math.sin(waveT * Math.PI * 4) * 0.85;
             rfidWaveMesh.scale.setScalar(1 + (waveT * 3.5) % 2.5);
         } else {
             rfidWaveMesh.material.opacity = 0;
-            const dockT = (simProgress - 0.35) / 0.65;
-            const easedDock = easeInOutQuad(Math.min(1.0, dockT));
-            truckGroup.position.z = THREE.MathUtils.lerp(-27.0, -35.75, easedDock);
-            truckWheels.forEach(w => { w.rotation.x -= dt * 3.5; });
-
-            // Pintu belakang trailer truk terbuka mulus saat mulai merapat ke dok
-            if (dockT > 0.65) {
-                const doorT = easeOutQuad((dockT - 0.65) / 0.35);
-                tDoorL.rotation.y = THREE.MathUtils.lerp(0, -Math.PI * 0.48, doorT);
-                tDoorR.rotation.y = THREE.MathUtils.lerp(0, Math.PI * 0.48, doorT);
-            }
         }
 
+        // Pintu belakang trailer truk terbuka mulus ke samping luar (120 derajat)
+        const doorT = easeOutQuad(Math.min(1.0, simProgress * 1.4));
+        tDoorL.rotation.y = THREE.MathUtils.lerp(0, -Math.PI * 0.65, doorT);
+        tDoorR.rotation.y = THREE.MathUtils.lerp(0, Math.PI * 0.65, doorT);
+
         if (simCameraMode === 'follow' && !isUserInteracting) {
-            camera.position.lerp(new THREE.Vector3(8.0, 9.5, -26.0), dt * 2.8);
-            controls.target.lerp(new THREE.Vector3(-5.0, 2.5, -32.5), dt * 2.8);
+            camera.position.lerp(new THREE.Vector3(7.0, 8.5, -30.0), dt * 2.8);
+            controls.target.lerp(new THREE.Vector3(-5.0, 2.5, -36.0), dt * 2.8);
         }
 
         if (simProgress >= 1.0) {
-            tDoorL.rotation.y = -Math.PI * 0.48;
-            tDoorR.rotation.y = Math.PI * 0.48;
+            tDoorL.rotation.y = -Math.PI * 0.65;
+            tDoorR.rotation.y = Math.PI * 0.65;
 
             truckBedPallet.visible = false;
             truckBedBox.visible = false;
             activeCargoGroup.visible = true;
-            activeCargoGroup.position.set(-5.0, 0.65, -30.0);
+            activeCargoGroup.position.set(-5.0, 0.65, -39.75); // Kargo mulai dari dalam bak trailer!
 
             simPhase = 3;
             simProgress = 0;
             updateStepperUI(3);
-            addSimLog(`📦 [UNLOAD] Kargo diturunkan dari truk ke jalur konveyor menuju Mesin X-Ray AVSEC.`);
-            showMilestone('BONGKAR KARGO', `Kargo diturunkan ke konveyor menuju Mesin X-Ray.`);
+            addSimLog(`📦 [UNLOAD] Pintu trailer dibuka. Kargo dikeluarkan dari bak truk ke feeder konveyor Bay 2.`);
+            showMilestone('BONGKAR KARGO', `Pintu trailer terbuka. Kargo meluncur dari bak truk ke konveyor.`);
         }
     }
 
@@ -7018,12 +7167,23 @@ function updateSimulationPipeline(dt) {
     // ═════════════════════════════════════════════════════════════════════════
     else if (simPhase === 3) {
         document.getElementById('hud-stage-name').innerHTML = 'TAHAP 3: PEMERIKSAAN X-RAY AVSEC <span class="text-[8px] px-1.5 py-0.5 rounded bg-amber-500/30 text-amber-200 font-extrabold">SCANNING</span>';
-        simProgress += dt * 0.090;
+        simProgress += dt * 0.082;
 
-        const easedZ = THREE.MathUtils.lerp(-30.0, -16.5, easeInOutQuad(Math.min(1.0, simProgress)));
-        activeCargoGroup.position.z = easedZ;
+        // Kargo meluncur keluar dari dalam bak truk (-39.75), melewati pintu belakang (-35.75),
+        // melintasi feeder conveyor (-33.5), melintasi portal RFID (-27.0),
+        // masuk mesin X-Ray (-18.5) hingga keluar di (-16.5)!
+        const easedZ = THREE.MathUtils.lerp(-39.75, -16.5, easeInOutQuad(Math.min(1.0, simProgress)));
+        activeCargoGroup.position.set(-5.0, 0.65, easedZ);
 
-        // Laser scan beam dan lampu terowongan pemindai
+        // AIDC RFID Scanner Beam saat kargo melintasi Z = -28.5 s.d. -25.5
+        if (easedZ >= -28.5 && easedZ <= -25.5) {
+            rfidWaveMesh.position.set(-5.0, 0.05, -27.0);
+            rfidWaveMesh.material.opacity = 0.8 + Math.sin(Date.now() * 0.03) * 0.2;
+        } else if (easedZ < -28.5) {
+            rfidWaveMesh.material.opacity = 0;
+        }
+
+        // Laser scan beam dan lampu terowongan pemindai X-Ray
         if (easedZ >= -21.5 && easedZ <= -16.8) {
             xrayScanLight.intensity = 3.6 + Math.sin(Date.now() * 0.035) * 2.2;
             xrBeaconMat.color.setHex(activeCargoData.xrayResult === 'SUSPECT' ? 0xEF4444 : 0x10B981);
@@ -7049,7 +7209,7 @@ function updateSimulationPipeline(dt) {
                 updateStepperUI(4);
                 playSound('pass');
                 addSimLog(`✅ [X-RAY PASS] Kargo dinyatakan AMAN (CLEARED). Menerbitkan sertifikat CSD. Mengalir ke Central Storage.`);
-                showMilestone('X-RAY CLEARED', 'Kargo aman dan diterbitkan CSD. Meluncur ke Central Storage.');
+                showMilestone('X-RAY CLEARED', 'Kargo aman dan diterbitkan CSD. Meluncur lurus ke Central Storage.');
             }
         }
     }
@@ -7072,8 +7232,7 @@ function updateSimulationPipeline(dt) {
             }
 
             const curX = THREE.MathUtils.lerp(-5.0, 24.5, easeInOutCubic(Math.min(1.0, simProgress)));
-            activeCargoGroup.position.x = curX;
-            activeCargoGroup.position.z = -16.5;
+            activeCargoGroup.position.set(curX, 0.65, -16.5);
 
             redAlarmStrobe.intensity = (Math.sin(Date.now() * 0.02) > 0) ? 6.5 : 0.8;
 
@@ -7105,20 +7264,21 @@ function updateSimulationPipeline(dt) {
         } else {
             // ─── CABANG AMAN: CENTRAL STORAGE & PERAKITAN ULD ───
             document.getElementById('hud-stage-name').innerHTML = 'TAHAP 4: STORAGE &amp; PERAKITAN ULD <span class="text-[8px] px-1.5 py-0.5 rounded bg-emerald-500/30 text-emerald-200 font-extrabold">BUILD-UP</span>';
-            simProgress += dt * 0.085;
+            simProgress += dt * 0.075;
 
-            if (simProgress < 0.45) {
-                const subT = simProgress / 0.45;
-                activeCargoGroup.position.z = THREE.MathUtils.lerp(-16.5, 0.0, easeInOutQuad(subT));
-                activeCargoGroup.position.x = -5.0;
-            } else if (simProgress < 0.75) {
-                const subT = (simProgress - 0.45) / 0.30;
-                activeCargoGroup.position.x = THREE.MathUtils.lerp(-5.0, 0.0, easeInOutQuad(subT));
-                activeCargoGroup.position.z = THREE.MathUtils.lerp(0.0, 8.0, easeInOutQuad(subT));
+            if (simProgress < 0.55) {
+                // Meluncur 100% LURUS di atas konveyor utama dari X-Ray (-16.5) ke Corner Transfer Bed (8.0) di X = -5.0
+                const subT = easeInOutQuad(simProgress / 0.55);
+                activeCargoGroup.position.set(-5.0, 0.65, THREE.MathUtils.lerp(-16.5, 8.0, subT));
+            } else if (simProgress < 0.78) {
+                // Berbelok mulus di corner bed dan meluncur ke timur masuk meja ULD di (0.0, 8.0)
+                const subT = easeInOutQuad((simProgress - 0.55) / 0.23);
+                activeCargoGroup.position.set(THREE.MathUtils.lerp(-5.0, 0.0, subT), 0.65, 8.0);
             } else {
+                // Di stasiun perakitan ULD (0.0, 8.0), kargo dirakit ke kontainer ULD AKE
                 activeCargoGroup.position.set(0.0, 0.65, 8.0);
-                const buildT = (simProgress - 0.75) / 0.25;
-                if (buildT > 0.5) {
+                const buildT = (simProgress - 0.78) / 0.22;
+                if (buildT > 0.4) {
                     palWoodGroup.visible = false;
                     palUldGroup.visible = true;
                 }
