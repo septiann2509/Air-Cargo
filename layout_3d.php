@@ -741,6 +741,219 @@ scene.add(quarantineAlarmLight);
 // ─────────────────────────────────────────────────────────────────────────────
 // MATERIAL REALISTIS & TAHAN SILAU
 // ─────────────────────────────────────────────────────────────────────────────
+function createTailFinTexture() {
+    const c = document.createElement('canvas');
+    c.width = 1024;
+    c.height = 1024;
+    const ctx = c.getContext('2d');
+
+    // 1. Ultra-Deep Royal Aviation Midnight Navy Gradient
+    const bgGrad = ctx.createLinearGradient(0, 0, 1024, 1024);
+    bgGrad.addColorStop(0.0, '#041024');
+    bgGrad.addColorStop(0.35, '#0A2540');
+    bgGrad.addColorStop(0.70, '#061933');
+    bgGrad.addColorStop(1.0, '#020A17');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, 1024, 1024);
+
+    // 2. High-Gloss Clear Coat Specular Sheen (Composite Aero Finish)
+    const glossGrad = ctx.createLinearGradient(350, 0, 950, 800);
+    glossGrad.addColorStop(0.0, 'rgba(255, 255, 255, 0.0)');
+    glossGrad.addColorStop(0.42, 'rgba(255, 255, 255, 0.055)');
+    glossGrad.addColorStop(0.50, 'rgba(255, 255, 255, 0.02)');
+    glossGrad.addColorStop(0.65, 'rgba(255, 255, 255, 0.0)');
+    ctx.fillStyle = glossGrad;
+    ctx.fillRect(0, 0, 1024, 1024);
+
+    // 3. Smooth Fuselage Spine Transition (Dorsal Fillet Soft Fade at Bottom-Left)
+    const baseGrad = ctx.createRadialGradient(80, 990, 20, 220, 860, 400);
+    baseGrad.addColorStop(0.0, 'rgba(248, 250, 252, 0.98)');
+    baseGrad.addColorStop(0.40, 'rgba(248, 250, 252, 0.55)');
+    baseGrad.addColorStop(0.80, 'rgba(10, 37, 64, 0.15)');
+    baseGrad.addColorStop(1.0, 'rgba(10, 37, 64, 0.0)');
+    ctx.fillStyle = baseGrad;
+    ctx.fillRect(0, 580, 650, 444);
+
+    // 4. Dynamic Streamline Speed Swooshes (Refined & Graceful, Following Fin Sweep)
+    // Primary Ribbon: Signature InJourney Teal Gradient
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(380, 1024);
+    ctx.bezierCurveTo(520, 850, 680, 620, 800, 380);
+    ctx.bezierCurveTo(845, 300, 885, 250, 925, 220);
+    ctx.lineTo(940, 250);
+    ctx.bezierCurveTo(900, 290, 840, 380, 770, 560);
+    ctx.bezierCurveTo(680, 790, 540, 940, 460, 1024);
+    ctx.closePath();
+    const tealGrad = ctx.createLinearGradient(400, 1000, 940, 220);
+    tealGrad.addColorStop(0.0, '#0CA1AF');
+    tealGrad.addColorStop(0.5, '#087F8A');
+    tealGrad.addColorStop(1.0, '#014D54');
+    ctx.fillStyle = tealGrad;
+    ctx.shadowColor = 'rgba(12, 161, 175, 0.40)';
+    ctx.shadowBlur = 18;
+    ctx.fill();
+    ctx.restore();
+
+    // Secondary Ribbon: Electric Cyan Accent Streamline
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(470, 1024);
+    ctx.bezierCurveTo(590, 860, 725, 650, 840, 390);
+    ctx.bezierCurveTo(875, 320, 910, 260, 945, 240);
+    ctx.lineTo(955, 262);
+    ctx.bezierCurveTo(920, 295, 875, 390, 810, 570);
+    ctx.bezierCurveTo(735, 780, 610, 940, 530, 1024);
+    ctx.closePath();
+    const cyanGrad = ctx.createLinearGradient(480, 1000, 955, 240);
+    cyanGrad.addColorStop(0.0, '#38BDF8');
+    cyanGrad.addColorStop(0.6, '#0EA5E9');
+    cyanGrad.addColorStop(1.0, '#0284C7');
+    ctx.fillStyle = cyanGrad;
+    ctx.shadowColor = 'rgba(56, 189, 248, 0.50)';
+    ctx.shadowBlur = 14;
+    ctx.fill();
+    ctx.restore();
+
+    // Tertiary Accent: Ultra-thin Metallic Gold Pinstripe
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(535, 1024);
+    ctx.bezierCurveTo(625, 930, 745, 770, 815, 570);
+    ctx.bezierCurveTo(875, 410, 920, 310, 955, 265);
+    ctx.strokeStyle = 'rgba(245, 158, 11, 0.85)';
+    ctx.lineWidth = 3.0;
+    ctx.stroke();
+    ctx.restore();
+
+    // 5. Perfectly Proportioned 3D Beveled Jewel InJourney Star Emblem (Refined Scale)
+    // Sized elegantly to fit the fin with dignity (arm length 54px, diameter 108px)
+    ctx.save();
+    const cx = 745, cy = 340;
+    const armLen = 54;
+    const shoulder = 16;
+    const coreR = 12;
+
+    // Ambient Luminous Radial Glow
+    const haloGrad = ctx.createRadialGradient(cx, cy, 4, cx, cy, 80);
+    haloGrad.addColorStop(0.0, 'rgba(56, 189, 248, 0.45)');
+    haloGrad.addColorStop(0.4, 'rgba(12, 161, 175, 0.20)');
+    haloGrad.addColorStop(1.0, 'rgba(12, 161, 175, 0.0)');
+    ctx.fillStyle = haloGrad;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 80, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Drop Shadow for 3D Bevel Depth
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.70)';
+    ctx.shadowBlur = 14;
+    ctx.shadowOffsetX = 3;
+    ctx.shadowOffsetY = 4;
+
+    // --- TOP ARM (Pure Aviation White / Pearl Silver Prism) ---
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - coreR);
+    ctx.lineTo(cx - shoulder, cy - coreR * 0.7);
+    ctx.lineTo(cx, cy - armLen);
+    ctx.closePath();
+    ctx.fillStyle = '#CBD5E1';
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - coreR);
+    ctx.lineTo(cx + shoulder, cy - coreR * 0.7);
+    ctx.lineTo(cx, cy - armLen);
+    ctx.closePath();
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fill();
+
+    // --- RIGHT ARM (Warm Indonesian Gold / Amber Prism) ---
+    ctx.beginPath();
+    ctx.moveTo(cx + coreR, cy);
+    ctx.lineTo(cx + coreR * 0.7, cy - shoulder);
+    ctx.lineTo(cx + armLen, cy);
+    ctx.closePath();
+    ctx.fillStyle = '#FBBF24';
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(cx + coreR, cy);
+    ctx.lineTo(cx + coreR * 0.7, cy + shoulder);
+    ctx.lineTo(cx + armLen, cy);
+    ctx.closePath();
+    ctx.fillStyle = '#D97706';
+    ctx.fill();
+
+    // --- BOTTOM ARM (Signature InJourney Teal Prism) ---
+    ctx.beginPath();
+    ctx.moveTo(cx, cy + coreR);
+    ctx.lineTo(cx - shoulder, cy + coreR * 0.7);
+    ctx.lineTo(cx, cy + armLen);
+    ctx.closePath();
+    ctx.fillStyle = '#0CA1AF';
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(cx, cy + coreR);
+    ctx.lineTo(cx + shoulder, cy + coreR * 0.7);
+    ctx.lineTo(cx, cy + armLen);
+    ctx.closePath();
+    ctx.fillStyle = '#065F68';
+    ctx.fill();
+
+    // --- LEFT ARM (Electric Aero Sky Blue Prism) ---
+    ctx.beginPath();
+    ctx.moveTo(cx - coreR, cy);
+    ctx.lineTo(cx - coreR * 0.7, cy - shoulder);
+    ctx.lineTo(cx - armLen, cy);
+    ctx.closePath();
+    ctx.fillStyle = '#38BDF8';
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(cx - coreR, cy);
+    ctx.lineTo(cx - coreR * 0.7, cy + shoulder);
+    ctx.lineTo(cx - armLen, cy);
+    ctx.closePath();
+    ctx.fillStyle = '#0284C7';
+    ctx.fill();
+
+    // --- CENTER CORE DIAMOND (Brilliant Crisp White) ---
+    ctx.shadowBlur = 4;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - (coreR + 2));
+    ctx.lineTo(cx + (coreR + 2), cy);
+    ctx.lineTo(cx, cy + (coreR + 2));
+    ctx.lineTo(cx - (coreR + 2), cy);
+    ctx.closePath();
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.restore();
+
+    // 6. Realistic Rudder Aero Hinge Seam Line & Trim Tabs
+    ctx.strokeStyle = 'rgba(3, 10, 22, 0.9)';
+    ctx.lineWidth = 3.5;
+    ctx.beginPath();
+    ctx.moveTo(905, 0);
+    ctx.lineTo(918, 1024);
+    ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(925, 450, 28, 70);
+    ctx.strokeRect(925, 620, 28, 70);
+
+    const tex = new THREE.CanvasTexture(c);
+    tex.wrapS = THREE.ClampToEdgeWrapping;
+    tex.wrapT = THREE.ClampToEdgeWrapping;
+    return tex;
+}
+const tailFinTex = createTailFinTexture();
+
 const MAT = {
     floorTerminal: new THREE.MeshStandardMaterial({ color: 0xEEF2F6, roughness: 0.65, metalness: 0.08 }),
     floorTarmac: new THREE.MeshStandardMaterial({ color: 0x1E293B, roughness: 0.95, metalness: 0.05 }),
@@ -761,7 +974,8 @@ const MAT = {
     truckCabBlue: new THREE.MeshStandardMaterial({ color: 0x0284C7, roughness: 0.3, metalness: 0.5 }),
     truckTire: new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.9 }),
     planeWhite: new THREE.MeshStandardMaterial({ color: 0xF8FAFC, roughness: 0.25, metalness: 0.28, side: THREE.DoubleSide }),
-    planeNavy: new THREE.MeshStandardMaterial({ color: 0x0A2540, roughness: 0.35, metalness: 0.25 }),
+    planeTailFin: new THREE.MeshStandardMaterial({ map: tailFinTex, roughness: 0.25, metalness: 0.2, side: THREE.DoubleSide }),
+    planeNavy: new THREE.MeshStandardMaterial({ color: 0x0A2540, roughness: 0.35, metalness: 0.25, side: THREE.DoubleSide }),
     cockpitGlass: new THREE.MeshStandardMaterial({ color: 0x07111E, roughness: 0.08, metalness: 0.92 }),
     chromeIntake: new THREE.MeshStandardMaterial({ color: 0xE2E8F0, metalness: 0.95, roughness: 0.12 }),
     engineCore: new THREE.MeshStandardMaterial({ color: 0x1E293B, metalness: 0.8, roughness: 0.4 }),
@@ -3841,27 +4055,149 @@ function createDetailedCargoPlane() {
     fuseGroup.add(bellyShell);
     // CATATAN: Sisi KIRI (Port side X < 0) antara Y = 3.85 dan Y = 6.75 dibiarkan TERBUKA LEBAR sebagai Pintu Kargo Masuk Nyata!
 
-    // Transisi Hidung Forward Fuselage (Z = -2 sampai Z = -9)
-    const fwdFuseGeo = new THREE.CylinderGeometry(3.1, 2.5, 7, 48);
-    fwdFuseGeo.rotateX(Math.PI / 2);
-    const fwdFuselage = new THREE.Mesh(fwdFuseGeo, MAT.planeWhite);
-    fwdFuselage.position.set(0, 5.1, -5.5);
-    fwdFuselage.castShadow = true;
-    fuseGroup.add(fwdFuselage);
+    // ─────────────────────────────────────────────────────────────────────────────
+    // 1B. FORWARD FUSELAGE, NOSE CONE & RADOME SEAMLESS AERODINAMIS (BOEING 777F)
+    // ─────────────────────────────────────────────────────────────────────────────
+    const noseStations = [
+        { z: -2.0,  rx: 3.10, yc: 5.20, ry: 3.10 }, // Sambungan mulus ke main fuselage di Z = -2.0
+        { z: -4.0,  rx: 3.08, yc: 5.20, ry: 3.08 },
+        { z: -6.0,  rx: 3.02, yc: 5.18, ry: 3.04 }, // Area L1 Crew Door & NLG Bay
+        { z: -8.0,  rx: 2.88, yc: 5.14, ry: 2.92 }, // Sekat kokpit belakang
+        { z: -9.8,  rx: 2.65, yc: 5.06, ry: 2.70 }, // Jendela samping kokpit
+        { z: -11.2, rx: 2.38, yc: 4.96, ry: 2.45 }, // Kusen atas kaca depan kokpit
+        { z: -12.4, rx: 2.10, yc: 4.84, ry: 2.18 }, // Kusen bawah kaca depan kokpit
+        { z: -13.6, rx: 1.78, yc: 4.70, ry: 1.86 }, // Lereng aerodinamis hidung depan
+        { z: -14.8, rx: 1.42, yc: 4.54, ry: 1.50 }, // Lengkungan hidung depan
+        { z: -15.8, rx: 1.05, yc: 4.40, ry: 1.12 }, // Garis sekat radome (radome partition line)
+        { z: -16.8, rx: 0.68, yc: 4.30, ry: 0.72 }, // Kubah lengkung radome
+        { z: -17.6, rx: 0.32, yc: 4.25, ry: 0.35 }, // Kerucut depan radome
+        { z: -18.1, rx: 0.08, yc: 4.22, ry: 0.09 }, // Tutup apex hidung
+        { z: -18.3, rx: 0.00, yc: 4.22, ry: 0.00 }  // Titik ujung hidung absolut
+    ];
 
-    // Kerucut Hidung Radome (Z = -9 sampai Z = -16, radius 2.5m ke 0.8m)
-    const noseGeo = new THREE.CylinderGeometry(2.5, 0.8, 7, 48);
-    noseGeo.rotateX(Math.PI / 2);
-    const noseMesh = new THREE.Mesh(noseGeo, MAT.planeWhite);
-    noseMesh.position.set(0, 4.85, -12.5);
-    noseMesh.castShadow = true;
-    fuseGroup.add(noseMesh);
+    function getNoseProfileAt(z) {
+        if (z >= -2.0) return { rx: 3.10, yc: 5.20, ry: 3.10 };
+        if (z <= -18.3) return { rx: 0.00, yc: 4.22, ry: 0.00 };
+        for (let i = 0; i < noseStations.length - 1; i++) {
+            const s0 = noseStations[i];
+            const s1 = noseStations[i + 1];
+            if (z <= s0.z && z >= s1.z) {
+                const frac = (z - s0.z) / (s1.z - s0.z);
+                const t = frac * frac * (3 - 2 * frac);
+                return {
+                    rx: s0.rx + (s1.rx - s0.rx) * t,
+                    yc: s0.yc + (s1.yc - s0.yc) * t,
+                    ry: s0.ry + (s1.ry - s0.ry) * t
+                };
+            }
+        }
+        return { rx: 0, yc: 4.22, ry: 0 };
+    }
 
-    // Radome Nose Cap Bulat Aerodinamis (Ujung Depan Hidung Pesawat di Z = -16)
-    const radomeCap = new THREE.Mesh(new THREE.SphereGeometry(0.82, 32, 24), MAT.metalSilver);
-    radomeCap.scale.set(1.0, 0.95, 1.4);
-    radomeCap.position.set(0, 4.65, -16.0);
-    fuseGroup.add(radomeCap);
+    function getPointOnNose(thetaDeg, z, offset = 0.015) {
+        const p = getNoseProfileAt(z);
+        const rad = thetaDeg * Math.PI / 180;
+        return {
+            x: (p.rx + offset) * Math.sin(rad),
+            y: p.yc + (p.ry + offset) * Math.cos(rad),
+            z: z
+        };
+    }
+
+    let seamlessNoseMesh;
+    function createSeamlessNoseFuselage() {
+        const group = new THREE.Group();
+        const RAD = 48;
+        const pos = [];
+        const ind = [];
+        const uvs = [];
+
+        for (let i = 0; i < noseStations.length; i++) {
+            const s = noseStations[i];
+            for (let j = 0; j < RAD; j++) {
+                const ang = (j / RAD) * Math.PI * 2;
+                const px = Math.cos(ang) * s.rx;
+                const py = s.yc + Math.sin(ang) * s.ry;
+                const pz = s.z;
+                pos.push(px, py, pz);
+
+                const u = j / RAD;
+                const v = (s.z - (-18.3)) / ((-2.0) - (-18.3));
+                uvs.push(u, v);
+            }
+
+            if (i > 0) {
+                const cOff = i * RAD;
+                const pOff = (i - 1) * RAD;
+                for (let j = 0; j < RAD; j++) {
+                    const jNext = (j + 1) % RAD;
+                    ind.push(pOff + j, cOff + j, cOff + jNext);
+                    ind.push(pOff + j, cOff + jNext, pOff + jNext);
+                }
+            }
+        }
+
+        // Penutup Ujung Apex Hidung di Z = -18.3
+        const tipOff = (noseStations.length - 1) * RAD;
+        for (let j = 1; j < RAD - 1; j++) {
+            ind.push(tipOff, tipOff + j + 1, tipOff + j);
+        }
+
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+        geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+        geo.setIndex(ind);
+        geo.computeVertexNormals();
+
+        seamlessNoseMesh = new THREE.Mesh(geo, MAT.planeWhite);
+        seamlessNoseMesh.castShadow = true;
+        seamlessNoseMesh.receiveShadow = true;
+        group.add(seamlessNoseMesh);
+
+        // Garis Sambungan Sekat Radome di Z = -15.8 (Radome Partition Bulkhead Ring)
+        const radomeSeam = new THREE.Mesh(
+            new THREE.CylinderGeometry(1.06, 1.06, 0.035, 48, 1, true),
+            MAT.engineCore
+        );
+        radomeSeam.rotateX(Math.PI / 2);
+        radomeSeam.position.set(0, 4.40, -15.8);
+        group.add(radomeSeam);
+
+        // 4 Pita Penangkal Petir Radome (Lightning Diverter Strips)
+        [0, 90, 180, 270].forEach(deg => {
+            const rad = deg * Math.PI / 180;
+            const pts = [];
+            for (let z = -18.25; z >= -15.8; z += 0.3) {
+                const p = getNoseProfileAt(z);
+                pts.push(new THREE.Vector3(
+                    (p.rx + 0.012) * Math.sin(rad),
+                    p.yc + (p.ry + 0.012) * Math.cos(rad),
+                    z
+                ));
+            }
+            const stripGeo = new THREE.BufferGeometry().setFromPoints(pts);
+            const stripLine = new THREE.Line(stripGeo, new THREE.LineBasicMaterial({ color: 0x94A3B8, linewidth: 2 }));
+            group.add(stripLine);
+        });
+
+        // Lubang & Pintu Roda Pendarat Depan (NLG Wheel Well & Doors di Perut Z = -6.5)
+        const nlgBay = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.22, 2.9), MAT.engineCore);
+        nlgBay.position.set(0, 2.15, -6.5);
+        group.add(nlgBay);
+
+        // Pintu Kiri & Kanan NLG Terbuka Miring 35 Derajat
+        [-0.62, 0.62].forEach(dx => {
+            const isLeft = (dx < 0);
+            const door = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.55, 2.7), MAT.planeWhite);
+            door.position.set(dx, 1.95, -6.5);
+            door.rotation.z = isLeft ? 0.61 : -0.61; // 35 derajat keluar
+            group.add(door);
+        });
+
+        return group;
+    }
+    const seamlessNoseGroup = createSeamlessNoseFuselage();
+    fuseGroup.add(seamlessNoseGroup);
 
     // Aerodynamic Belly Fairing (Wing-to-Body Fairing: Z = 11.5 sampai Z = 24.5, bersih dari area pintu kargo Z = 8.0)
     const bellyFairing = new THREE.Mesh(new THREE.BoxGeometry(6.4, 1.25, 13.0), MAT.planeWhite);
@@ -3869,83 +4205,179 @@ function createDetailedCargoPlane() {
     bellyFairing.castShadow = true;
     fuseGroup.add(bellyFairing);
 
-    // Aft Fuselage Upswept Tail (Z = 32 sampai Z = 47, radius 3.1m ke 1.1m, belly melengkung ke atas)
-    const aftFuseGeo = new THREE.CylinderGeometry(1.1, 3.1, 15, 48);
-    aftFuseGeo.rotateX(Math.PI / 2);
-    const aftFuselage = new THREE.Mesh(aftFuseGeo, MAT.planeWhite);
-    aftFuselage.position.set(0, 5.8, 39.5);
-    aftFuselage.castShadow = true;
-    fuseGroup.add(aftFuselage);
+    // AFT FUSELAGE & APU CONE KONTINU AERODINAMIS SEJATI (SEAMLESS LOFTED BOAT-TAIL)
+    function createSeamlessAftFuselage() {
+        const rings = [
+            { z: 32.0, r: 3.10, y: 5.20 }, // Sambungan mulus tanpa patahan dengan main fuselage di Z = 32.0
+            { z: 36.0, r: 2.65, y: 5.42 },
+            { z: 40.0, r: 2.10, y: 5.68 },
+            { z: 44.0, r: 1.45, y: 5.95 }, // Pertemuan tepat dengan pangkal rudder fin di Z = 44.0
+            { z: 46.5, r: 1.00, y: 6.18 }, // Awal kerucut APU tailcone
+            { z: 48.5, r: 0.55, y: 6.35 },
+            { z: 49.6, r: 0.32, y: 6.42 }  // Ujung saluran pembuangan APU
+        ];
+        const RAD = 32;
+        const pos = [];
+        const ind = [];
 
-    // Kerucut Ekor APU Cone (Z = 47 sampai Z = 51.5)
-    const apuConeGeo = new THREE.CylinderGeometry(0.4, 1.1, 4.5, 32);
-    apuConeGeo.rotateX(Math.PI / 2);
-    const apuCone = new THREE.Mesh(apuConeGeo, MAT.planeWhite);
-    apuCone.position.set(0, 6.4, 49.2);
-    apuCone.castShadow = true;
-    fuseGroup.add(apuCone);
+        for (let i = 0; i < rings.length; i++) {
+            const ring = rings[i];
+            for (let j = 0; j < RAD; j++) {
+                const ang = (j / RAD) * Math.PI * 2;
+                pos.push(
+                    Math.cos(ang) * ring.r,
+                    ring.y + Math.sin(ang) * ring.r,
+                    ring.z
+                );
+            }
+            if (i > 0) {
+                const cOff = i * RAD;
+                const pOff = (i - 1) * RAD;
+                for (let j = 0; j < RAD; j++) {
+                    const jNext = (j + 1) % RAD;
+                    ind.push(pOff + j, cOff + j, cOff + jNext);
+                    ind.push(pOff + j, cOff + jNext, pOff + jNext);
+                }
+            }
+        }
 
-    // Saluran Pembuangan APU Exhaust Logam Tahan Panas
-    const apuPipe = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.38, 1.4, 24), MAT.engineCore);
-    apuPipe.rotateX(Math.PI / 2);
-    apuPipe.position.set(0, 6.45, 51.6);
-    fuseGroup.add(apuPipe);
+        // Penutup Ujung Saluran APU di Z = 49.6 (APU Exhaust Core Interior Cap)
+        const endOff = (rings.length - 1) * RAD;
+        for (let j = 1; j < RAD - 1; j++) {
+            ind.push(endOff, endOff + j + 1, endOff + j);
+        }
+
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+        geo.setIndex(ind);
+        geo.computeVertexNormals();
+
+        const aftMesh = new THREE.Mesh(geo, MAT.planeWhite);
+        aftMesh.castShadow = true;
+        aftMesh.receiveShadow = true;
+
+        // Pipa Knalpot APU Metalik Gelap di Dalam Lubang
+        const pipeGeo = new THREE.CylinderGeometry(0.24, 0.28, 0.6, 24, 1, true);
+        pipeGeo.rotateX(Math.PI / 2);
+        const pipeMesh = new THREE.Mesh(pipeGeo, MAT.engineCore);
+        pipeMesh.position.set(0, 6.42, 49.6);
+
+        const group = new THREE.Group();
+        group.add(aftMesh, pipeMesh);
+        return group;
+    }
+    const aftFuselageGroup = createSeamlessAftFuselage();
+    fuseGroup.add(aftFuselageGroup);
 
     // ─────────────────────────────────────────────────────────────────────────
-    // 2. KOKPIT & KACA JENDELA AERODINAMIS DENGAN VISOR MASK
+    // 2. KOKPIT 6-KACA AERODINAMIS MELENGKUNG (AUTHENTIC BOEING 777F COCKPIT)
     // ─────────────────────────────────────────────────────────────────────────
-    // Mask Hitam Anti-Glare di Sekeliling Kaca Kokpit
-    const visorMask = new THREE.Mesh(new THREE.BoxGeometry(2.7, 1.1, 0.08), MAT.cockpitGlass);
-    visorMask.position.set(0, 6.35, -11.9);
-    visorMask.rotation.x = -Math.PI / 6.2;
-    fuseGroup.add(visorMask);
+    function buildCurvedPatchGeometry(thMin, thMax, zMin, zMax, segU = 4, segV = 4, offset = 0.015) {
+        const pos = [];
+        const ind = [];
+        const uvs = [];
 
-    // 2 Kaca Depan Utama (Center Windshields - Angled)
-    [-0.65, 0.65].forEach(cx => {
-        const frontPane = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.72, 0.12), MAT.cockpitGlass);
-        frontPane.position.set(cx, 6.35, -11.92);
-        frontPane.rotation.x = -Math.PI / 6.2;
-        frontPane.rotation.y = (cx > 0) ? -0.1 : 0.1;
-        fuseGroup.add(frontPane);
-    });
+        for (let v = 0; v <= segV; v++) {
+            const vFrac = v / segV;
+            const z = zMin + vFrac * (zMax - zMin);
+            for (let u = 0; u <= segU; u++) {
+                const uFrac = u / segU;
+                const th = thMin + uFrac * (thMax - thMin);
+                const pt = getPointOnNose(th, z, offset);
+                pos.push(pt.x, pt.y, pt.z);
+                uvs.push(uFrac, vFrac);
 
-    // 2 Kaca Samping Geser (Side Windows)
-    [-1.4, 1.4].forEach(sx => {
-        const sidePane = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.62, 1.4), MAT.cockpitGlass);
-        sidePane.position.set(sx, 6.3, -11.2);
-        sidePane.rotation.y = (sx > 0) ? -Math.PI / 5.5 : Math.PI / 5.5;
-        fuseGroup.add(sidePane);
-    });
+                if (v > 0 && u > 0) {
+                    const i00 = (v - 1) * (segU + 1) + (u - 1);
+                    const i10 = (v - 1) * (segU + 1) + u;
+                    const i01 = v * (segU + 1) + (u - 1);
+                    const i11 = v * (segU + 1) + u;
 
-    // Wiper Kokpit
-    [-0.65, 0.65].forEach(wx => {
-        const wiper = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.65, 0.04), MAT.metalDark);
-        wiper.position.set(wx, 6.3, -11.98);
-        wiper.rotation.z = (wx > 0) ? 0.35 : -0.35;
-        fuseGroup.add(wiper);
-    });
+                    ind.push(i00, i01, i11);
+                    ind.push(i00, i11, i10);
+                }
+            }
+        }
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+        geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+        geo.setIndex(ind);
+        geo.computeVertexNormals();
+        return geo;
+    }
 
-    // Probe Sensor Pitot di Hidung Pesawat
-    [-1.8, 1.8].forEach(px => {
-        const pitot = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.5), MAT.metalSilver);
-        pitot.rotateX(Math.PI / 2);
-        pitot.position.set(px, 4.8, -13.5);
-        fuseGroup.add(pitot);
+    function createCurvedCockpitAssembly() {
+        const group = new THREE.Group();
+
+        // 1. Visor Mask Hitam Anti-Glare Melengkung Sempurna di Bawah Kaca
+        const maskGeo = buildCurvedPatchGeometry(-58, 58, -12.55, -9.60, 16, 6, 0.008);
+        const visorMat = new THREE.MeshStandardMaterial({ color: 0x07111E, roughness: 0.35, metalness: 0.45 });
+        const maskMesh = new THREE.Mesh(maskGeo, visorMat);
+        group.add(maskMesh);
+
+        // 2. 6 Kaca Kokpit Presisi Mengikuti Lengkungan Hidung (Conforming Curved Panes)
+        const panes = [
+            { thMin: -14.5, thMax: -2.5,  zMin: -12.30, zMax: -11.10, u: 4, v: 4 }, // Kaca Depan Kiri (Center Left)
+            { thMin: 2.5,   thMax: 14.5,  zMin: -12.30, zMax: -11.10, u: 4, v: 4 }, // Kaca Depan Kanan (Center Right)
+            { thMin: -40.0, thMax: -18.5, zMin: -12.00, zMax: -10.30, u: 4, v: 4 }, // Jendela Geser Kiri (Slide Left)
+            { thMin: 18.5,  thMax: 40.0,  zMin: -12.00, zMax: -10.30, u: 4, v: 4 }, // Jendela Geser Kanan (Slide Right)
+            { thMin: -53.0, thMax: -43.0, zMin: -11.35, zMax: -9.90,  u: 3, v: 3 }, // Jendela Alis Kiri (Aft Eyebrow Left)
+            { thMin: 43.0,  thMax: 53.0,  zMin: -11.35, zMax: -9.90,  u: 3, v: 3 }  // Jendela Alis Kanan (Aft Eyebrow Right)
+        ];
+
+        panes.forEach(p => {
+            const pGeo = buildCurvedPatchGeometry(p.thMin, p.thMax, p.zMin, p.zMax, p.u, p.v, 0.016);
+            const paneMesh = new THREE.Mesh(pGeo, MAT.cockpitGlass);
+            group.add(paneMesh);
+        });
+
+        // 3. Sepasang Wiper Kaca Depan yang Menempel Rapi di Kusen Bawah Kaca
+        [-1, 1].forEach(side => {
+            const pStart = getPointOnNose(side * 13, -12.32, 0.024);
+            const pEnd = getPointOnNose(side * 3, -12.28, 0.024);
+            const wiperPts = [new THREE.Vector3(pStart.x, pStart.y, pStart.z), new THREE.Vector3(pEnd.x, pEnd.y, pEnd.z)];
+            const wiperGeo = new THREE.BufferGeometry().setFromPoints(wiperPts);
+            const wiperLine = new THREE.Line(wiperGeo, new THREE.LineBasicMaterial({ color: 0x1E293B, linewidth: 3 }));
+            group.add(wiperLine);
+        });
+
+        // 4. Panel Pelindung Silau Matahari Kokpit Dalam (Glare Shield Silhouette)
+        const shieldPt = getPointOnNose(0, -11.6, -0.05);
+        const glareShield = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.08, 1.2), MAT.engineCore);
+        glareShield.position.set(0, shieldPt.y - 0.2, -11.6);
+        group.add(glareShield);
+
+        return group;
+    }
+    const cockpitAssembly = createCurvedCockpitAssembly();
+    fuseGroup.add(cockpitAssembly);
+
+    // 4 Probe Sensor Pitot & AoA di Permukaan Hidung (Surface-Mounted Avionics)
+    [
+        { th: -65, z: -13.8 },
+        { th: 65,  z: -13.8 },
+        { th: -62, z: -14.4 },
+        { th: 62,  z: -14.4 }
+    ].forEach(pr => {
+        const pt = getPointOnNose(pr.th, pr.z, 0.005);
+        const basePlate = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.06, 0.12), MAT.metalDark);
+        basePlate.position.set(pt.x, pt.y, pt.z);
+        const needle = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.35, 12), MAT.chromeIntake);
+        needle.rotateX(Math.PI / 2);
+        needle.position.set(pt.x, pt.y, pt.z - 0.18);
+        fuseGroup.add(basePlate, needle);
     });
 
     // ─────────────────────────────────────────────────────────────────────────
     // 3. LIVERY & DEKORASI INJOURNEY CARGO (STRIPES & TYPOGRAPHY)
     // ─────────────────────────────────────────────────────────────────────────
     // Garis Cheatline InJourney Teal & Navy di Kedua Sisi Fuselage
-    // Sisi Kanan / Starboard: Garis memanjang utuh dari hidung ke ekor
-    const tealBandStbd = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.55, 38), MAT.injourneyTeal);
+    // Sisi Kanan / Starboard: Garis memanjang utuh dari hidung ke awal taper ekor (Z = -2 sampai Z = 32)
+    const tealBandStbd = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.55, 34), MAT.injourneyTeal);
     tealBandStbd.position.set(3.12, 4.6, 15);
-    const navyBandStbd = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.22, 36), MAT.planeNavy);
+    const navyBandStbd = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.22, 34), MAT.planeNavy);
     navyBandStbd.position.set(3.12, 4.18, 15);
-    const tailStripeStbd = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.45, 12), MAT.injourneyTeal);
-    tailStripeStbd.position.set(3.12 * 0.75, 5.7, 38);
-    tailStripeStbd.rotation.x = 0.08;
-    fuseGroup.add(tealBandStbd, navyBandStbd, tailStripeStbd);
+    fuseGroup.add(tealBandStbd, navyBandStbd);
 
     // Sisi Kiri / Port: Garis terputus di area pintu kargo (Z = 5.8 sampai 10.2) agar pintu kargo terbuka bersih
     // Garis Depan (Forward Cheatline: Z = -2 sampai Z = 5.8)
@@ -3959,29 +4391,50 @@ function createDetailedCargoPlane() {
     tealBandPortAft.position.set(-3.12, 4.6, 21.1);
     const navyBandPortAft = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.22, 21.8), MAT.planeNavy);
     navyBandPortAft.position.set(-3.12, 4.18, 21.1);
-    const tailStripePort = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.45, 12), MAT.injourneyTeal);
-    tailStripePort.position.set(-3.12 * 0.75, 5.7, 38);
-    tailStripePort.rotation.x = 0.08;
-    fuseGroup.add(tealBandPortFwd, navyBandPortFwd, tealBandPortAft, navyBandPortAft, tailStripePort);
+    fuseGroup.add(tealBandPortFwd, navyBandPortFwd, tealBandPortAft, navyBandPortAft);
 
-    // Registrasi Pesawat PK-ACF (Port & Starboard Aft Fuselage)
-    const regLabelPort = makeLabelSprite("PK-ACF", "BOEING 777F FREIGHTER", "#0CA1AF");
-    regLabelPort.scale.set(4.5, 1.2, 1);
-    regLabelPort.position.set(-3.18, 6.0, 32);
-    regLabelPort.rotation.y = -Math.PI / 2;
-    fuseGroup.add(regLabelPort);
+    // Registrasi Pesawat Resmi PK-ACF di Lambung Belakang (Aft Fuselage Flanks - Port & Starboard)
+    function createAftRegLabelTex() {
+        const rc = document.createElement('canvas');
+        rc.width = 512;
+        rc.height = 128;
+        const rctx = rc.getContext('2d');
+        rctx.fillStyle = '#0D1C42';
+        rctx.font = '900 68px "Barlow", "Arial Black", sans-serif';
+        rctx.textAlign = 'center';
+        rctx.textBaseline = 'middle';
+        rctx.fillText('PK-ACF', 256, 48);
 
-    const regLabelStbd = makeLabelSprite("PK-ACF", "INJOURNEY AIR CARGO", "#0CA1AF");
-    regLabelStbd.scale.set(4.5, 1.2, 1);
-    regLabelStbd.position.set(3.18, 6.0, 32);
-    regLabelStbd.rotation.y = Math.PI / 2;
-    fuseGroup.add(regLabelStbd);
+        rctx.fillStyle = '#087F8A';
+        rctx.font = 'bold 24px monospace';
+        rctx.letterSpacing = '3px';
+        rctx.fillText('BOEING 777F', 256, 96);
 
-    // Pintu Masuk Kru Pesawat (L1 Crew Entry Door di Sisi Port Z = -7.5)
-    const crewDoor = new THREE.Mesh(new THREE.BoxGeometry(0.08, 1.9, 1.1), MAT.metalSilver);
-    crewDoor.position.set(-3.13, 5.0, -7.5);
-    const crewWindow = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.35, 0.25), MAT.cockpitGlass);
-    crewWindow.position.set(-3.14, 5.4, -7.5);
+        const rTex = new THREE.CanvasTexture(rc);
+        return rTex;
+    }
+    const aftRegTex = createAftRegLabelTex();
+    [-1, 1].forEach(side => {
+        const isLeft = (side < 0);
+        const regMesh = new THREE.Mesh(
+            new THREE.PlaneGeometry(3.6, 0.9),
+            new THREE.MeshBasicMaterial({ map: aftRegTex, transparent: true, opacity: 0.92, side: THREE.DoubleSide })
+        );
+        regMesh.position.set(side * 2.82, 5.85, 34.2);
+        regMesh.rotation.y = isLeft ? -Math.PI / 2 : Math.PI / 2;
+        regMesh.rotation.x = 0.0667; // Mengikuti sudut elevasi bodi aft fuselage
+        fuseGroup.add(regMesh);
+    });
+
+    // Pintu Masuk Kru Pesawat (L1 Crew Entry Door di Sisi Port Z = -6.5 Menempel Rapat)
+    const doorPt = getPointOnNose(-90, -6.5, 0.012);
+    const crewDoor = new THREE.Mesh(new THREE.BoxGeometry(0.04, 1.9, 1.1), MAT.metalSilver);
+    crewDoor.position.set(doorPt.x, doorPt.y, doorPt.z);
+    crewDoor.rotation.y = 0.035; // Mengikuti sudut taper bodi hidung
+
+    const crewWindow = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.36, 0.24), MAT.cockpitGlass);
+    crewWindow.position.set(doorPt.x - 0.005, doorPt.y + 0.35, doorPt.z);
+    crewWindow.rotation.y = 0.035;
     fuseGroup.add(crewDoor, crewWindow);
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -4409,63 +4862,224 @@ function createDetailedCargoPlane() {
     plane.add(createHighBypassEngine(false));
 
     // ─────────────────────────────────────────────────────────────────────────
-    // 7. EKOR PESAWAT (EMPENNAGE: VERTICAL FIN DENGAN LIVERY & HORIZONTAL TAIL)
+    // 7. EKOR PESAWAT AERODINAMIS (AERODYNAMIC EMPENNAGE: LOFTED 777F FIN & TAILPLANES)
     // ─────────────────────────────────────────────────────────────────────────
     const empennage = new THREE.Group();
-    empennage.position.set(0, 6.2, 37);
 
-    // Dorsal Fin Fairing (Sirip Transisi dari Punggung Fuselage ke Fin)
-    const dorsalFin = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1.8, 8.5), MAT.planeWhite);
-    dorsalFin.position.set(0, 1.2, -1.8);
-    dorsalFin.rotation.x = -0.32;
-    empennage.add(dorsalFin);
+    // A. VERTICAL STABILIZER DENGAN GEOMETRI LOFTED AERODINAMIS & PROYEKSI UV ORTOGONAL PRESISI
+    function createLoftedVerticalFin() {
+        const K = 16;
+        const positions = [];
+        const uvs = [];
+        const indices = [];
 
-    // Sirip Tegak Vertikal (Vertical Stabilizer Swept Fin)
-    const vFin = new THREE.Mesh(new THREE.BoxGeometry(0.42, 9.4, 7.2), MAT.planeNavy);
-    vFin.position.set(0, 5.0, 3.0);
-    vFin.rotation.x = Math.PI / 6.4;
-    vFin.castShadow = true;
-    empennage.add(vFin);
+        for (let i = 0; i <= K; i++) {
+            const t = i / K;
+            const y = 7.40 + t * 9.80; // 7.40m di spine fuselage sampai 17.20m di puncak ekor
 
-    // Livery Wave Teal di Sirip Tegak
-    const vFinTeal = new THREE.Mesh(new THREE.BoxGeometry(0.44, 4.8, 4.2), MAT.injourneyTeal);
-    vFinTeal.position.set(0, 3.5, 2.5);
-    vFinTeal.rotation.x = Math.PI / 6.4;
-    empennage.add(vFinTeal);
+            // Leading Edge Z: S-curve dorsal fillet di pangkal (t < 0.25), lalu sweepback 41.5 derajat
+            let z_le;
+            if (t < 0.25) {
+                const u = t / 0.25;
+                z_le = 28.5 + 5.0 * (1.0 - Math.cos(u * Math.PI * 0.5));
+            } else {
+                z_le = 33.5 + ((t - 0.25) / 0.75) * 7.0; // Puncak LE di Z = 40.5
+            }
 
-    // Rudder Kemudi Putih di Bagian Belakang Sirip
-    const rudder = new THREE.Mesh(new THREE.BoxGeometry(0.38, 8.2, 1.4), MAT.planeWhite);
-    rudder.position.set(0, 5.2, 5.8);
-    rudder.rotation.x = Math.PI / 6.4;
-    empennage.add(rudder);
+            // Trailing Edge Z: Rudder menyatu presisi tepat di Z = 44.5 (awal APU cone) tanpa bilah melayang
+            const z_te = 44.5 - t * 0.90; // Pangkal TE di Z = 44.5, puncak TE di Z = 43.6
+            const chord = Math.max(1.8, z_te - z_le);
 
-    // Strobe Beacon Putih di Puncak Ekor
-    const topStrobe = new THREE.Mesh(new THREE.SphereGeometry(0.18, 12, 12), new THREE.MeshBasicMaterial({ color: 0xFFFFFF }));
-    topStrobe.position.set(0, 9.6, 5.2);
-    empennage.add(topStrobe);
+            // Ketebalan Profil Aerofoil Symmetrical NACA (Mengecil aerodinamis ke arah puncak)
+            const th = 0.48 * (1.0 - 0.55 * t);
+
+            // 10 Titik Profil Aerofoil Keliling pada Ketinggian y
+            const pts = [
+                { s: 0.00, xf: 0.00, side: 1 },  // 0: Leading Edge
+                { s: 0.12, xf: 0.38, side: 1 },  // 1: Stbd Front
+                { s: 0.32, xf: 0.50, side: 1 },  // 2: Stbd Max Thickness
+                { s: 0.65, xf: 0.30, side: 1 },  // 3: Stbd Rudder Hinge
+                { s: 0.90, xf: 0.12, side: 1 },  // 4: Stbd Rear
+                { s: 1.00, xf: 0.00, side: 1 },  // 5: Trailing Edge
+                { s: 0.90, xf: 0.12, side: -1 }, // 6: Port Rear
+                { s: 0.65, xf: 0.30, side: -1 }, // 7: Port Rudder Hinge
+                { s: 0.32, xf: 0.50, side: -1 }, // 8: Port Max Thickness
+                { s: 0.12, xf: 0.38, side: -1 }  // 9: Port Front
+            ];
+
+            for (let k = 0; k < 10; k++) {
+                const px = pts[k].side * th * pts[k].xf;
+                const pz = z_le + chord * pts[k].s;
+                positions.push(px, y, pz);
+
+                // Proyeksi UV Ortogonal Bebas Distorsi (World-Space UV Mapping)
+                const u_uv = (pz - 28.5) / 16.0;
+                const v_uv = (y - 7.4) / 9.8;
+                uvs.push(u_uv, v_uv);
+            }
+
+            if (i > 0) {
+                const cOff = i * 10;
+                const pOff = (i - 1) * 10;
+                for (let k = 0; k < 10; k++) {
+                    const kNext = (k + 1) % 10;
+                    indices.push(pOff + k, cOff + k, cOff + kNext);
+                    indices.push(pOff + k, cOff + kNext, pOff + kNext);
+                }
+            }
+        }
+
+        // Penutup Puncak Fin (Top Tip Cap)
+        const topOff = K * 10;
+        for (let k = 1; k < 9; k++) {
+            indices.push(topOff, topOff + k, topOff + k + 1);
+        }
+
+        // Penutup Dasar Fin (Bottom Root Cap)
+        for (let k = 1; k < 9; k++) {
+            indices.push(0, k + 1, k);
+        }
+
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+        geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+        geo.setIndex(indices);
+        geo.computeVertexNormals();
+
+        const finMesh = new THREE.Mesh(geo, MAT.planeTailFin);
+        finMesh.castShadow = true;
+        finMesh.receiveShadow = true;
+        return finMesh;
+    }
+
+    const verticalFin = createLoftedVerticalFin();
+    empennage.add(verticalFin);
+
+    // B. ELEMEN AVIONIK & STROBE PUNCAK FIN
+    // Fairing Kubah Komunikasi Satelit (SatCom VHF Antenna Dome) di Puncak Fin
+    const satcomDome = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 2.4, 16), MAT.planeWhite);
+    satcomDome.rotateX(Math.PI / 2);
+    satcomDome.position.set(0, 17.22, 42.1);
+    empennage.add(satcomDome);
+
+    // Lampu Strobo Putih Ekor Berkedip
+    const finStrobe = new THREE.Mesh(new THREE.SphereGeometry(0.14, 12, 12), new THREE.MeshBasicMaterial({ color: 0xFFFFFF }));
+    finStrobe.position.set(0, 17.25, 43.5);
+    empennage.add(finStrobe);
 
     plane.add(empennage);
 
-    // Horizontal Stabilizers (Tailplanes Kiri & Kanan)
-    [-1, 1].forEach(side => {
-        const hStabGroup = new THREE.Group();
-        hStabGroup.position.set(side * 1.0, 6.8, 41);
+    // C. HORIZONTAL STABILIZERS AIRFOIL WATERTIGHT DENGAN INTEGRATED CHROME LEADING EDGE
+    function createLoftedHorizontalStabilizer(isLeft) {
+        const stabGroup = new THREE.Group();
+        const side = isLeft ? -1 : 1;
+        const N = 12;
 
-        const hStab = new THREE.Mesh(new THREE.BoxGeometry(8.4, 0.38, 3.8), MAT.planeWhite);
-        hStab.position.set(side * 4.2, 0, 0);
-        hStab.rotation.y = -side * 0.22;
-        hStab.rotation.z = side * 0.06;
-        hStab.castShadow = true;
-        hStabGroup.add(hStab);
+        const wingPos = [];
+        const wingInd = [];
+        const slatPos = [];
+        const slatInd = [];
 
-        // Silver Slat Leading Edge Horizontal Stabilizer
-        const hSlat = new THREE.Mesh(new THREE.BoxGeometry(8.4, 0.4, 0.4), MAT.metalSilver);
-        hSlat.position.set(side * 4.2, 0, -1.8);
-        hSlat.rotation.y = -side * 0.22;
-        hStabGroup.add(hSlat);
+        for (let i = 0; i <= N; i++) {
+            const t = i / N;
+            const x = side * (1.80 + t * 8.40); // 1.80m (dari dalam bodi) ke 10.20m (ujung tip)
+            const y = 5.90 + t * 1.05;          // Dihedral upsweep +7 derajat
+            const z_le = 36.5 + t * 5.45;       // Sweepback 32.5 derajat
+            const chord = 5.00 - t * 3.35;      // Root chord 5.0m, Tip chord 1.65m
+            const z_te = z_le + chord;
+            const th = 0.38 * (1.0 - 0.60 * t); // Ketebalan aerofoil 38cm ke 15cm
 
-        plane.add(hStabGroup);
-    });
+            // 8 Titik Keliling Profil Aerofoil Symmetrical NACA
+            // 0: LE, 1: Upper 15%, 2: Upper 35%, 3: Upper 72%, 4: TE, 5: Lower 72%, 6: Lower 35%, 7: Lower 15%
+            const pts = [
+                { z: z_le,                 yf: 0.00 },  // 0: LE
+                { z: z_le + chord * 0.15,  yf: 0.38 },  // 1: Slat Upper Seam
+                { z: z_le + chord * 0.35,  yf: 0.50 },  // 2: Upper Crest
+                { z: z_le + chord * 0.72,  yf: 0.22 },  // 3: Elevator Hinge
+                { z: z_te,                 yf: 0.00 },  // 4: TE
+                { z: z_le + chord * 0.72,  yf: -0.22 }, // 5: Lower Elevator Hinge
+                { z: z_le + chord * 0.35,  yf: -0.50 }, // 6: Lower Crest
+                { z: z_le + chord * 0.15,  yf: -0.38 }  // 7: Slat Lower Seam
+            ];
+
+            // A. Titik untuk Badan Sayap Komposit Putih (Points 1, 2, 3, 4, 5, 6, 7)
+            for (let k = 1; k <= 7; k++) {
+                wingPos.push(x, y + th * pts[k].yf, pts[k].z);
+            }
+
+            // B. Titik untuk Bilah Anti-Ice Logam Krom Mengkilap (Points 7, 0, 1)
+            slatPos.push(
+                x, y + th * pts[7].yf, pts[7].z,
+                x, y,                 pts[0].z - 0.015,
+                x, y + th * pts[1].yf, pts[1].z
+            );
+
+            if (i > 0) {
+                // Quads untuk Badan Sayap (6 segmen perimeter keliling)
+                const cW = i * 7;
+                const pW = (i - 1) * 7;
+                for (let k = 0; k < 6; k++) {
+                    if (!isLeft) {
+                        wingInd.push(pW + k, cW + k, cW + k + 1);
+                        wingInd.push(pW + k, cW + k + 1, pW + k + 1);
+                    } else {
+                        wingInd.push(pW + k, cW + k + 1, cW + k);
+                        wingInd.push(pW + k, pW + k + 1, cW + k + 1);
+                    }
+                }
+
+                // Quads untuk Bilah Chrome Slat (2 segmen perimeter di hidung sayap)
+                const cS = i * 3;
+                const pS = (i - 1) * 3;
+                for (let k = 0; k < 2; k++) {
+                    if (!isLeft) {
+                        slatInd.push(pS + k, cS + k, cS + k + 1);
+                        slatInd.push(pS + k, cS + k + 1, pS + k + 1);
+                    } else {
+                        slatInd.push(pS + k, cS + k + 1, cS + k);
+                        slatInd.push(pS + k, pS + k + 1, cS + k + 1);
+                    }
+                }
+            }
+        }
+
+        // Penutup Ujung Tip Sayap (Tip Cap)
+        const tipW = N * 7;
+        for (let k = 1; k < 6; k++) {
+            if (!isLeft) wingInd.push(tipW, tipW + k, tipW + k + 1);
+            else wingInd.push(tipW, tipW + k + 1, tipW + k);
+        }
+
+        const geoWing = new THREE.BufferGeometry();
+        geoWing.setAttribute('position', new THREE.Float32BufferAttribute(wingPos, 3));
+        geoWing.setIndex(wingInd);
+        geoWing.computeVertexNormals();
+        const meshWing = new THREE.Mesh(geoWing, MAT.planeWhite);
+        meshWing.castShadow = true;
+        meshWing.receiveShadow = true;
+        stabGroup.add(meshWing);
+
+        const geoSlat = new THREE.BufferGeometry();
+        geoSlat.setAttribute('position', new THREE.Float32BufferAttribute(slatPos, 3));
+        geoSlat.setIndex(slatInd);
+        geoSlat.computeVertexNormals();
+        const meshSlat = new THREE.Mesh(geoSlat, MAT.chromeIntake);
+        meshSlat.castShadow = true;
+        stabGroup.add(meshSlat);
+
+        // Lampu Posisi Navigasi Putih di Ujung Sayap Ekor
+        const tipX = side * 10.20;
+        const tipY = 5.90 + 1.05;
+        const tipZ = 36.5 + 5.45 + 0.8;
+        const tipLight = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 12), new THREE.MeshBasicMaterial({ color: 0xFFFFFF }));
+        tipLight.position.set(tipX, tipY, tipZ);
+        stabGroup.add(tipLight);
+
+        return stabGroup;
+    }
+
+    plane.add(createLoftedHorizontalStabilizer(true));
+    plane.add(createLoftedHorizontalStabilizer(false));
 
     // ─────────────────────────────────────────────────────────────────────────
     // 8. RODA PENDARAT REALISTIS (AUTHENTIC 6-WHEEL TRIPLE-AXLE BOGIES)
@@ -4630,7 +5244,9 @@ function createDetailedCargoPlane() {
     bindInteractive(fwdMainFuselage, 'loading');
     bindInteractive(aftMainFuselage, 'loading');
     bindInteractive(hatchPanel, 'loading');
-    bindInteractive(radomeCap, 'loading');
+    if (typeof seamlessNoseMesh !== 'undefined' && seamlessNoseMesh) {
+        bindInteractive(seamlessNoseMesh, 'loading');
+    }
 
     return plane;
 }
