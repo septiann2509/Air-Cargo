@@ -3,6 +3,7 @@
 // API endpoint untuk menerima input kargo baru dari form cargo_input.php
 // dan menyiapkan data untuk simulasi 3D di layout_3d.php
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/cargo_payload.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 if ($method !== 'POST') {
@@ -169,6 +170,8 @@ try {
     $xrayLogPayload = [
         'event_type' => 'SECURITY_SCREENING_EVALUATION',
         'cargo_id' => $cargoId,
+        'cargo_payload_id' => 'CMP-' . $cargoId,
+        'payload' => $masterPayload,
         'inspection_result' => $xrayResult,
         'inspector_badge' => $inspectorId,
         'csd_certificate' => $csdNum,
@@ -248,6 +251,8 @@ try {
         'success' => true,
         'message' => 'Kargo berhasil didaftarkan dan simulasi ' . ($isSuspect ? 'karantina' : 'loading lengkap') . ' telah dijalankan',
         'cargo_id' => $cargoId,
+        'cargo_payload_id' => 'CMP-' . $cargoId,
+        'payload' => $masterPayload,
         'awb_number' => $awbNumber,
         'sscc' => $sscc,
         'truck_id' => $truckId,

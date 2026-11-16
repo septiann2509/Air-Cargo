@@ -1,6 +1,7 @@
 <?php
 // api/simulate.php
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/cargo_payload.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 if ($method !== 'POST') {
@@ -244,6 +245,8 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $truckD
                 ];
 
                 $jsonPayload = [
+                    "cargo_payload_id" => "CMP-" . $cargoId,
+                    "master_sscc" => $sscc18,
                     "event_type" => "TMS_TRUCK_GATE_CHECKIN",
                     "truck_id" => $truckId,
                     "truck_plate" => $truckPlate,
@@ -290,6 +293,8 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $truckD
                 $update->execute([$scanTime, $cargoId]);
 
                 $jsonPayload = [
+                    "cargo_payload_id" => "CMP-" . $cargoId,
+                    "master_sscc" => $cargo['sscc'],
                     "event_type" => "AIDC_INBOUND_JSON_INGEST",
                     "device_id" => "EDGE-AIDC-SCANNER-01",
                     "stream_protocol" => "GS1_DIGITAL_LINK_JSON / REST_MQTT",
@@ -329,6 +334,8 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $truckD
                 $update->execute([$cargoId]);
 
                 $jsonPayload = [
+                    "cargo_payload_id" => "CMP-" . $cargoId,
+                    "master_sscc" => $cargo['sscc'],
                     "event_type" => "CMS_AWB_MATCHING",
                     "action" => "VALIDATE_ELECTRONIC_AIR_WAYBILL",
                     "e_awb_number" => $cargo['awb_number'],
@@ -409,6 +416,8 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $truckD
                 $update->execute([$statusResult, $cargoId]);
 
                 $jsonPayload = [
+                    "cargo_payload_id" => "CMP-" . $cargoId,
+                    "master_sscc" => $cargo['sscc'],
                     "event_type" => "SECURITY_SCREENING_EVALUATION",
                     "cargo_id" => $cargoId,
                     "awb_number" => $cargo['awb_number'],
@@ -477,6 +486,8 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $truckD
                 $update->execute([$actual, $cargoId]);
 
                 $jsonPayload = [
+                    "cargo_payload_id" => "CMP-" . $cargoId,
+                    "master_sscc" => $cargo['sscc'],
                     "event_type" => "CARGO_WEIGHT_ACQUISITION",
                     "device_id" => "SCALE-FLOOR-ULD-01",
                     "device_specs" => [
@@ -557,6 +568,8 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $truckD
                 $updateCargo->execute([$targetUld['id'], $cargoId]);
 
                 $jsonPayload = [
+                    "cargo_payload_id" => "CMP-" . $cargoId,
+                    "master_sscc" => $cargo['sscc'],
                     "event_type" => "ULD_CONSOLIDATION_AND_LOAD_PLANNING",
                     "cargo_id" => $cargoId,
                     "target_uld" => [
@@ -625,6 +638,8 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $truckD
                 $loadsheetId = 'LS-' . ($flightInfo['flight_number'] ?? 'GA707') . '-' . date('YmdHi');
 
                 $jsonPayload = [
+                    "cargo_payload_id" => "CMP-" . $cargoId,
+                    "master_sscc" => $cargo['sscc'],
                     "event_type" => "FLIGHT_MANIFEST_FINALIZATION",
                     "flight_manifest_id" => $flightInfo['id'] ?? 'FL-GA707-2026',
                     "flight_number" => $flightInfo['flight_number'] ?? 'GA-707',

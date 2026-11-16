@@ -348,7 +348,12 @@ include __DIR__ . '/includes/header.php';
                             <tr class="hover:bg-teal-50/40 transition-colors">
                                 <td class="py-3.5 px-5">
                                     <div class="font-extrabold text-[#0D1C42]"><?= htmlspecialchars($c['awb_number']) ?></div>
-                                    <span class="text-[10px] text-slate-400 font-mono"><?= htmlspecialchars($c['id']) ?></span>
+                                    <div class="flex items-center gap-1.5 mt-0.5">
+                                        <span class="text-[10px] text-slate-400 font-mono"><?= htmlspecialchars($c['id']) ?></span>
+                                        <button type="button" onclick="viewDashboardMasterPayload('<?= htmlspecialchars($c['id']) ?>', '<?= htmlspecialchars($c['awb_number']) ?>')" class="inline-flex items-center px-1.5 py-0.5 rounded bg-teal-50 hover:bg-teal-100 text-[#087F8A] font-mono text-[9.5px] font-bold border border-teal-200 transition-colors cursor-pointer" title="Lihat Master JSON Payload Kargo Ini">
+                                            <i class="fa-solid fa-code mr-1"></i>CMP-<?= substr($c['id'], -3) ?>
+                                        </button>
+                                    </div>
                                 </td>
                                 <td class="py-3.5 px-5">
                                     <span class="text-[#087F8A] font-bold"><?= htmlspecialchars($c['sscc']) ?></span>
@@ -383,10 +388,13 @@ include __DIR__ . '/includes/header.php';
                                     <div class="text-slate-700">Dock: <span class="text-[#087F8A] font-bold font-mono"><?= htmlspecialchars($c['dock_slot'] ?? '-') ?></span></div>
                                     <div class="text-[10.5px] text-slate-400 font-mono">ULD: <?= htmlspecialchars($c['uld_code'] ?? 'Belum Di-build') ?></div>
                                 </td>
-                                <td class="py-3.5 px-5 text-center font-sans">
-                                    <a href="simulation.php?cargo_id=<?= urlencode($c['id']) ?>" class="inline-flex items-center px-3 py-1.5 rounded-lg bg-teal-50 hover:bg-[#087F8A] text-[#087F8A] hover:text-white border border-teal-200 hover:border-[#087F8A] text-xs font-bold transition-all shadow-sm">
+                                <td class="py-3.5 px-5 text-center font-sans space-x-1">
+                                    <a href="simulation.php?cargo_id=<?= urlencode($c['id']) ?>" class="inline-flex items-center px-3 py-1.5 rounded-lg bg-teal-50 hover:bg-[#087F8A] text-[#087F8A] hover:text-white border border-teal-200 hover:border-[#087F8A] text-xs font-bold transition-all shadow-sm" title="Lanjutkan Simulasi 7-Tahap">
                                         <i class="fa-solid fa-play mr-1.5 text-[10px]"></i> Simulasi
                                     </a>
+                                    <button type="button" onclick="viewDashboardMasterPayload('<?= htmlspecialchars($c['id']) ?>', '<?= htmlspecialchars($c['awb_number']) ?>')" class="inline-flex items-center px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold border border-gray-200 transition-all shadow-sm cursor-pointer" title="Lihat Master JSON Payload (Hardware Surrogate)">
+                                        <i class="fa-solid fa-file-code text-[#087F8A]"></i>
+                                    </button>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -613,6 +621,116 @@ include __DIR__ . '/includes/header.php';
             } else {
                 Swal.fire('Error', res.message, 'error');
             }
+        });
+    }
+</script>
+
+<!-- Modal Master JSON Payload Kargo di Dashboard -->
+<div id="dashboardMasterPayloadModal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-4xl rounded-2xl border border-gray-200 p-6 shadow-2xl relative flex flex-col max-h-[90vh]">
+        <button onclick="closeDashboardMasterPayloadModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-700 text-lg transition-colors cursor-pointer" title="Tutup Modal">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+        
+        <div class="pb-3 border-b border-gray-100 mb-4">
+            <div class="flex items-center gap-2">
+                <span class="w-2.5 h-6 rounded-full bg-gradient-to-b from-[#0CA1AF] to-[#087F8A]"></span>
+                <h3 class="text-base font-extrabold text-[#0D1C42]">
+                    Master JSON Payload Kargo (Hardware Surrogate PoC)
+                </h3>
+                <span id="dashModalPayloadBadge" class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-teal-50 text-[#087F8A] border border-teal-200">
+                    CMP-...
+                </span>
+            </div>
+            <p class="text-xs text-slate-500 mt-1 pl-4">
+                Satu bundle dokumen JSON terintegrasi yang merekam spesifikasi kargo, pembacaan 7 sensor virtual Layer 1, dan riwayat perpindahan data terminal bandara.
+            </p>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3 text-xs">
+            <div class="flex items-center space-x-2 text-[11px] text-slate-600">
+                <span class="font-bold">Protokol:</span>
+                <span class="font-mono bg-emerald-50 text-emerald-700 px-2.5 py-0.5 rounded-lg border border-emerald-200 font-semibold text-[10.5px]">GS1 SSCC-18 / JSON Schema</span>
+                <span class="text-slate-300">|</span>
+                <span class="text-slate-500">AWB: <strong id="dashModalCargoAwb" class="text-[#0D1C42] font-mono">-</strong></span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="copyDashboardMasterPayload()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs border border-gray-200 transition-all flex items-center gap-1.5 shadow-sm cursor-pointer">
+                    <i class="fa-solid fa-copy text-[#087F8A]"></i>
+                    <span>Salin JSON</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Scrollable Code Box -->
+        <div class="flex-grow overflow-auto bg-[#0D1C42] border border-slate-700 rounded-xl p-4 text-xs font-mono relative shadow-inner min-h-[350px]">
+            <pre id="dashModalJsonDisplay" class="text-emerald-300 leading-relaxed text-[11px] whitespace-pre">// Memuat data Master JSON Payload kargo...</pre>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-slate-500">
+            <span>Proof of Concept &bull; PT Aerospace Consultant Advisory &bull; ITL Trisakti</span>
+            <button type="button" onclick="closeDashboardMasterPayloadModal()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs border border-gray-200 transition-all cursor-pointer">
+                Tutup
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentDashboardModalPayload = null;
+
+    function viewDashboardMasterPayload(cargoId, awbNumber = '') {
+        Swal.fire({
+            title: 'Memuat Master JSON Payload...',
+            text: 'Mengambil data terintegrasi hardware surrogate...',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); },
+            background: '#ffffff',
+            color: '#0D1C42',
+            customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
+        });
+
+        fetch(`api/cargo.php?action=master_payload&id=${encodeURIComponent(cargoId)}`)
+            .then(r => r.json())
+            .then(res => {
+                Swal.close();
+                if (res.success && res.payload) {
+                    currentDashboardModalPayload = res.payload;
+                    const badge = document.getElementById('dashModalPayloadBadge');
+                    const awbEl = document.getElementById('dashModalCargoAwb');
+                    const disp = document.getElementById('dashModalJsonDisplay');
+                    if (badge) badge.textContent = 'CMP-' + cargoId;
+                    if (awbEl) awbEl.textContent = awbNumber || cargoId;
+                    if (disp) disp.textContent = JSON.stringify(res.payload, null, 2);
+                    document.getElementById('dashboardMasterPayloadModal').classList.remove('hidden');
+                } else {
+                    Swal.fire('Error', res.message || 'Gagal memuat master payload', 'error');
+                }
+            })
+            .catch(err => {
+                Swal.fire('Error', 'Gagal memuat payload: ' + err, 'error');
+            });
+    }
+
+    function closeDashboardMasterPayloadModal() {
+        const modal = document.getElementById('dashboardMasterPayloadModal');
+        if (modal) modal.classList.add('hidden');
+    }
+
+    function copyDashboardMasterPayload() {
+        if (!currentDashboardModalPayload) return;
+        navigator.clipboard.writeText(JSON.stringify(currentDashboardModalPayload, null, 2)).then(() => {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                title: 'Master JSON Payload berhasil disalin!',
+                icon: 'success',
+                showConfirmButton: false,
+                timer: 2000,
+                background: '#ffffff',
+                color: '#0D1C42',
+                customClass: { popup: 'rounded-xl shadow-lg border border-gray-200' }
+            });
         });
     }
 </script>

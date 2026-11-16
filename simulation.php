@@ -133,6 +133,27 @@ include __DIR__ . '/includes/header.php';
                     </span>
                 </div>
             </div>
+
+            <!-- Master Cargo JSON Payload Sub-Banner (Hardware Surrogate PoC) -->
+            <div class="mt-3.5 pt-3 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div class="flex items-center space-x-2">
+                    <span class="px-2.5 py-1 rounded-lg bg-teal-50 border border-teal-200 text-[#087F8A] font-bold text-[11px] flex items-center gap-1.5">
+                        <i class="fa-solid fa-microchip text-[#0CA1AF]"></i>
+                        <span>Kode JSON Payload Kargo:</span>
+                        <span id="card-payload-id" class="font-mono font-black text-[#0D1C42]">-</span>
+                    </span>
+                    <span class="text-[11px] text-slate-500 hidden sm:inline">&bull; 1 Dokumen JSON Terpadu Pengganti Hardware Lapangan (Tahap 1 s/d 7)</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="openMasterCargoPayloadModal()" class="px-3 py-1 rounded-lg bg-slate-100 hover:bg-teal-50 text-slate-700 hover:text-[#087F8A] font-bold text-[11px] border border-gray-200 hover:border-teal-300 transition-all flex items-center gap-1.5 shadow-sm cursor-pointer">
+                        <i class="fa-solid fa-code text-[#087F8A]"></i>
+                        <span>Lihat Master JSON Kargo</span>
+                    </button>
+                    <button type="button" onclick="copyMasterPayloadJson()" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-semibold border border-gray-200 transition-all cursor-pointer" title="Salin Master JSON Kargo">
+                        <i class="fa-solid fa-copy"></i>
+                    </button>
+                </div>
+            </div>
         </div>
 
         <!-- SYSTEM DASHBOARD SWITCHER TABS (Pembagian Khusus Sesuai Alur: Kedatangan Truk s/d Flight Loading) -->
@@ -360,13 +381,16 @@ include __DIR__ . '/includes/header.php';
                             </button>
                         </div>
 
-                        <!-- Sub-Tabs: Request vs Response -->
-                        <div class="flex space-x-2 mb-3">
-                            <button id="tabBtnRequest" onclick="switchPayloadTab('request')" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-bold bg-[#087F8A] text-white shadow-sm transition-all flex items-center justify-center">
-                                <i class="fa-solid fa-arrow-up-right-from-square mr-1.5"></i> HTTP Request
+                        <!-- Sub-Tabs: Request vs Response vs Master JSON -->
+                        <div class="flex space-x-1.5 mb-3">
+                            <button id="tabBtnRequest" onclick="switchPayloadTab('request')" class="flex-1 py-1.5 px-2 rounded-lg text-xs font-bold bg-[#087F8A] text-white shadow-sm transition-all flex items-center justify-center cursor-pointer">
+                                <i class="fa-solid fa-arrow-up-right-from-square mr-1 text-[11px]"></i> Request
                             </button>
-                            <button id="tabBtnResponse" onclick="switchPayloadTab('response')" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold bg-slate-100 text-slate-600 hover:text-slate-800 border border-gray-200 transition-all flex items-center justify-center">
-                                <i class="fa-solid fa-arrow-down-left-and-up-right-to-center mr-1.5"></i> System Response
+                            <button id="tabBtnResponse" onclick="switchPayloadTab('response')" class="flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold bg-slate-100 text-slate-600 hover:text-slate-800 border border-gray-200 transition-all flex items-center justify-center cursor-pointer">
+                                <i class="fa-solid fa-arrow-down-left-and-up-right-to-center mr-1 text-[11px]"></i> Response
+                            </button>
+                            <button id="tabBtnMaster" onclick="switchPayloadTab('master')" class="flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold bg-slate-100 text-[#087F8A] hover:bg-teal-50 hover:text-[#0D1C42] border border-gray-200 transition-all flex items-center justify-center font-bold cursor-pointer" title="Lihat Satu Dokumen JSON Terpadu untuk Kargo Ini">
+                                <i class="fa-solid fa-box-open mr-1 text-[11px]"></i> Master JSON
                             </button>
                         </div>
 
@@ -1666,6 +1690,61 @@ include __DIR__ . '/includes/header.php';
 
     </div>
 
+</div>
+
+<!-- Modal Master Cargo JSON Payload (Hardware Replacement Surrogate PoC) -->
+<div id="masterCargoPayloadModal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-4xl rounded-2xl border border-gray-200 p-6 shadow-2xl relative flex flex-col max-h-[90vh]">
+        <button onclick="closeMasterCargoPayloadModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-700 text-lg transition-colors cursor-pointer" title="Tutup Modal">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+        
+        <div class="pb-3 border-b border-gray-100 mb-4">
+            <div class="flex items-center gap-2">
+                <span class="w-2.5 h-6 rounded-full bg-gradient-to-b from-[#0CA1AF] to-[#087F8A]"></span>
+                <h3 class="text-base font-extrabold text-[#0D1C42]">
+                    Master JSON Payload Kargo (Hardware Surrogate PoC)
+                </h3>
+                <span id="modal-payload-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-teal-50 text-[#087F8A] border border-teal-200">
+                    CMP-...
+                </span>
+            </div>
+            <p class="text-xs text-slate-500 mt-1 pl-4">
+                Satu dokumen JSON terintegrasi per kargo yang merepresentasikan pembacaan 7 perangkat sensor Layer 1 &amp; riwayat perpindahan data di seluruh tahapan terminal.
+            </p>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3 text-xs">
+            <div class="flex items-center space-x-2 text-[11px] text-slate-600">
+                <span class="font-bold">Standar:</span>
+                <span class="font-mono bg-emerald-50 text-emerald-700 px-2.5 py-0.5 rounded-lg border border-emerald-200 font-semibold text-[10.5px]">GS1 SSCC-18 / JSON Schema</span>
+                <span class="text-slate-300">|</span>
+                <span class="text-slate-500">Kargo Aktif: <strong id="modal-cargo-awb" class="text-[#0D1C42] font-mono">-</strong></span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="copyMasterPayloadJson()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs border border-gray-200 transition-all flex items-center gap-1.5 shadow-sm cursor-pointer">
+                    <i class="fa-solid fa-copy text-[#087F8A]"></i>
+                    <span>Salin JSON</span>
+                </button>
+                <button type="button" onclick="downloadMasterPayloadJson()" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-bold text-xs shadow-md shadow-teal-500/20 transition-all flex items-center gap-1.5 cursor-pointer">
+                    <i class="fa-solid fa-download"></i>
+                    <span>Download .json</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Scrollable Code Box -->
+        <div class="flex-grow overflow-auto bg-[#0D1C42] border border-slate-700 rounded-xl p-4 text-xs font-mono relative shadow-inner min-h-[350px]">
+            <pre id="modalJsonDisplay" class="text-emerald-300 leading-relaxed text-[11px] whitespace-pre">// Memuat data Master JSON Payload kargo...</pre>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-slate-500">
+            <span>Proof of Concept &bull; PT Aerospace Consultant Advisory &bull; ITL Trisakti</span>
+            <button type="button" onclick="closeMasterCargoPayloadModal()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs border border-gray-200 transition-all cursor-pointer">
+                Tutup
+            </button>
+        </div>
+    </div>
 </div>
 
 <!-- Simulation Engine Scripts -->

@@ -2,6 +2,7 @@
 // Logika Eksekusi Laboratorium Simulasi 7 Tahapan Kargo Udara (InJourney Airports Design System)
 
 let currentCargoData = null;
+let currentMasterPayload = null;
 let currentStageView = 1;
 let currentSystemDashboard = 'all';
 let activePayloadTab = 'request';
@@ -83,6 +84,7 @@ function initSimulation(cargoId, targetStageView = null, targetSystem = null) {
         .then(res => {
             if (res.success) {
                 currentCargoData = res.data.cargo;
+                currentMasterPayload = res.data.payload || null;
                 renderCargoHeader(currentCargoData);
                 renderAuditTimeline(res.data.logs);
                 updateStepperState(currentCargoData.current_stage, currentCargoData.status);
@@ -111,6 +113,11 @@ function renderCargoHeader(c) {
     
     const actWt = c.actual_weight_kg ? `${parseFloat(c.actual_weight_kg).toFixed(1)} kg` : 'Belum Ditimbang';
     document.getElementById('card-weight').textContent = `${parseFloat(c.declared_weight_kg).toFixed(1)} kg / ${actWt}`;
+
+    const payloadBadge = document.getElementById('card-payload-id');
+    if (payloadBadge) {
+        payloadBadge.textContent = 'CMP-' + c.id;
+    }
 
     // Badge status (InJourney Clean Theme)
     const badge = document.getElementById('card-status-badge');
@@ -619,6 +626,9 @@ function doExecuteStageAction(stage, avsecDecision) {
                 currentCargoData = res.cargo;
                 renderCargoHeader(currentCargoData);
             }
+            if (res.payload) {
+                currentMasterPayload = res.payload;
+            }
 
             let iconType = 'success';
             let btnColor = '#087F8A';
@@ -708,6 +718,9 @@ function triggerAutoRun() {
             .then(r => r.json())
             .then(res => {
                 if (res.success) {
+                    if (res.payload) {
+                        currentMasterPayload = res.payload;
+                    }
                     Swal.fire({
                         title: 'Simulasi Lengkap Berhasil!',
                         text: 'Semua 7 tahapan kargo telah disimulasikan hingga status LOADED dan manifes penerbangan GA-707 ditutup.',
@@ -747,6 +760,14 @@ function triggerAutoRun() {
 function updatePayloadInspector(stage) {
     const c = currentCargoData;
     if (!c) return;
+
+    // Prioritaskan payload terintegrasi dari Master Cargo Document jika tersedia
+    if (currentMasterPayload && currentMasterPayload.stages && currentMasterPayload.stages[stage]) {
+        currentRequestJson = currentMasterPayload.stages[stage].request_payload;
+        currentResponseJson = currentMasterPayload.stages[stage].response_payload;
+        displayActivePayload();
+        return;
+    }
 
     // Default payload matching stage
     if (stage === 1) {
@@ -923,21 +944,30 @@ function switchPayloadTab(tab) {
     activePayloadTab = tab;
     const reqBtn = document.getElementById('tabBtnRequest');
     const resBtn = document.getElementById('tabBtnResponse');
+    const masBtn = document.getElementById('tabBtnMaster');
 
-    if (tab === 'request') {
-        reqBtn.className = 'flex-1 py-1.5 px-3 rounded-lg text-xs font-bold bg-[#087F8A] text-white shadow-sm transition-all flex items-center justify-center';
-        resBtn.className = 'flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold bg-slate-100 text-slate-600 hover:text-slate-800 border border-gray-200 transition-all flex items-center justify-center';
-    } else {
-        resBtn.className = 'flex-1 py-1.5 px-3 rounded-lg text-xs font-bold bg-[#087F8A] text-white shadow-sm transition-all flex items-center justify-center';
-        reqBtn.className = 'flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold bg-slate-100 text-slate-600 hover:text-slate-800 border border-gray-200 transition-all flex items-center justify-center';
-    }
+    const activeClass = 'flex-1 py-1.5 px-2 rounded-lg text-xs font-bold bg-[#087F8A] text-white shadow-sm transition-all flex items-center justify-center cursor-pointer';
+    const inactiveClass = 'flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold bg-slate-100 text-slate-600 hover:text-slate-800 border border-gray-200 transition-all flex items-center justify-center cursor-pointer';
+
+    if (reqBtn) reqBtn.className = (tab === 'request') ? activeClass : inactiveClass;
+    if (resBtn) resBtn.className = (tab === 'response') ? activeClass : inactiveClass;
+    if (masBtn) masBtn.className = (tab === 'master') ? activeClass : inactiveClass;
 
     displayActivePayload();
 }
 
 function displayActivePayload() {
     const display = document.getElementById('jsonPayloadDisplay');
-    const targetObj = (activePayloadTab === 'request') ? currentRequestJson : currentResponseJson;
+    if (!display) return;
+    let targetObj = currentRequestJson;
+    if (activePayloadTab === 'response') {
+        targetObj = currentResponseJson;
+    } else if (activePayloadTab === 'master') {
+        targetObj = currentMasterPayload || {
+            "cargo_payload_id": currentCargoData ? ('CMP-' + currentCargoData.id) : "CMP-CGO",
+            "message": "Memuat Master JSON Payload kargo..."
+        };
+    }
     display.textContent = JSON.stringify(targetObj, null, 2);
 }
 
@@ -1342,6 +1372,8 @@ function updateTMSJsonPayload(assignedDock = null, customPlate = null) {
     const activePlate = customPlate || (plateInput ? plateInput.value : currentCargoData.truck_plate) || 'B 9482 XX';
 
     const tmsJson = {
+        "cargo_payload_id": "CMP-" + currentCargoData.id,
+        "master_sscc": currentCargoData.sscc,
         "event_type": "TMS_TRUCK_GATE_CHECKIN",
         "truck_id": currentCargoData.truck_arrival_id || "TRK-INBOUND-01",
         "truck_plate": activePlate,
@@ -1587,6 +1619,9 @@ function submitTMSCheckIn() {
             if (res.cargo) {
                 currentCargoData = res.cargo;
                 renderCargoHeader(currentCargoData);
+            }
+            if (res.payload) {
+                currentMasterPayload = res.payload;
             } else {
                 currentCargoData.current_stage = 1;
                 currentCargoData.status = 'REGISTERED';
@@ -1753,6 +1788,9 @@ function executeStage2Scan() {
             if (res.cargo) {
                 currentCargoData = res.cargo;
                 renderCargoHeader(currentCargoData);
+            }
+            if (res.payload) {
+                currentMasterPayload = res.payload;
             } else {
                 currentCargoData.current_stage = 2;
                 currentCargoData.status = 'SCANNED';
@@ -1888,6 +1926,9 @@ function executeStage3Validate() {
             if (res.cargo) {
                 currentCargoData = res.cargo;
                 renderCargoHeader(currentCargoData);
+            }
+            if (res.payload) {
+                currentMasterPayload = res.payload;
             } else {
                 currentCargoData.current_stage = 3;
                 currentCargoData.status = 'REGISTERED';
@@ -2015,6 +2056,8 @@ function renderCMSDashboard(c) {
     // KASUS 1: BARU TIBA DARI TMS, MUATAN TRUK SIAP DI-INGEST KE CMS (Stage < 2)
     if (stage < 2) {
         const readyPayload = {
+            "cargo_payload_id": "CMP-" + c.id,
+            "master_sscc": c.sscc,
             "event_type": "AIDC_INBOUND_INGEST_STREAM",
             "protocol": "GS1_DIGITAL_LINK_JSON / REST_MQTT",
             "device_id": "EDGE-AIDC-GATEWAY-01",
@@ -2090,6 +2133,8 @@ function renderCMSDashboard(c) {
     // KASUS 2: SUDAH INGEST DATA JSON, SIAP VALIDASI E-AWB (Stage == 2)
     else if (stage === 2) {
         const scanPayload = {
+            "cargo_payload_id": "CMP-" + c.id,
+            "master_sscc": c.sscc,
             "event_type": "AIDC_INBOUND_INGEST_STREAM",
             "device_id": "EDGE-AIDC-SCANNER-01",
             "scan_protocol": "GS1_DIGITAL_LINK_JSON",
@@ -2428,4 +2473,72 @@ function renderLoadBalanceDashboard(c) {
     if (streamDisp) streamDisp.textContent = JSON.stringify(lbJson, null, 2);
     const lbDisp = document.getElementById('lbPayloadDisplay');
     if (lbDisp) lbDisp.textContent = JSON.stringify(lbJson, null, 2);
+}
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MASTER CARGO JSON PAYLOAD MODAL & EXPORT HANDLERS (HARDWARE REPLACEMENT PoC)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function openMasterCargoPayloadModal() {
+    if (!currentCargoData) return;
+    const modal = document.getElementById('masterCargoPayloadModal');
+    const modalBadge = document.getElementById('modal-payload-badge');
+    const modalAwb = document.getElementById('modal-cargo-awb');
+    const modalDisplay = document.getElementById('modalJsonDisplay');
+
+    const payloadId = 'CMP-' + currentCargoData.id;
+    if (modalBadge) modalBadge.textContent = payloadId;
+    if (modalAwb) modalAwb.textContent = `${currentCargoData.awb_number} (${currentCargoData.description})`;
+
+    const targetPayload = currentMasterPayload || {
+        "cargo_payload_id": payloadId,
+        "identity": currentCargoData,
+        "note": "Memuat master payload dari server..."
+    };
+
+    if (modalDisplay) {
+        modalDisplay.textContent = JSON.stringify(targetPayload, null, 2);
+    }
+    if (modal) modal.classList.remove('hidden');
+}
+
+function closeMasterCargoPayloadModal() {
+    const modal = document.getElementById('masterCargoPayloadModal');
+    if (modal) modal.classList.add('hidden');
+}
+
+function copyMasterPayloadJson() {
+    if (!currentCargoData) return;
+    const targetPayload = currentMasterPayload || currentCargoData;
+    const text = JSON.stringify(targetPayload, null, 2);
+    navigator.clipboard.writeText(text).then(() => {
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            title: `Master JSON Payload (CMP-${currentCargoData.id}) berhasil disalin!`,
+            icon: 'success',
+            showConfirmButton: false,
+            timer: 2000,
+            background: '#ffffff',
+            color: '#0D1C42',
+            customClass: { popup: 'rounded-xl shadow-lg border border-gray-200' }
+        });
+    });
+}
+
+function downloadMasterPayloadJson() {
+    if (!currentCargoData) return;
+    const payloadId = 'CMP-' + currentCargoData.id;
+    const targetPayload = currentMasterPayload || currentCargoData;
+    const text = JSON.stringify(targetPayload, null, 2);
+    const blob = new Blob([text], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${payloadId}-Master-Payload.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 }

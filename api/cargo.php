@@ -1,6 +1,7 @@
 <?php
 // api/cargo.php
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/cargo_payload.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? 'list';
@@ -11,6 +12,7 @@ try {
         $stmt = $db->query("
             SELECT 
                 c.*, 
+                CONCAT('CMP-', c.id) as cargo_payload_id,
                 t.truck_plate, t.dock_slot, t.driver_name,
                 u.uld_code, u.compartment,
                 f.flight_number, f.destination as flight_dest
@@ -22,6 +24,23 @@ try {
         ");
         $cargos = $stmt->fetchAll();
         jsonResponse(['success' => true, 'data' => $cargos]);
+    }
+
+    if ($action === 'master_payload') {
+        $id = $_GET['id'] ?? '';
+        if (!$id) {
+            jsonResponse(['success' => false, 'message' => 'Cargo ID required'], 400);
+        }
+        $payload = syncCargoPayload($db, $id);
+        if (!$payload) {
+            jsonResponse(['success' => false, 'message' => 'Cargo not found'], 404);
+        }
+        jsonResponse([
+            'success' => true,
+            'cargo_id' => $id,
+            'cargo_payload_id' => 'CMP-' . $id,
+            'payload' => $payload
+        ]);
     }
 
     if ($action === 'detail') {
@@ -57,11 +76,16 @@ try {
         $logStmt->execute([$id]);
         $logs = $logStmt->fetchAll();
 
+        // Sinkronkan dan ambil Master JSON Payload Terpadu
+        $masterPayload = syncCargoPayload($db, $id);
+
         jsonResponse([
             'success' => true,
             'data' => [
                 'cargo' => $cargo,
-                'logs' => $logs
+                'logs' => $logs,
+                'payload' => $masterPayload,
+                'payload_id' => 'CMP-' . $cargo['id']
             ]
         ]);
     }
@@ -130,6 +154,7 @@ try {
 
         // Simpan log tahap 1 (TMS / TAS Arrival)
         $logPayload = [
+            'cargo_payload_id' => 'CMP-' . $cargoId,
             'event' => 'TRUCK_ARRIVAL_BOOKING',
             'truck_id' => $truckId,
             'plate_number' => $plate,
@@ -140,6 +165,7 @@ try {
             'arrival_timestamp' => date('c')
         ];
         $logResponse = [
+            'cargo_payload_id' => 'CMP-' . $cargoId,
             'status' => 'SUCCESS',
             'message' => 'Truk berhasil dialokasikan ke dock ' . $dock,
             'gate_clearance_code' => 'GATE-OK-' . rand(1000, 9999)
@@ -160,12 +186,17 @@ try {
 
         $db->commit();
 
+        // Sinkronkan Master JSON Payload Kargo Baru
+        $masterPayload = syncCargoPayload($db, $cargoId);
+
         jsonResponse([
             'success' => true,
             'message' => 'Kargo berhasil dibuat',
             'cargo_id' => $cargoId,
+            'cargo_payload_id' => 'CMP-' . $cargoId,
             'sscc' => $sscc,
-            'awb_number' => $awbNumber
+            'awb_number' => $awbNumber,
+            'payload' => $masterPayload
         ]);
     }
 

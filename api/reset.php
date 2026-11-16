@@ -1,6 +1,7 @@
 <?php
 // api/reset.php
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/cargo_payload.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 if ($method !== 'POST') {
@@ -53,6 +54,7 @@ try {
 
     // Log awal untuk kargo 1 di tahap 1
     $logPayload = [
+        'cargo_payload_id' => 'CMP-CGO-20260926-001',
         'event' => 'TRUCK_ARRIVAL_BOOKING',
         'truck_id' => 'TRK-20260926-01',
         'plate_number' => 'B 9482 KXT',
@@ -63,6 +65,7 @@ try {
         'arrival_timestamp' => date('c')
     ];
     $logResponse = [
+        'cargo_payload_id' => 'CMP-CGO-20260926-001',
         'status' => 'SUCCESS',
         'message' => 'Truk berhasil dialokasikan ke dock DOCK-04',
         'gate_clearance_code' => 'GATE-OK-9482'
