@@ -13,58 +13,58 @@ let currentResponseJson = {};
 const STAGE_METADATA = {
     1: {
         title: "Kedatangan Truk & Booking Slot (TMS/TAS)",
-        hardware: "TMS RFID Gate Reader & Barrier Gate",
+        hardware: "TMS RFID Gate Reader & Barrier Gate (Virtual JSON Stream)",
         software: "Intermodal TMS / Truck Appointment System (TAS)",
         icon: "fa-truck",
-        explanation: "Sistem TMS/TAS mengatur time-slot kedatangan truk dari moda transportasi darat untuk menghindari antrean di gerbang bandara. Truk diverifikasi dan diarahkan otomatis ke dock kargo yang tersedia.",
+        explanation: "Hardware gerbang fisik (RFID reader dan barrier) direpresentasikan oleh JSON Payload verifikasi time-slot dan data truk. Kargo diverifikasi secara otomatis dan dialokasikan ke dock.",
         standard: "EDIFACT / REST API Gate Ingest"
     },
     2: {
         title: "Scan RFID/Barcode di Gerbang Masuk (High-Speed Scanner)",
-        hardware: "High-Speed Barcode/RFID UHF Tunnel Scanner (2.5 m/s, IP65)",
+        hardware: "High-Speed Barcode/RFID UHF Tunnel Scanner (Virtual JSON Stream 2.5 m/s)",
         software: "Cargo Management Software (CMS) Inbound Edge",
         icon: "fa-qrcode",
-        explanation: "Kargo dipindai secara massal tanpa sentuh saat melewati konveyor gerbang. Tag GS1-128 dan SSCC 18-digit dibaca otomatis dan diparsing menjadi data digital seketika tanpa entri manual.",
+        explanation: "Hardware tunnel scanner 2.5 m/s digantikan oleh transmisi JSON Payload standar GS1 yang memuat SSCC 18-digit, GTIN, nomor batch, dan tanggal kedaluwarsa secara otomatis.",
         standard: "GS1 AI (00) SSCC & (01) GTIN Standard"
     },
     3: {
         title: "Registrasi Data & Pencocokan e-AWB di CMS",
-        hardware: "CMS Core Application Server & Industrial Network",
-        software: "Cargo Management Software (CMS Master)",
+        hardware: "CMS Core Application Server & Gateway (Virtual JSON Stream)",
+        software: "Cargo Management Software (CMS Master e-AWB)",
         icon: "fa-laptop-code",
-        explanation: "CMS menerima paket data hasil pindaian gerbang dan mencocokkannya dengan dokumen Air Waybill elektronik (e-AWB). Sistem menetapkan rute internal kargo menuju area screening keamanan.",
+        explanation: "CMS memproses paket data JSON hasil pindaian dan mencocokkannya dengan Air Waybill elektronik (e-AWB). Sistem menetapkan rute internal kargo menuju area screening keamanan.",
         standard: "IATA e-freight / e-AWB XML/JSON"
     },
     4: {
         title: "Pemeriksaan Keamanan X-Ray (AVSEC System)",
-        hardware: "Dual-View / High-Energy Air Cargo X-Ray Scanner (180x180 cm, 320kV)",
+        hardware: "Dual-View High-Energy X-Ray 320kV (Virtual JSON Density Stream)",
         software: "Aviation Security Management System (AVSEC System)",
         icon: "fa-shield-halved",
-        explanation: "Kargo dipindai dengan sinar-X sudut ganda untuk mendeteksi barang berbahaya (Dangerous Goods, baterai terlarang, bahan peledak). Jika CLEARED diterbitkan sertifikat CSD digital; jika SUSPECT kargo langsung diblokir otomatis.",
+        explanation: "Hardware scanner sinar-X disimulasikan menggunakan JSON Payload evaluasi densitas atom Z-effective. Jika lolos (CLEARED), diterbitkan sertifikat CSD digital; jika SUSPECT kargo langsung diblokir.",
         standard: "ICAO / AVSEC CSD (Consignment Security Declaration)"
     },
     5: {
         title: "Penimbangan Kargo (Smart ULD Weighing Station)",
-        hardware: "Smart ULD Floor Scale (Kapasitas 15 Ton, Akurasi ±1 kg, IP68)",
+        hardware: "Smart ULD Floor Scale 15T (Virtual JSON Load Cell Stream)",
         software: "CMS & Modul Integrasi Weight & Balance",
         icon: "fa-scale-balanced",
-        explanation: "Kargo ditimbang di timbangan lantai industri yang terpasang rata dengan lantai gudang. Nilai berat kotor aktual (actual weight) dicatat dan dicocokkan dengan deklarasi e-AWB untuk mencegah anomali muatan.",
+        explanation: "Sensor load cell timbangan lantai industri direpresentasikan melalui JSON Payload pembacaan berat aktual dan kalkulasi selisih toleransi bobot (discrepancy) untuk kepatuhan batas beban.",
         standard: "OIML R76 Weighing Standard / TCP Socket Payload"
     },
     6: {
         title: "Build-Up ULD & Kalkulasi Weight & Balance",
-        hardware: "Automated ULD Workstation & Stacking Conveyor",
+        hardware: "Automated ULD Workstation (Virtual JSON Envelope Stream)",
         software: "Weight & Balance System / Load Planning Software",
         icon: "fa-boxes-packing",
-        explanation: "Kargo dikonsolidasikan ke dalam kontainer pesawat (ULD tipe AKE/PMC). Software menghitung distribusi massa pesawat, batas beban lantai kabin (floor load limit), dan titik keseimbangan (Center of Gravity / CoG).",
+        explanation: "Proses workstation perakitan ULD kontainer disimulasikan dengan JSON Payload yang menghitung distribusi muatan, titik keseimbangan Center of Gravity (CoG 28.4%), dan integritas batas lantai kabin.",
         standard: "IATA ULD Regulations & Weight & Balance Envelope"
     },
     7: {
         title: "Update Manifes Penerbangan & Pemuatan ke Pesawat",
-        hardware: "Airport Ramp Dolly, Cargo High-Loader, & Cockpit EFB",
+        hardware: "Airport Ramp Dolly & Cargo High-Loader (Virtual JSON Dispatch Stream)",
         software: "CMS & Airline Flight Operations System",
         icon: "fa-plane-departure",
-        explanation: "Manifes kargo penerbangan final diperbarui dengan data ULD terpasang. Dokumen Electronic Loadsheet resmi diterbitkan ke kokpit pilot dan kargo diberangkatkan (status DEPARTED).",
+        explanation: "Hardware transfer dolly dan ramp high-loader ke perut pesawat dituntaskan melalui JSON Payload penerbitan Electronic Loadsheet resmi ke kokpit pilot dan manifes penerbangan (status DEPARTED).",
         standard: "IATA Cargo-IMP / Flight Loadsheet Standard"
     }
 };

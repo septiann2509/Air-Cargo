@@ -273,11 +273,16 @@ include __DIR__ . '/includes/header.php';
                             </span>
                         </div>
 
-                        <!-- Hardware & Software Badges -->
+                        <!-- Hardware & Software Badges (Layer 1 Virtual Sensing via JSON Payload) -->
                         <div class="grid grid-cols-2 gap-3 mb-5 text-xs">
                             <div class="p-3.5 rounded-xl bg-slate-50 border border-gray-200">
-                                <span class="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Layer 1: Hardware Lapangan</span>
-                                <span id="activeHardwareName" class="text-[#0D1C42] font-bold block mt-0.5">-</span>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Layer 1: Hardware Lapangan</span>
+                                    <span class="text-[9px] font-mono font-bold text-[#087F8A] bg-teal-50 px-2 py-0.5 rounded border border-teal-200 flex items-center gap-1">
+                                        <i class="fa-solid fa-code text-[8px]"></i> JSON Payload Surrogate
+                                    </span>
+                                </div>
+                                <span id="activeHardwareName" class="text-[#0D1C42] font-bold block mt-1">-</span>
                             </div>
                             <div class="p-3.5 rounded-xl bg-slate-50 border border-gray-200">
                                 <span class="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Layer 3: Software Sistem</span>
