@@ -30,18 +30,31 @@ try {
     }
 
     if ($actionType === 'auto_run') {
-        // Jalankan dari stage saat ini sampai stage 7 secara berurutan
+        // Jalankan dari stage awal sampai stage 7 secara berurutan
         $results = [];
-        for ($s = max(2, $cargo['current_stage'] + 1); $s <= 7; $s++) {
+        $startStage = ($cargo['current_stage'] == 1 && $cargo['status'] === 'REGISTERED') ? 1 : ((int)$cargo['current_stage'] < 7 ? (int)$cargo['current_stage'] : 1);
+        for ($s = $startStage; $s <= 7; $s++) {
             $res = executeStage($db, $cargoId, $s, 'CLEARED');
             $results[] = $res;
             if (!$res['success']) {
                 break;
             }
         }
+        $stmtFetch = $db->prepare("
+            SELECT c.*, t.truck_plate, t.dock_slot, t.driver_name, t.transporter_company, t.booking_code
+            FROM cargo_shipments c
+            LEFT JOIN truck_arrivals t ON c.truck_arrival_id = t.id
+            WHERE c.id = ?
+        ");
+        $stmtFetch->execute([$cargoId]);
+        $finalCargo = $stmtFetch->fetch();
+        $finalPayload = syncCargoPayload($db, $cargoId);
+
         jsonResponse([
             'success' => true,
-            'message' => 'Auto-run simulasi selesai hingga tahap akhir',
+            'message' => 'Auto-run simulasi selesai hingga tahap akhir (LOADED)',
+            'cargo' => $finalCargo,
+            'payload' => $finalPayload,
             'history' => $results
         ]);
     } else {
@@ -213,7 +226,7 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $truckD
                     SET awb_number = ?, sscc = ?, gtin = ?, batch_no = ?, expiry_date = ?,
                         shipper = ?, consignee = ?, description = ?, commodity_type = ?,
                         quantity = ?, declared_weight_kg = ?, actual_weight_kg = ?,
-                        current_stage = 1, status = 'REGISTERED', truck_arrival_id = ?
+                        current_stage = 2, status = 'ARRIVED', truck_arrival_id = ?
                     WHERE id = ?
                 ");
                 $updateCargo->execute([
@@ -287,7 +300,7 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $truckD
                 $scanTime = date('Y-m-d H:i:s');
                 $update = $db->prepare("
                     UPDATE cargo_shipments 
-                    SET current_stage = 2, status = 'SCANNED', scan_time = ? 
+                    SET current_stage = 3, status = 'SCANNED', scan_time = ? 
                     WHERE id = ?
                 ");
                 $update->execute([$scanTime, $cargoId]);
@@ -328,7 +341,7 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $truckD
             case 3: // TAHAP 3: Registrasi Data & e-AWB Matching di CMS
                 $update = $db->prepare("
                     UPDATE cargo_shipments 
-                    SET current_stage = 3, status = 'SECURITY_CHECK' 
+                    SET current_stage = 4, status = 'SECURITY_CHECK' 
                     WHERE id = ?
                 ");
                 $update->execute([$cargoId]);
@@ -408,12 +421,18 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $truckD
                     $notes
                 ]);
 
+                $nextStageAvsec = 5;
+                if ($isSuspect) {
+                    $nextStageAvsec = 4;
+                } else if ($isReturn) {
+                    $nextStageAvsec = 1;
+                }
                 $update = $db->prepare("
                     UPDATE cargo_shipments 
-                    SET current_stage = 4, status = ? 
+                    SET current_stage = ?, status = ? 
                     WHERE id = ?
                 ");
-                $update->execute([$statusResult, $cargoId]);
+                $update->execute([$nextStageAvsec, $statusResult, $cargoId]);
 
                 $jsonPayload = [
                     "cargo_payload_id" => "CMP-" . $cargoId,
@@ -480,7 +499,7 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $truckD
 
                 $update = $db->prepare("
                     UPDATE cargo_shipments 
-                    SET current_stage = 5, status = 'WEIGHED', actual_weight_kg = ? 
+                    SET current_stage = 6, status = 'WEIGHED', actual_weight_kg = ? 
                     WHERE id = ?
                 ");
                 $update->execute([$actual, $cargoId]);
@@ -562,7 +581,7 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $truckD
 
                 $updateCargo = $db->prepare("
                     UPDATE cargo_shipments 
-                    SET current_stage = 6, status = 'ALLOCATED', uld_id = ? 
+                    SET current_stage = 7, status = 'ALLOCATED', uld_id = ? 
                     WHERE id = ?
                 ");
                 $updateCargo->execute([$targetUld['id'], $cargoId]);
@@ -682,13 +701,17 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $truckD
         $stmtCargoAfter->execute([$cargoId]);
         $updatedCargo = $stmtCargoAfter->fetch();
 
+        // Sinkronkan Master JSON Payload terbaru ke database
+        $masterPayload = syncCargoPayload($db, $cargoId);
+
         $db->commit();
         $res = [
             'success' => true,
             'message' => 'Tahap ' . $stage . ' berhasil diproses',
             'stage' => $stage,
             'cargo_id' => $cargoId,
-            'cargo' => $updatedCargo
+            'cargo' => $updatedCargo,
+            'payload' => $masterPayload
         ];
         if (isset($newTruckRecord)) {
             $res['truck'] = $newTruckRecord;

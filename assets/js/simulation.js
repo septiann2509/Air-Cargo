@@ -143,7 +143,21 @@ function renderCargoHeader(c) {
 }
 
 function updateStepperState(completedStage, status) {
-    document.getElementById('currentStageBadge').textContent = `Tahap Kargo Saat Ini: ${completedStage} (${status})`;
+    const currentStage = parseInt(completedStage || 1);
+    const isFullyLoaded = (status === 'LOADED' && currentStage === 7);
+    const badge = document.getElementById('currentStageBadge');
+    if (badge) {
+        if (isFullyLoaded) {
+            badge.textContent = `Seluruh 7 Tahap Selesai: LOADED (Siap Terbang)`;
+            badge.className = 'text-[11px] font-mono px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-300 font-bold';
+        } else if (status === 'SUSPECT') {
+            badge.textContent = `Tahap Kargo Saat Ini: 4 (SUSPECT - Dikarantina)`;
+            badge.className = 'text-[11px] font-mono px-3 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-300 font-bold animate-pulse';
+        } else {
+            badge.textContent = `Tahap Kargo Saat Ini: ${currentStage} (${status})`;
+            badge.className = 'text-[11px] font-mono px-3 py-1 rounded-full bg-teal-50 text-[#087F8A] border border-teal-200 font-bold';
+        }
+    }
 
     for (let s = 1; s <= 7; s++) {
         const btn = document.getElementById(`step-btn-${s}`);
@@ -151,36 +165,38 @@ function updateStepperState(completedStage, status) {
         const icon = document.getElementById(`step-icon-${s}`);
         const title = document.getElementById(`step-title-${s}`);
 
+        if (!btn || !circle) continue;
+
         btn.className = 'stage-step-card text-left p-3.5 rounded-xl border transition-all flex flex-col justify-between ';
 
-        if (s < completedStage) {
-            // Sudah lewat (Selesai)
+        if (isFullyLoaded || s < currentStage) {
+            // Sudah lewat (Selesai Dilalui) -> HIJAU DENGAN CHECKMARK
             circle.className = 'w-6 h-6 rounded-full bg-emerald-500 text-white text-xs font-bold flex items-center justify-center font-mono shadow-sm';
             circle.innerHTML = '<i class="fa-solid fa-check text-[10px]"></i>';
-            icon.className = `fa-solid ${STAGE_METADATA[s].icon} text-emerald-600 text-xs`;
-            title.className = 'text-[11px] font-bold text-emerald-700 leading-snug';
-            btn.className += 'border-emerald-200 bg-emerald-50/40 hover:bg-emerald-50/70';
-        } else if (s === completedStage) {
-            // Tahap saat ini
+            if (icon) icon.className = `fa-solid ${STAGE_METADATA[s].icon} text-emerald-600 text-xs`;
+            if (title) title.className = 'text-[11px] font-bold text-emerald-700 leading-snug';
+            btn.className += 'border-emerald-200 bg-emerald-50/50 hover:bg-emerald-50';
+        } else if (s === currentStage) {
+            // Tahap saat ini (Aktif)
             if (status === 'SUSPECT' && s === 4) {
-                circle.className = 'w-6 h-6 rounded-full bg-rose-600 text-white text-xs font-bold flex items-center justify-center font-mono animate-pulse ring-4 ring-rose-100';
-                circle.textContent = '!';
-                icon.className = `fa-solid ${STAGE_METADATA[s].icon} text-rose-600 text-xs`;
-                title.className = 'text-[11px] font-bold text-rose-700 leading-snug';
+                circle.className = 'w-6 h-6 rounded-full bg-rose-600 text-white text-xs font-bold flex items-center justify-center font-mono animate-pulse ring-4 ring-rose-100 shadow-sm';
+                circle.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-[10px]"></i>';
+                if (icon) icon.className = `fa-solid ${STAGE_METADATA[s].icon} text-rose-600 text-xs`;
+                if (title) title.className = 'text-[11px] font-bold text-rose-700 leading-snug';
                 btn.className += 'border-rose-300 bg-rose-50 shadow-sm';
             } else {
                 circle.className = 'w-6 h-6 rounded-full bg-gradient-to-tr from-[#0CA1AF] to-[#087F8A] text-white text-xs font-bold flex items-center justify-center font-mono ring-4 ring-teal-100 shadow-sm';
                 circle.textContent = s;
-                icon.className = `fa-solid ${STAGE_METADATA[s].icon} text-[#087F8A] text-xs`;
-                title.className = 'text-[11px] font-extrabold text-[#0D1C42] leading-snug';
+                if (icon) icon.className = `fa-solid ${STAGE_METADATA[s].icon} text-[#087F8A] text-xs`;
+                if (title) title.className = 'text-[11px] font-extrabold text-[#0D1C42] leading-snug';
                 btn.className += 'border-[#0CA1AF] bg-teal-50/40 shadow-sm';
             }
         } else {
-            // Belum dicapai
+            // Belum dicapai (Tahap Mendatang)
             circle.className = 'w-6 h-6 rounded-full bg-slate-200 text-slate-500 text-xs font-bold flex items-center justify-center font-mono';
             circle.textContent = s;
-            icon.className = `fa-solid ${STAGE_METADATA[s].icon} text-slate-400 text-xs`;
-            title.className = 'text-[11px] font-bold text-slate-600 leading-snug';
+            if (icon) icon.className = `fa-solid ${STAGE_METADATA[s].icon} text-slate-400 text-xs`;
+            if (title) title.className = 'text-[11px] font-bold text-slate-600 leading-snug';
             btn.className += 'border-gray-200 bg-slate-50/70 hover:border-gray-300 hover:bg-slate-100/50';
         }
     }
@@ -189,44 +205,57 @@ function updateStepperState(completedStage, status) {
 function selectStageView(stage) {
     currentStageView = stage;
     const meta = STAGE_METADATA[stage];
+    if (!meta) return;
 
-    // Highlight card
+    // Highlight card di visual stepper
     for (let s = 1; s <= 7; s++) {
         const btn = document.getElementById(`step-btn-${s}`);
-        if (s === stage) {
-            btn.classList.add('ring-2', 'ring-[#087F8A]');
-        } else {
-            btn.classList.remove('ring-2', 'ring-[#087F8A]');
+        if (btn) {
+            if (s === stage) {
+                btn.classList.add('ring-2', 'ring-[#087F8A]');
+            } else {
+                btn.classList.remove('ring-2', 'ring-[#087F8A]');
+            }
         }
     }
 
     // Set stage details
-    document.getElementById('activeStageNumber').textContent = `Tahap ${stage} dari 7`;
-    document.getElementById('activeStageTitle').textContent = meta.title;
-    document.getElementById('activeHardwareName').textContent = meta.hardware;
-    document.getElementById('activeSoftwareName').textContent = meta.software;
-    document.getElementById('activeStageExplanation').textContent = meta.explanation;
-    document.getElementById('payloadStandardBadge').textContent = meta.standard;
-    document.getElementById('activeStageIcon').className = `fa-solid ${meta.icon}`;
+    const activeStageNumEl = document.getElementById('activeStageNumber');
+    if (activeStageNumEl) activeStageNumEl.textContent = `Tahap ${stage} dari 7`;
+    const activeStageTitleEl = document.getElementById('activeStageTitle');
+    if (activeStageTitleEl) activeStageTitleEl.textContent = meta.title;
+    const activeHardwareEl = document.getElementById('activeHardwareName');
+    if (activeHardwareEl) activeHardwareEl.textContent = meta.hardware;
+    const activeSoftwareEl = document.getElementById('activeSoftwareName');
+    if (activeSoftwareEl) activeSoftwareEl.textContent = meta.software;
+    const activeExplEl = document.getElementById('activeStageExplanation');
+    if (activeExplEl) activeExplEl.textContent = meta.explanation;
+    const payloadStdBadge = document.getElementById('payloadStandardBadge');
+    if (payloadStdBadge) payloadStdBadge.textContent = meta.standard;
+    const activeIconEl = document.getElementById('activeStageIcon');
+    if (activeIconEl) activeIconEl.className = `fa-solid ${meta.icon}`;
 
     // Status badge (InJourney Clean Theme)
     const badge = document.getElementById('stageCompleteBadge');
-    const currentCargoStage = currentCargoData ? currentCargoData.current_stage : 1;
+    const currentCargoStage = currentCargoData ? parseInt(currentCargoData.current_stage || 1) : 1;
+    const isLoaded = (currentCargoData && currentCargoData.status === 'LOADED' && currentCargoStage === 7);
 
-    if (stage < currentCargoStage) {
-        badge.textContent = 'Status: Selesai Dilalui';
-        badge.className = 'text-xs px-3 py-1 rounded-full font-bold bg-emerald-50 text-emerald-700 border border-emerald-200';
-    } else if (stage === currentCargoStage) {
-        badge.textContent = (currentCargoData && currentCargoData.status === 'SUSPECT') ? 'Status: Kargo Diblokir' : 'Status: Tahap Aktif';
-        badge.className = (currentCargoData && currentCargoData.status === 'SUSPECT') 
-            ? 'text-xs px-3 py-1 rounded-full font-bold bg-rose-50 text-rose-700 border border-rose-300 animate-pulse'
-            : 'text-xs px-3 py-1 rounded-full font-bold bg-teal-50 text-[#087F8A] border border-teal-200';
-    } else {
-        badge.textContent = 'Status: Menunggu Tahap Sebelumnya';
-        badge.className = 'text-xs px-3 py-1 rounded-full font-bold bg-slate-100 text-slate-500 border border-slate-200';
+    if (badge) {
+        if (isLoaded || stage < currentCargoStage) {
+            badge.textContent = 'Status: Selesai Dilalui';
+            badge.className = 'text-xs px-3 py-1 rounded-full font-bold bg-emerald-50 text-emerald-700 border border-emerald-200';
+        } else if (stage === currentCargoStage && !isLoaded) {
+            badge.textContent = (currentCargoData && currentCargoData.status === 'SUSPECT') ? 'Status: Kargo Diblokir' : 'Status: Tahap Aktif';
+            badge.className = (currentCargoData && currentCargoData.status === 'SUSPECT') 
+                ? 'text-xs px-3 py-1 rounded-full font-bold bg-rose-50 text-rose-700 border border-rose-300 animate-pulse'
+                : 'text-xs px-3 py-1 rounded-full font-bold bg-teal-50 text-[#087F8A] border border-teal-200';
+        } else {
+            badge.textContent = 'Status: Menunggu Tahap Sebelumnya';
+            badge.className = 'text-xs px-3 py-1 rounded-full font-bold bg-slate-100 text-slate-500 border border-slate-200';
+        }
     }
 
-    // Render Stage Visual Graphic & Action Buttons
+    // Render Stage Visual Graphic & Action Buttons & Payload Inspector
     renderStageGraphic(stage);
     renderStageActionButtons(stage);
     updatePayloadInspector(stage);
@@ -401,20 +430,24 @@ function renderStageActionButtons(stage) {
     const c = currentCargoData;
     if (!container || !c) return;
 
-    const currentCargoStage = c.current_stage;
+    const currentCargoStage = parseInt(c.current_stage || 1);
+    const isLoaded = (c.status === 'LOADED' && currentCargoStage === 7);
     container.innerHTML = '';
 
     // ── TAHAP 4: SCREENING X-RAY AVSEC ──
     if (stage === 4) {
-        if (c.status === 'CLEARED') {
-            // Status kargo sudah CLEARED: Tonjolkan tombol lanjut ke Tahap 5
+        if (c.status === 'CLEARED' || (currentCargoStage > 4 && c.status !== 'SUSPECT' && c.status !== 'RETURNED_TO_TRUCK')) {
             container.innerHTML = `
-                <button onclick="selectStageView(5)" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-bold text-xs shadow-md shadow-teal-500/25 transition-all flex items-center transform hover:-translate-y-0.5 animate-pulse cursor-pointer">
+                <div class="w-full mb-1 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center justify-between">
+                    <span class="font-bold"><i class="fa-solid fa-circle-check text-emerald-600 mr-1.5"></i> Pemeriksaan Keamanan AVSEC Lolos (CLEARED) &mdash; Sertifikat CSD Diterbitkan</span>
+                    <span class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-mono font-bold">CLEARED</span>
+                </div>
+                <button onclick="selectStageView(5)" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-bold text-xs shadow-md shadow-teal-500/25 transition-all flex items-center transform hover:-translate-y-0.5 cursor-pointer">
                     <i class="fa-solid fa-scale-balanced mr-2 text-sm"></i>
-                    <span>Lihat &amp; Lanjut ke Tahap 5 (Penimbangan Smart Scale)</span>
+                    <span>Lanjut ke Tahap 5 (Penimbangan Smart Scale)</span>
                     <i class="fa-solid fa-arrow-right ml-2 text-xs"></i>
                 </button>
-                <button onclick="executeStageAction(4, 'CLEARED')" class="px-3.5 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold border border-emerald-300 shadow-sm transition-all flex items-center cursor-pointer">
+                <button onclick="executeStageAction(4, 'CLEARED')" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 hover:text-emerald-700 text-xs font-bold border border-gray-300 shadow-sm transition-all flex items-center cursor-pointer">
                     <i class="fa-solid fa-rotate mr-1.5 text-xs text-emerald-600"></i>
                     <span>Simulasi Ulang Lolos (CLEARED)</span>
                 </button>
@@ -431,7 +464,7 @@ function renderStageActionButtons(stage) {
         } else if (c.status === 'SUSPECT') {
             container.innerHTML = `
                 <div class="w-full mb-2 p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center justify-between">
-                    <span class="font-bold"><i class="fa-solid fa-triangle-exclamation mr-1.5 text-rose-600 animate-pulse"></i> Kargo Berstatus SUSPECT — Dikunci di Ruang Khusus Karantina AVSEC</span>
+                    <span class="font-bold"><i class="fa-solid fa-triangle-exclamation mr-1.5 text-rose-600 animate-pulse"></i> Kargo Berstatus SUSPECT &mdash; Dikunci di Ruang Khusus Karantina AVSEC</span>
                     <span class="text-[10px] bg-rose-200/80 px-2 py-0.5 rounded font-mono font-bold text-rose-800">VAULT LOCKOUT</span>
                 </div>
                 <button onclick="executeStageAction(4, 'RELEASE')" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-500/20 transition-all flex items-center transform hover:-translate-y-0.5 cursor-pointer">
@@ -490,6 +523,57 @@ function renderStageActionButtons(stage) {
     }
 
     // ── TAHAP LAIN (1, 2, 3, 5, 6, 7) ──
+    const isStageDone = (isLoaded || stage < currentCargoStage);
+
+    if (isStageDone) {
+        // TAHAP SUDAH SELESAI DILALUI
+        container.innerHTML = `
+            <div class="w-full mb-1 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center justify-between">
+                <span class="font-bold"><i class="fa-solid fa-circle-check text-emerald-600 mr-1.5"></i> Tahap ${stage} Telah Selesai Dilalui</span>
+                <span class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-mono font-bold">COMPLETED</span>
+            </div>
+            ${stage < 7 ? `
+                <button onclick="selectStageView(${stage + 1})" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-bold text-xs shadow-md shadow-teal-500/25 transition-all flex items-center transform hover:-translate-y-0.5 cursor-pointer">
+                    <span>Lanjut ke Tahap ${stage + 1}</span>
+                    <i class="fa-solid fa-arrow-right ml-2 text-xs"></i>
+                </button>
+            ` : ''}
+            <button onclick="executeStageAction(${stage}, 'CLEARED')" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 hover:text-[#087F8A] text-xs font-bold border border-gray-300 shadow-sm transition-all flex items-center cursor-pointer">
+                <i class="fa-solid fa-rotate mr-1.5 text-xs text-slate-400"></i>
+                <span>Jalankan Ulang Tahap ${stage}</span>
+            </button>
+            ${stage > 1 ? `
+                <button onclick="selectStageView(${stage - 1})" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-600 hover:text-[#087F8A] text-xs font-bold border border-gray-300 shadow-sm transition-colors flex items-center cursor-pointer">
+                    <i class="fa-solid fa-arrow-left mr-1.5 text-xs"></i>
+                    <span>Lihat Tahap ${stage - 1}</span>
+                </button>
+            ` : ''}
+        `;
+        return;
+    }
+
+    if (stage > currentCargoStage) {
+        // TAHAP MENDATANG / TERKUNCI
+        container.innerHTML = `
+            <div class="w-full mb-1 p-2.5 rounded-xl bg-slate-100 border border-slate-200 text-slate-600 text-xs flex items-center justify-between">
+                <span class="font-medium"><i class="fa-solid fa-lock text-slate-400 mr-1.5"></i> Tahap ${stage} Terkunci &mdash; Selesaikan Tahap ${currentCargoStage} Terlebih Dahulu</span>
+                <span class="text-[10px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded font-mono font-bold">LOCKED</span>
+            </div>
+            <button onclick="selectStageView(${currentCargoStage})" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-bold text-xs shadow-md shadow-teal-500/25 transition-all flex items-center transform hover:-translate-y-0.5 cursor-pointer">
+                <i class="fa-solid fa-arrow-left mr-2"></i>
+                <span>Buka Tahap Aktif (${currentCargoStage})</span>
+            </button>
+            ${stage > 1 ? `
+                <button onclick="selectStageView(${stage - 1})" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-600 hover:text-[#087F8A] text-xs font-bold border border-gray-300 shadow-sm transition-colors flex items-center cursor-pointer">
+                    <i class="fa-solid fa-arrow-left mr-1.5 text-xs"></i>
+                    <span>Lihat Tahap ${stage - 1}</span>
+                </button>
+            ` : ''}
+        `;
+        return;
+    }
+
+    // TAHAP SAAT INI (AKTIF)
     let btnText = `Jalankan Tahap ${stage}`;
     let btnIcon = 'fa-play';
     if (stage === 1) { btnText = 'Daftarkan Truk di Dock (TMS)'; btnIcon = 'fa-truck'; }
@@ -499,10 +583,8 @@ function renderStageActionButtons(stage) {
     else if (stage === 6) { btnText = 'Alokasikan ke ULD & Cek CoG'; btnIcon = 'fa-boxes-packing'; }
     else if (stage === 7) { btnText = 'Finalisasi Manifes & Load Pesawat'; btnIcon = 'fa-plane-departure'; }
 
-    const disabledAttr = (stage > currentCargoStage + 1 && c.status !== 'SUSPECT') ? 'disabled style="opacity:0.45;cursor:not-allowed;"' : '';
-
     container.innerHTML = `
-        <button onclick="executeStageAction(${stage}, 'CLEARED')" ${disabledAttr} class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-bold text-xs shadow-md shadow-teal-500/25 transition-all flex items-center transform hover:-translate-y-0.5 cursor-pointer">
+        <button onclick="executeStageAction(${stage}, 'CLEARED')" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-bold text-xs shadow-md shadow-teal-500/25 transition-all flex items-center transform hover:-translate-y-0.5 cursor-pointer">
             <i class="fa-solid ${btnIcon} mr-2"></i>
             <span>${btnText}</span>
         </button>
@@ -1623,8 +1705,8 @@ function submitTMSCheckIn() {
             if (res.payload) {
                 currentMasterPayload = res.payload;
             } else {
-                currentCargoData.current_stage = 1;
-                currentCargoData.status = 'REGISTERED';
+                currentCargoData.current_stage = 2;
+                currentCargoData.status = 'ARRIVED';
                 currentCargoData.truck_plate = truckPlate;
                 currentCargoData.driver_name = driverName;
                 currentCargoData.transporter_company = transporter;
@@ -1686,7 +1768,7 @@ function submitTMSCheckIn() {
                 customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
             }).then((result) => {
                 // Refresh stepper and timeline
-                initSimulation(currentCargoData.id, 1, result.isConfirmed ? 'cms' : 'tms');
+                initSimulation(currentCargoData.id, 2, result.isConfirmed ? 'cms' : 'tms');
             });
         } else {
             Swal.fire({
@@ -1792,7 +1874,7 @@ function executeStage2Scan() {
             if (res.payload) {
                 currentMasterPayload = res.payload;
             } else {
-                currentCargoData.current_stage = 2;
+                currentCargoData.current_stage = 3;
                 currentCargoData.status = 'SCANNED';
             }
 
@@ -1838,7 +1920,7 @@ function executeStage2Scan() {
                 confirmButtonText: 'Lanjut ke Validasi e-AWB',
                 customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
             }).then(() => {
-                initSimulation(currentCargoData.id, 2, 'cms');
+                initSimulation(currentCargoData.id, 3, 'cms');
             });
         } else {
             Swal.fire({
@@ -1930,8 +2012,8 @@ function executeStage3Validate() {
             if (res.payload) {
                 currentMasterPayload = res.payload;
             } else {
-                currentCargoData.current_stage = 3;
-                currentCargoData.status = 'REGISTERED';
+                currentCargoData.current_stage = 4;
+                currentCargoData.status = 'SECURITY_CHECK';
             }
 
             // Masukkan kargo ke antrean CMS di bawahnya secara real-time!
@@ -2010,7 +2092,7 @@ function executeStage3Validate() {
                 cancelButtonColor: '#94a3b8',
                 customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
             }).then((result) => {
-                initSimulation(currentCargoData.id, 3, result.isConfirmed ? 'avsec' : 'cms');
+                initSimulation(currentCargoData.id, 4, result.isConfirmed ? 'avsec' : 'cms');
             });
         } else {
             Swal.fire({

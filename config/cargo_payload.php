@@ -126,7 +126,7 @@ function generateIntegratedStagesPayload($cargo, $logsByStage, $hardwareFeed) {
     $stages = [];
 
     // TAHAP 1: TMS / TAS
-    $s1Done = ($currentStage >= 1 && $status !== 'REGISTERED') || isset($logsByStage[1]);
+    $s1Done = ($currentStage >= 2) || ($status !== 'REGISTERED') || isset($logsByStage[1]);
     $stages[1] = [
         "stage_number" => 1,
         "stage_name" => "Kedatangan Truk & Booking Slot (TMS/TAS)",
@@ -156,7 +156,7 @@ function generateIntegratedStagesPayload($cargo, $logsByStage, $hardwareFeed) {
     ];
 
     // TAHAP 2: Inbound JSON Ingestion (AIDC Tunnel)
-    $s2Done = ($currentStage > 2) || ($currentStage === 2 && $status === 'SCANNED') || isset($logsByStage[2]);
+    $s2Done = ($currentStage >= 3) || ($status === 'SCANNED') || isset($logsByStage[2]);
     $stages[2] = [
         "stage_number" => 2,
         "stage_name" => "Scan RFID & Barcode Gerbang Inbound (AIDC Tunnel)",
@@ -190,7 +190,7 @@ function generateIntegratedStagesPayload($cargo, $logsByStage, $hardwareFeed) {
     ];
 
     // TAHAP 3: Registrasi CMS & e-AWB Matching
-    $s3Done = ($currentStage > 3) || ($currentStage === 3 && $status === 'SECURITY_CHECK') || isset($logsByStage[3]);
+    $s3Done = ($currentStage >= 4) || isset($logsByStage[3]);
     $stages[3] = [
         "stage_number" => 3,
         "stage_name" => "Registrasi Data & Pencocokan e-AWB di CMS",
@@ -228,7 +228,7 @@ function generateIntegratedStagesPayload($cargo, $logsByStage, $hardwareFeed) {
     // TAHAP 4: Pemeriksaan AVSEC X-Ray
     $isSuspect = ($status === 'SUSPECT');
     $isReturned = ($status === 'RETURNED_TO_TRUCK');
-    $s4Done = ($currentStage > 4) || in_array($status, ['CLEARED', 'SUSPECT', 'RETURNED_TO_TRUCK']) || isset($logsByStage[4]);
+    $s4Done = ($currentStage >= 5) || ($status === 'CLEARED') || isset($logsByStage[4]);
     $stages[4] = [
         "stage_number" => 4,
         "stage_name" => "Pemeriksaan Keamanan X-Ray (AVSEC System)",
@@ -256,7 +256,7 @@ function generateIntegratedStagesPayload($cargo, $logsByStage, $hardwareFeed) {
     ];
 
     // TAHAP 5: Penimbangan Kargo (Smart Floor Scale)
-    $s5Done = ($currentStage > 5) || ($status === 'WEIGHED' || $status === 'ALLOCATED' || $status === 'LOADED') || isset($logsByStage[5]);
+    $s5Done = ($currentStage >= 6) || in_array($status, ['WEIGHED', 'ALLOCATED', 'LOADED']) || isset($logsByStage[5]);
     $stages[5] = [
         "stage_number" => 5,
         "stage_name" => "Penimbangan Kargo (Smart ULD Weighing Station)",
@@ -286,7 +286,7 @@ function generateIntegratedStagesPayload($cargo, $logsByStage, $hardwareFeed) {
     ];
 
     // TAHAP 6: Build-Up ULD & Kalkulasi Weight & Balance
-    $s6Done = ($currentStage > 6) || ($status === 'ALLOCATED' || $status === 'LOADED') || isset($logsByStage[6]);
+    $s6Done = ($status === 'LOADED') || ($currentStage === 7 && $status === 'ALLOCATED') || isset($logsByStage[6]);
     $stages[6] = [
         "stage_number" => 6,
         "stage_name" => "Build-Up ULD & Kalkulasi Weight & Balance",
@@ -323,7 +323,7 @@ function generateIntegratedStagesPayload($cargo, $logsByStage, $hardwareFeed) {
         "stage_name" => "Update Manifes Penerbangan & Pemuatan ke Pesawat",
         "hardware_layer1" => "Airport Ramp Dolly, Cargo High-Loader, & Cockpit EFB",
         "software_layer3" => "Cargo Management Software (CMS) & Airline Flight Operations",
-        "status" => $s7Done ? "COMPLETED" : ($currentStage === 7 ? "CURRENT_ACTIVE" : "PENDING"),
+        "status" => $s7Done ? "COMPLETED" : ($currentStage === 7 && $status !== 'LOADED' ? "CURRENT_ACTIVE" : "PENDING"),
         "request_payload" => [
             "cargo_payload_id" => $payloadId,
             "event_type" => "FLIGHT_MANIFEST_FINALIZATION",

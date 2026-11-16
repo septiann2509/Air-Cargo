@@ -80,6 +80,11 @@ try {
         json_encode($logResponse, JSON_PRETTY_PRINT)
     ]);
 
+    // Inisialisasi Master JSON Payload terpadu untuk ketiga kargo sampel demo
+    syncCargoPayload($db, 'CGO-20260926-001');
+    syncCargoPayload($db, 'CGO-20260926-002');
+    syncCargoPayload($db, 'CGO-20260926-003');
+
     jsonResponse([
         'success' => true,
         'message' => 'Data simulasi berhasil di-reset ke kondisi awal demo'
