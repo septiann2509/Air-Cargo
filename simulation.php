@@ -1473,6 +1473,26 @@ include __DIR__ . '/includes/header.php';
                             <pre id="lb-json-stream-display" class="font-mono text-[11px] leading-relaxed text-emerald-400 bg-[#060D1A] p-3.5 rounded-xl border border-slate-800/90 overflow-x-auto max-h-56 scrollbar-thin select-all"><code>// Memuat stream penimbangan Smart Floor Scale...</code></pre>
                         </div>
 
+                        <!-- AI Agent Loadmaster Reasoning Card (LangGraph Perceive → Think → Act) -->
+                        <div id="loadmaster-ai-agent-box" class="hidden p-4 rounded-2xl border border-teal-200 bg-teal-50/75 shadow-sm mb-5 space-y-2.5">
+                            <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-teal-200/70">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-7 h-7 rounded-lg bg-[#087F8A] text-white flex items-center justify-center text-xs shadow-sm"><i class="fa-solid fa-robot"></i></span>
+                                    <div>
+                                        <h4 class="text-xs font-black text-[#0D1C42]">Penalaran Otonom AI Agent Loadmaster</h4>
+                                        <p class="text-[10px] text-slate-500">Perceive (e-AWB &amp; IoT Scale) &rarr; Think (IATA &plusmn;5%, HEA, ULD Limit) &rarr; Act (e-CCA &amp; Lock CoG)</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-1.5 text-[10px] font-mono">
+                                    <span id="lm-agent-engine-badge" class="px-2 py-0.5 rounded-full font-bold bg-teal-100 text-[#087F8A] border border-teal-200">langgraph-js</span>
+                                    <span id="lm-agent-metrics" class="px-2 py-0.5 rounded-full font-bold bg-white text-slate-700 border border-slate-200">Risiko 0% &bull; Keyakinan 0%</span>
+                                </div>
+                            </div>
+                            <div id="lm-agent-headline" class="text-xs font-bold text-[#0D1C42] bg-white px-3 py-2 rounded-xl border border-teal-100">-</div>
+                            <div id="lm-agent-chips" class="flex flex-wrap items-center gap-1.5 text-[10px]"></div>
+                            <div id="lm-agent-trace" class="grid grid-cols-1 md:grid-cols-3 gap-2 text-[11px]"></div>
+                        </div>
+
                         <!-- 3-Col Visual Cards: Parameter & Kriteria Batas Berat -->
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
                             
@@ -1564,7 +1584,7 @@ include __DIR__ . '/includes/header.php';
                                     </div>
                                     <div class="flex justify-between">
                                         <span class="text-slate-500">Center of Gravity:</span>
-                                        <strong class="text-emerald-700 font-mono">28.4% MAC (Safe)</strong>
+                                        <strong id="lb-cg-mac" class="text-emerald-700 font-mono">28.4% MAC (Safe)</strong>
                                     </div>
                                     <div class="flex justify-between text-[9px] text-slate-400">
                                         <span>Envelope Limit:</span>
@@ -1576,22 +1596,24 @@ include __DIR__ . '/includes/header.php';
                         </div>
 
                         <!-- Interactive Action Triggers for Stages 5, 6, 7 -->
-                        <div class="pt-1 flex flex-wrap items-center gap-3">
-                            <button onclick="executeStageAction(5, 'CLEARED')" class="px-4 py-2.5 rounded-xl bg-white hover:bg-teal-50 text-[#087F8A] hover:text-[#0CA1AF] text-xs font-bold border border-teal-300 shadow-sm transition-all flex items-center transform hover:-translate-y-0.5 cursor-pointer">
-                                <i class="fa-solid fa-scale-balanced mr-1.5"></i>
-                                <span>Timbang di Smart Scale (Tahap 5)</span>
-                            </button>
-                            <button onclick="openToleranceTestModal()" class="px-3.5 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold border border-amber-300 shadow-sm transition-all flex items-center transform hover:-translate-y-0.5 cursor-pointer" title="Simulasikan Uji Toleransi IATA ±5% dan Batas Maksimal ULD">
-                                <i class="fa-solid fa-vial mr-1.5 text-amber-600"></i>
-                                <span>Uji Toleransi IATA &amp; ULD</span>
-                            </button>
-                            <button onclick="executeStageAction(6, 'CLEARED')" class="px-4 py-2.5 rounded-xl bg-white hover:bg-teal-50 text-[#087F8A] hover:text-[#0CA1AF] text-xs font-bold border border-teal-300 shadow-sm transition-all flex items-center transform hover:-translate-y-0.5 cursor-pointer">
-                                <i class="fa-solid fa-boxes-packing mr-1.5"></i>
-                                <span>Konsolidasi ke ULD (Tahap 6)</span>
-                            </button>
-                            <button onclick="executeStageAction(7, 'CLEARED')" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-bold text-xs shadow-md shadow-teal-500/25 transition-all flex items-center transform hover:-translate-y-0.5 cursor-pointer">
-                                <i class="fa-solid fa-plane-departure mr-2"></i>
-                                <span>Finalisasi Manifes &amp; Flight Loading (Tahap 7)</span>
+                        <div class="pt-1 flex flex-wrap items-center justify-between gap-2.5">
+                            <div class="flex flex-wrap items-center gap-2.5">
+                                <button onclick="executeStageAction(5, 'CLEARED')" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#0CA1AF] to-[#087F8A] hover:from-[#04AFBF] hover:to-[#0CA1AF] text-white text-xs font-bold shadow-md shadow-teal-500/20 transition-all flex items-center transform hover:-translate-y-0.5 cursor-pointer">
+                                    <i class="fa-solid fa-robot mr-1.5"></i>
+                                    <span>Timbang Otomatis AI Loadmaster (Tahap 5)</span>
+                                </button>
+                                <button onclick="executeStageAction(6, 'CLEARED')" class="px-4 py-2.5 rounded-xl bg-white hover:bg-teal-50 text-[#087F8A] hover:text-[#0CA1AF] text-xs font-bold border border-teal-300 shadow-sm transition-all flex items-center transform hover:-translate-y-0.5 cursor-pointer">
+                                    <i class="fa-solid fa-boxes-packing mr-1.5"></i>
+                                    <span>Konsolidasi ULD &amp; Weight Balance (Tahap 6)</span>
+                                </button>
+                                <button onclick="executeStageAction(7, 'CLEARED')" class="px-4 py-2.5 rounded-xl bg-[#0D1C42] hover:bg-slate-800 text-white font-bold text-xs shadow-md transition-all flex items-center transform hover:-translate-y-0.5 cursor-pointer">
+                                    <i class="fa-solid fa-plane-departure mr-1.5"></i>
+                                    <span>Finalisasi Manifes (Tahap 7)</span>
+                                </button>
+                            </div>
+                            <button onclick="openToleranceTestModal()" class="px-3 py-2 rounded-xl bg-slate-50 hover:bg-amber-50 text-slate-600 hover:text-amber-800 text-[11px] font-bold border border-gray-200 hover:border-amber-300 transition-all flex items-center cursor-pointer" title="Opsional: Mode penguji untuk mensimulasikan kasus deviasi >5% atau overload ULD">
+                                <i class="fa-solid fa-flask mr-1.5 text-amber-600"></i>
+                                <span>Mode Uji Skenario</span>
                             </button>
                         </div>
                     </div>

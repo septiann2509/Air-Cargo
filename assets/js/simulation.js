@@ -7,6 +7,7 @@ let recentTrucksList = [];
 let totalTrucksCount = 0;
 let currentMasterPayload = null;
 let currentAgentDecision = null;
+let currentLoadmasterDecision = null;
 let currentStageView = 1;
 let currentSystemDashboard = 'all';
 let activePayloadTab = 'request';
@@ -93,6 +94,7 @@ function initSimulation(cargoId, targetStageView = null, targetSystem = null) {
                 totalTrucksCount = res.data.tms_total_trucks || recentTrucksList.length;
                 currentMasterPayload = res.data.payload || null;
                 currentAgentDecision = res.data.agent || null;
+                currentLoadmasterDecision = res.data.loadmaster_agent || null;
                 renderCargoHeader(currentCargoData);
                 renderAuditTimeline(res.data.logs);
                 updateStepperState(currentCargoData.current_stage, currentCargoData.status);
@@ -762,20 +764,30 @@ function doExecuteStageAction(stage, avsecDecision) {
             if (res.agent) {
                 currentAgentDecision = res.agent;
             }
+            if (res.loadmaster_agent) {
+                currentLoadmasterDecision = res.loadmaster_agent;
+            }
 
             const resultIsSuspect = (avsecDecision === 'SUSPECT') || (stage === 4 && res.cargo && res.cargo.status === 'SUSPECT');
+            const resultIsCca = (stage === 5 && res.loadmaster_agent && res.loadmaster_agent.decision === 'CCA_AMENDMENT');
             let iconType = 'success';
             let btnColor = '#087F8A';
+            let alertTitle = 'Tahap Berhasil Diproses!';
             if (resultIsSuspect) {
                 iconType = 'warning';
                 btnColor = '#e11d48';
+                alertTitle = 'Peringatan AVSEC: SUSPECT!';
+            } else if (resultIsCca) {
+                iconType = 'warning';
+                btnColor = '#d97706';
+                alertTitle = 'AI Loadmaster: Terbitkan e-CCA!';
             } else if (avsecDecision === 'RETURN_TO_TRUCK') {
                 iconType = 'info';
                 btnColor = '#0f172a';
             }
 
             Swal.fire({
-                title: resultIsSuspect ? 'Peringatan AVSEC: SUSPECT!' : 'Tahap Berhasil Diproses!',
+                title: alertTitle,
                 text: res.message,
                 icon: iconType,
                 background: '#ffffff',
@@ -792,13 +804,17 @@ function doExecuteStageAction(stage, avsecDecision) {
                 initSimulation(currentCargoData.id, nextView, currentSystemDashboard);
             });
         } else {
+            if (res.loadmaster_agent) {
+                currentLoadmasterDecision = res.loadmaster_agent;
+                renderLoadmasterAgentPanelBox(currentLoadmasterDecision);
+            }
             Swal.fire({
-                title: 'Peringatan Operasional!',
+                title: res.overload ? 'AI Loadmaster: OVERLOAD PREVENTED!' : 'Peringatan Operasional!',
                 text: res.message,
                 icon: 'error',
                 background: '#ffffff',
                 color: '#0D1C42',
-                confirmButtonColor: '#087F8A',
+                confirmButtonColor: '#e11d48',
                 customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
             });
         }
@@ -854,6 +870,9 @@ function triggerAutoRun() {
                 if (res.success) {
                     if (res.payload) {
                         currentMasterPayload = res.payload;
+                    }
+                    if (res.loadmaster_agent) {
+                        currentLoadmasterDecision = res.loadmaster_agent;
                     }
                     Swal.fire({
                         title: 'Simulasi Lengkap Berhasil!',
@@ -2723,12 +2742,35 @@ function renderLoadBalanceDashboard(c) {
             "max_aircraft_payload_capacity_kg": maxAircraftPayloadKg,
             "cumulative_flight_payload_kg": parseFloat((5420.0 + grossUldWt).toFixed(1)),
             "flight_payload_fit": "SAFE_WITHIN_AIRCRAFT_CAPACITY",
-            "center_of_gravity_mac": 28.4,
+            "center_of_gravity_mac": (currentLoadmasterDecision && currentLoadmasterDecision.cg_mac) ? currentLoadmasterDecision.cg_mac : 28.4,
             "safe_cg_envelope": "18.0% - 34.0% MAC",
             "flight_trim_status": "OPTIMAL_SAFETY_TRIM",
             "electronic_loadsheet": (c.status === 'LOADED') ? "ISSUED_TO_EFB_COCKPIT" : "PENDING_FINAL_DISPATCH"
         }
     };
+
+    if (currentLoadmasterDecision) {
+        lbJson.ai_agent_loadmaster = {
+            engine: currentLoadmasterDecision.engine,
+            decision: currentLoadmasterDecision.decision,
+            risk_score: currentLoadmasterDecision.risk_score,
+            confidence: currentLoadmasterDecision.confidence,
+            cca_required: !!currentLoadmasterDecision.cca_required,
+            is_hea: !!currentLoadmasterDecision.is_hea,
+            uld_overload: !!currentLoadmasterDecision.uld_overload,
+            cg_mac: currentLoadmasterDecision.cg_mac,
+            headline: currentLoadmasterDecision.headline,
+            actions: currentLoadmasterDecision.actions
+        };
+    }
+
+    const cgEl = document.getElementById('lb-cg-mac');
+    if (cgEl) {
+        const cgMac = (currentLoadmasterDecision && currentLoadmasterDecision.cg_mac) ? currentLoadmasterDecision.cg_mac : 28.4;
+        cgEl.textContent = `${cgMac}% MAC (Safe)`;
+    }
+
+    renderLoadmasterAgentPanelBox(currentLoadmasterDecision);
 
     const streamDisp = document.getElementById('lb-json-stream-display');
     if (streamDisp) streamDisp.textContent = JSON.stringify(lbJson, null, 2);
@@ -2814,8 +2856,8 @@ function executeScaleToleranceTest(scenario, declared) {
     }
 
     Swal.fire({
-        title: 'Menimbang di Smart Floor Scale...',
-        text: 'Mengirimkan telemetri sensor load cell ke CMS...',
+        title: 'AI Loadmaster Menimbang di Smart Scale...',
+        text: 'Membaca telemetri sensor load cell & mengevaluasi standar IATA...',
         allowOutsideClick: false,
         didOpen: () => { Swal.showLoading(); },
         background: '#ffffff',
@@ -2830,26 +2872,11 @@ function executeScaleToleranceTest(scenario, declared) {
     })
     .then(r => r.json())
     .then(res => {
-        if (res.success) {
-            if (res.cargo) {
-                currentCargoData = res.cargo;
-                renderCargoHeader(currentCargoData);
+        if (!res.success) {
+            if (res.loadmaster_agent) {
+                currentLoadmasterDecision = res.loadmaster_agent;
+                renderLoadmasterAgentPanelBox(currentLoadmasterDecision);
             }
-            if (res.payload) currentMasterPayload = res.payload;
-
-            const isExceeded = scenario === 'exceeded';
-            Swal.fire({
-                title: isExceeded ? 'Peringatan Toleransi IATA!' : 'Hasil Penimbangan Terverifikasi!',
-                text: res.message,
-                icon: isExceeded ? 'warning' : 'success',
-                confirmButtonColor: isExceeded ? '#d97706' : '#087F8A',
-                background: '#ffffff',
-                color: '#0D1C42',
-                customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
-            }).then(() => {
-                initSimulation(currentCargoData.id, 5, currentSystemDashboard);
-            });
-        } else {
             Swal.fire({
                 title: 'Peringatan Operasional!',
                 text: res.message,
@@ -2859,7 +2886,59 @@ function executeScaleToleranceTest(scenario, declared) {
                 color: '#0D1C42',
                 customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
             });
+            return;
         }
+
+        if (res.cargo) {
+            currentCargoData = res.cargo;
+            renderCargoHeader(currentCargoData);
+        }
+        if (res.payload) currentMasterPayload = res.payload;
+        if (res.loadmaster_agent) currentLoadmasterDecision = res.loadmaster_agent;
+
+        if (scenario === 'overload') {
+            // Lanjutkan langsung ke Tahap 6 untuk menguji AI Agent Overload Blocker pada kontainer AKE (1.588 kg)
+            return fetch('api/simulate.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    cargo_id: currentCargoData.id,
+                    stage: 6,
+                    action: 'advance',
+                    target_uld_type: 'AKE'
+                })
+            })
+            .then(r2 => r2.json())
+            .then(res6 => {
+                if (res6.loadmaster_agent) {
+                    currentLoadmasterDecision = res6.loadmaster_agent;
+                }
+                Swal.fire({
+                    title: res6.overload ? 'AI Loadmaster: OVERLOAD PREVENTED!' : 'Hasil Konsolidasi ULD',
+                    text: res6.message,
+                    icon: res6.overload ? 'error' : 'success',
+                    confirmButtonColor: res6.overload ? '#e11d48' : '#087F8A',
+                    background: '#ffffff',
+                    color: '#0D1C42',
+                    customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
+                }).then(() => {
+                    initSimulation(currentCargoData.id, 6, currentSystemDashboard);
+                });
+            });
+        }
+
+        const isExceeded = scenario === 'exceeded';
+        Swal.fire({
+            title: isExceeded ? 'AI Loadmaster: Terbitkan e-CCA!' : 'AI Loadmaster: Terverifikasi!',
+            text: res.message,
+            icon: isExceeded ? 'warning' : 'success',
+            confirmButtonColor: isExceeded ? '#d97706' : '#087F8A',
+            background: '#ffffff',
+            color: '#0D1C42',
+            customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
+        }).then(() => {
+            initSimulation(currentCargoData.id, 5, currentSystemDashboard);
+        });
     })
     .catch(err => {
         Swal.fire({
@@ -2972,6 +3051,68 @@ function renderAvsecAgentPanelBox(agent) {
         traceEl.innerHTML = agent.trace.map(t => `
             <div class="p-2.5 rounded-xl bg-white border border-slate-200/80">
                 <div class="font-extrabold text-[10px] uppercase tracking-wider ${t.node === 'act' && isSus ? 'text-rose-700' : 'text-[#087F8A]'}">${escapeHtml(t.title || t.node)}</div>
+                <div class="text-slate-600 mt-1 leading-snug">${escapeHtml(t.detail || '')}</div>
+            </div>
+        `).join('');
+    }
+}
+
+function renderLoadmasterAgentPanelBox(agent) {
+    const box = document.getElementById('loadmaster-ai-agent-box');
+    if (!box) return;
+    if (!agent || !agent.decision) {
+        box.classList.add('hidden');
+        return;
+    }
+    box.classList.remove('hidden');
+    const isOverload = agent.decision === 'OVERLOAD_REJECTED' || !!agent.uld_overload;
+    const isCca = agent.decision === 'CCA_AMENDMENT' || !!agent.cca_required;
+
+    let boxBorder = 'border-teal-200 bg-teal-50/75';
+    let headlineStyle = 'bg-white text-emerald-800 border-emerald-200';
+    if (isOverload) {
+        boxBorder = 'border-rose-300 bg-rose-50/70';
+        headlineStyle = 'bg-white text-rose-800 border-rose-200';
+    } else if (isCca) {
+        boxBorder = 'border-amber-300 bg-amber-50/75';
+        headlineStyle = 'bg-white text-amber-800 border-amber-200';
+    }
+    box.className = 'p-4 rounded-2xl border shadow-sm mb-5 space-y-2.5 ' + boxBorder;
+
+    const badge = document.getElementById('lm-agent-engine-badge');
+    if (badge) {
+        badge.textContent = agent.engine || 'langgraph-js';
+    }
+    const metrics = document.getElementById('lm-agent-metrics');
+    if (metrics) {
+        metrics.textContent = 'Risiko ' + Math.round((agent.risk_score || 0) * 100) + '% · Keyakinan ' + Math.round((agent.confidence || 0) * 100) + '%';
+    }
+    const headline = document.getElementById('lm-agent-headline');
+    if (headline) {
+        headline.textContent = agent.headline || agent.decision;
+        headline.className = 'text-xs font-bold px-3 py-2 rounded-xl border ' + headlineStyle;
+    }
+
+    const chipsEl = document.getElementById('lm-agent-chips');
+    if (chipsEl) {
+        const chips = [];
+        chips.push(agent.is_within_tolerance !== false
+            ? '<span class="px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800 border border-emerald-200"><i class="fa-solid fa-circle-check mr-1"></i>IATA &plusmn;5% OK</span>'
+            : '<span class="px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-800 border border-amber-200"><i class="fa-solid fa-file-invoice-dollar mr-1"></i>e-CCA Diterbitkan</span>');
+        if (agent.is_hea) {
+            chips.push('<span class="px-2 py-0.5 rounded-full font-bold bg-purple-100 text-purple-800 border border-purple-200"><i class="fa-solid fa-weight-hanging mr-1"></i>HEA Forklift</span>');
+        }
+        chips.push(agent.uld_overload
+            ? '<span class="px-2 py-0.5 rounded-full font-bold bg-rose-100 text-rose-800 border border-rose-200"><i class="fa-solid fa-ban mr-1"></i>Overload ULD (Alihkan PMC)</span>'
+            : `<span class="px-2 py-0.5 rounded-full font-bold bg-white text-[#087F8A] border border-teal-200"><i class="fa-solid fa-crosshairs mr-1"></i>CoG ${escapeHtml(String(agent.cg_mac ?? 28.4))}% MAC</span>`);
+        chipsEl.innerHTML = chips.join('');
+    }
+
+    const traceEl = document.getElementById('lm-agent-trace');
+    if (traceEl && Array.isArray(agent.trace)) {
+        traceEl.innerHTML = agent.trace.map(t => `
+            <div class="p-2.5 rounded-xl bg-white border border-slate-200/80">
+                <div class="font-extrabold text-[10px] uppercase tracking-wider ${t.node === 'act' && isOverload ? 'text-rose-700' : 'text-[#087F8A]'}">${escapeHtml(t.title || t.node)}</div>
                 <div class="text-slate-600 mt-1 leading-snug">${escapeHtml(t.detail || '')}</div>
             </div>
         `).join('');

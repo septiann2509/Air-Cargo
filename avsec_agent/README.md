@@ -26,8 +26,9 @@ Jika layanan tidak dijalankan, PHP otomatis memakai **fallback aturan kata kunci
 
 ## Endpoint
 - `GET  /health`
-- `POST /inspect` — `{ "cargo": {awb, description, commodity_type, ...}, "scenario": "CLEARED|SUSPECT" }`
+- `POST /inspect` — `{ "cargo": {awb, description, commodity_type, ...}, "scenario": "CLEARED|SUSPECT" }` (AVSEC Tahap 4)
+- `POST /evaluate-load` — `{ "cargo": {awb, description, commodity_type, quantity, declared_weight_kg}, "actual_weight_kg": 156, "uld": {...}, "stage": 5 }` (Loadmaster Tahap 5–6)
 
 ## Alur integrasi
-`simulation_live.php` → `api/cargo_input.php` → `config/avsec_agent.php` → `POST :8787/inspect`
-→ hasil disimpan di `security_checks` + `avsec_agent_decisions` (jejak audit) → panel 3D menggerakkan diverter arm & sirine.
+- AVSEC: `simulation_live.php` / `simulation.php` → `api/simulate.php` → `config/avsec_agent.php` → `POST :8787/inspect` → `security_checks` + `avsec_agent_decisions`.
+- Loadmaster: `simulation_live.php` / `simulation.php` → `api/simulate.php` → `config/loadmaster_agent.php` → `POST :8787/evaluate-load` → `weight_records` + `loadmaster_agent_decisions`.

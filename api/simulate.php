@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/cargo_payload.php';
 require_once __DIR__ . '/../config/avsec_agent.php';
+require_once __DIR__ . '/../config/loadmaster_agent.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 if ($method !== 'POST') {
@@ -57,25 +58,28 @@ try {
         $stmtFetch->execute([$cargoId]);
         $finalCargo = $stmtFetch->fetch();
         $finalPayload = syncCargoPayload($db, $cargoId);
+        $latestLoadmaster = getLatestLoadmasterDecision($db, $cargoId);
 
         if ($failedMessage !== null) {
             jsonResponse([
-                'success' => false,
-                'message' => $failedMessage,
-                'cargo' => $finalCargo,
-                'payload' => $finalPayload,
-                'history' => $results
+                'success'          => false,
+                'message'          => $failedMessage,
+                'cargo'            => $finalCargo,
+                'payload'          => $finalPayload,
+                'loadmaster_agent' => $latestLoadmaster,
+                'history'          => $results
             ]);
         }
 
         jsonResponse([
-            'success' => true,
-            'message' => ($finalCargo['status'] ?? '') === 'SUSPECT'
+            'success'          => true,
+            'message'          => ($finalCargo['status'] ?? '') === 'SUSPECT'
                 ? 'Auto-run dihentikan di Tahap 4 (AVSEC): AI Agent mendeteksi potensi Dangerous Goods dan mengunci kargo di Ruang Karantina.'
                 : 'Auto-run simulasi selesai hingga tahap akhir (LOADED)',
-            'cargo' => $finalCargo,
-            'payload' => $finalPayload,
-            'history' => $results
+            'cargo'            => $finalCargo,
+            'payload'          => $finalPayload,
+            'loadmaster_agent' => $latestLoadmaster,
+            'history'          => $results
         ]);
     } else {
         // Jalankan single stage tertentu (tanpa re-entry input)
@@ -129,6 +133,9 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $option
 
     if ((int)$stage === 4) {
         ensureAvsecDecisionTable($db); // DDL sebelum transaksi dimulai
+    }
+    if ((int)$stage === 5 || (int)$stage === 6) {
+        ensureLoadmasterDecisionTable($db); // DDL sebelum transaksi dimulai
     }
 
     // Validasi urutan tahapan agar tetap linear (tidak melompati tahap yang belum selesai)
@@ -447,20 +454,17 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $option
                 logTransaction($db, $cargoId, 4, "Pemeriksaan Keamanan X-Ray", "Dual-View X-Ray Scanner (AVSEC)", "Aviation Security Management System", "Screening Sinar-X & Status CSD", $jsonPayload, $responsePayload, $httpCode);
                 break;
 
-            case 5: // TAHAP 5: Penimbangan Kargo (Smart ULD Weighing Station)
+            case 5: // TAHAP 5: Penimbangan Kargo (Smart ULD Weighing Station + AI Agent Loadmaster)
                 $declared = (float)$cargo['declared_weight_kg'];
 
-                // Input bobot aktual: mendukung penimbangan realistis & uji toleransi IATA
+                // Telemetri IoT Smart Floor Scale (mendukung input eksplisit untuk uji skenario atau otomatis realistis)
                 if (isset($input['actual_weight']) && is_numeric($input['actual_weight'])) {
                     $actual = round((float)$input['actual_weight'], 1);
                 } elseif (!empty($input['simulate_exceeded_tolerance'])) {
-                    // Paksa melebihi batas toleransi 5% (misal +7.5% untuk demonstrasi CCA Alert)
                     $actual = round($declared * 1.075, 1);
                 } elseif (!empty($input['simulate_within_tolerance'])) {
-                    // Paksa dalam batas toleransi 5% (misal +3.5% untuk demonstrasi validasi IATA)
                     $actual = round($declared * 1.035, 1);
                 } else {
-                    // Default simulasi realistis: deviasi normal kecil (dalam batas toleransi ±5%)
                     if ($declared >= 100) {
                         $pct = rand(15, 38) / 10.0; // 1.5% s/d 3.8%
                         $sign = (rand(1, 10) > 3) ? 1 : -1;
@@ -472,19 +476,33 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $option
                     }
                 }
 
-                $discrepancy = round($actual - $declared, 2);
-                $diffPercent = $declared > 0 ? round(($discrepancy / $declared) * 100, 2) : 0.0;
-                $maxToleranceAllowedKg = round($declared * 0.05, 2);
-                $isWithinTolerance = (abs($diffPercent) <= 5.0);
-                $tolerance = $isWithinTolerance ? 'WITHIN_TOLERANCE' : 'DISCREPANCY_WARNING';
-                $isHea = ($declared >= 150.0 || $actual >= 150.0);
+                // Evaluasi Otonom AI Agent Loadmaster (LangGraph.js / Fallback IATA)
+                $loadmasterResult = loadmasterAgentEvaluate([
+                    'cargo_id'           => $cargoId,
+                    'awb'                => $cargo['awb_number'] ?? '',
+                    'description'        => $cargo['description'] ?? '',
+                    'commodity_type'     => $cargo['commodity_type'] ?? 'GENERAL_CARGO',
+                    'quantity'           => (int)($cargo['quantity'] ?? 1),
+                    'declared_weight_kg' => $declared,
+                ], $actual, [
+                    'uld_code'       => $cargo['uld_code'] ?? 'AKE-12345-GA',
+                    'uld_type'       => $cargo['uld_type'] ?? 'AKE',
+                    'tare_weight_kg' => 75.0,
+                    'max_weight_kg'  => 1588.0,
+                    'compartment'    => $cargo['compartment'] ?? 'AFT-LOWER-1',
+                ], 5);
 
-                // Parameter Batas Beban Kargo Pesawat
-                $maxUldCapacity = 1588.0; // Maksimal kontainer AKE (atau 6804.0 PMC)
-                $maxAircraftCapacity = 18500.0; // Kapasitas muatan Boeing 737-800F GA-707
+                $discrepancy = round((float)($loadmasterResult['discrepancy_kg'] ?? ($actual - $declared)), 2);
+                $diffPercent = (float)($loadmasterResult['discrepancy_percent'] ?? ($declared > 0 ? round(($discrepancy / $declared) * 100, 2) : 0.0));
+                $maxToleranceAllowedKg = (float)($loadmasterResult['max_tolerance_kg'] ?? round($declared * 0.05, 2));
+                $isWithinTolerance = (bool)($loadmasterResult['is_within_tolerance'] ?? (abs($diffPercent) <= 5.0));
+                $tolerance = $loadmasterResult['tolerance_status'] ?? ($isWithinTolerance ? 'WITHIN_TOLERANCE' : 'DISCREPANCY_WARNING');
+                $isHea = (bool)($loadmasterResult['is_hea'] ?? ($declared >= 150.0 || $actual >= 150.0));
+
+                $maxUldCapacity = 1588.0;
+                $maxAircraftCapacity = 18500.0;
                 $isApprovedForFlight = ($actual <= ($maxUldCapacity - 75.0));
 
-                // Hapus record lama jika ada
                 $del = $db->prepare("DELETE FROM weight_records WHERE cargo_id = ?");
                 $del->execute([$cargoId]);
 
@@ -509,6 +527,8 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $option
                     WHERE id = ?
                 ");
                 $update->execute([$actual, $cargoId]);
+
+                saveLoadmasterDecision($db, $cargoId, 5, $loadmasterResult);
 
                 $jsonPayload = [
                     "cargo_payload_id" => "CMP-" . $cargoId,
@@ -544,26 +564,33 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $option
                         "aircraft_type" => "Boeing 737-800F (GA-707)",
                         "criteria_status" => $isApprovedForFlight ? "APPROVED_FOR_AKE_LOADING" : "REQUIRES_PMC_PALLET"
                     ],
+                    "ai_agent" => [
+                        "engine" => $loadmasterResult['engine'] ?? null,
+                        "decision" => $loadmasterResult['decision'] ?? null,
+                        "confidence" => $loadmasterResult['confidence'] ?? null,
+                        "risk_score" => $loadmasterResult['risk_score'] ?? null,
+                        "cca_required" => $loadmasterResult['cca_required'] ?? false,
+                        "is_hea" => $isHea,
+                        "headline" => $loadmasterResult['headline'] ?? null,
+                        "actions" => $loadmasterResult['actions'] ?? []
+                    ],
                     "weighed_at" => date('c')
                 ];
 
                 $responsePayload = [
                     "status" => "200_OK",
-                    "message" => $isWithinTolerance 
-                        ? "Data berat aktual ({$actual} kg) terverifikasi dalam batas toleransi IATA (±5% / maks ±{$maxToleranceAllowedKg} kg). Selisih: {$discrepancy} kg ({$diffPercent}%)." . ($isHea ? " [TAG HEA: Kargo Berat >=150kg]" : "")
-                        : "Peringatan: Selisih berat aktual ({$actual} kg vs deklarasi {$declared} kg, selisih {$discrepancy} kg / {$diffPercent}%) MELEBIHI batas toleransi IATA (±5% / maks ±{$maxToleranceAllowedKg} kg). Dokumen e-AWB diterbitkan amandemen CCA, namun berat fisik disinkronkan ke Weight & Balance agar kalkulasi beban fisik pesawat akurat!",
+                    "message" => $loadmasterResult['headline'],
                     "allow_uld_buildup" => true,
                     "criteria_result" => $isWithinTolerance ? "PASSED_WITHIN_TOLERANCE" : "DISCREPANCY_FLAGGED_PASSED_PHYSICAL",
                     "document_amendment_required" => !$isWithinTolerance,
                     "is_heavy_cargo" => $isHea
                 ];
 
-                logTransaction($db, $cargoId, 5, "Penimbangan Kargo", "Smart ULD Floor Weighing Station", "CMS & Weight/Balance Engine", "Pembacaan Sensor Load Cell & Sinkronisasi Berat Aktual (Toleransi IATA ±5%)", $jsonPayload, $responsePayload);
+                logTransaction($db, $cargoId, 5, "Penimbangan Kargo", "Smart ULD Floor Weighing Station", "CMS & AI Loadmaster Agent (" . ($loadmasterResult['engine'] ?? 'langgraph-js') . ")", "Pembacaan Sensor Load Cell & Evaluasi Otonom Toleransi IATA ±5%", $jsonPayload, $responsePayload);
                 break;
 
-            case 6: // TAHAP 6: Build-Up ULD & Kalkulasi Weight/Balance
-                // Cari kontainer ULD yang tersedia (prioritaskan AKE untuk belly Boeing 737-800F)
-                $requestedUldType = $input['target_uld_type'] ?? 'AKE';
+            case 6: // TAHAP 6: Build-Up ULD & Kalkulasi Weight/Balance + AI Agent Loadmaster
+                $requestedUldType = !empty($input['override_pmc']) ? 'PMC' : ($input['target_uld_type'] ?? 'AKE');
                 $stmtUld = $db->prepare("
                     SELECT u.*, f.flight_number, f.aircraft_type, f.destination 
                     FROM uld_containers u
@@ -603,9 +630,28 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $option
                 $cargoWeight = (float)($cargo['actual_weight_kg'] ?? $cargo['declared_weight_kg']);
                 $newUldWeight = round($tareWeight + $cargoWeight, 2);
                 $maxCapacity = (float)$targetUld['max_weight_kg'];
-                $isOverload = ($newUldWeight > $maxCapacity);
 
-                // Jika terdeteksi overload kontainer AKE (> 1.588 kg)
+                // Evaluasi Otonom AI Agent Loadmaster untuk Build-Up ULD & Center of Gravity (CoG)
+                $loadmasterResult = loadmasterAgentEvaluate([
+                    'cargo_id'           => $cargoId,
+                    'awb'                => $cargo['awb_number'] ?? '',
+                    'description'        => $cargo['description'] ?? '',
+                    'commodity_type'     => $cargo['commodity_type'] ?? 'GENERAL_CARGO',
+                    'quantity'           => (int)($cargo['quantity'] ?? 1),
+                    'declared_weight_kg' => (float)$cargo['declared_weight_kg'],
+                ], $cargoWeight, [
+                    'uld_code'       => $targetUld['uld_code'],
+                    'uld_type'       => $targetUld['uld_type'],
+                    'tare_weight_kg' => $tareWeight,
+                    'max_weight_kg'  => $maxCapacity,
+                    'compartment'    => $targetUld['compartment'] ?? 'AFT-LOWER-1',
+                ], 6);
+
+                $isOverload = !empty($loadmasterResult['uld_overload']) || ($newUldWeight > $maxCapacity);
+                $cgMac = (float)($loadmasterResult['cg_mac'] ?? 28.4);
+
+                saveLoadmasterDecision($db, $cargoId, 6, $loadmasterResult);
+
                 if ($isOverload && empty($input['override_pmc'])) {
                     $jsonPayload = [
                         "cargo_payload_id" => "CMP-" . $cargoId,
@@ -622,26 +668,36 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $option
                             "overload_margin_kg" => round($newUldWeight - $maxCapacity, 2),
                             "structural_safety" => "REJECTED_EXCEEDS_AKE_RATING"
                         ],
+                        "ai_agent" => [
+                            "engine" => $loadmasterResult['engine'] ?? null,
+                            "decision" => $loadmasterResult['decision'] ?? 'OVERLOAD_REJECTED',
+                            "confidence" => $loadmasterResult['confidence'] ?? null,
+                            "risk_score" => $loadmasterResult['risk_score'] ?? null,
+                            "headline" => $loadmasterResult['headline'] ?? null,
+                            "actions" => $loadmasterResult['actions'] ?? []
+                        ],
                         "recommended_action" => "TRANSFER_TO_PMC_PALLET_OR_BREAK_BULK",
                         "timestamp" => date('c')
                     ];
 
+                    $overloadMsg = "OVERLOAD PREVENTED: Total berat gross ULD ({$newUldWeight} kg = kargo {$cargoWeight} kg + tare {$tareWeight} kg) melebihi batas struktural kontainer {$targetUld['uld_type']} ({$maxCapacity} kg). Sesuai aturan keselamatan penerbangan IATA ULD Manual, kargo ditolak masuk kontainer {$targetUld['uld_type']} dan harus dipindahkan ke Palet PMC (Maks 6.804 kg)!";
                     $responsePayload = [
                         "status" => "422_OVERLOAD_WARNING",
-                        "message" => "OVERLOAD PREVENTED: Total berat gross ULD ({$newUldWeight} kg = kargo {$cargoWeight} kg + tare {$tareWeight} kg) melebihi batas struktural kontainer AKE ({$maxCapacity} kg). Sesuai aturan keselamatan penerbangan IATA ULD Manual, kargo ditolak masuk kontainer AKE dan harus dipindahkan ke Palet PMC (Maks 6.804 kg)!",
+                        "message" => $overloadMsg,
                         "allow_flight_loading" => false
                     ];
 
-                    logTransaction($db, $cargoId, 6, "Build-Up ULD & Kalkulasi Weight & Balance", "Automated Cargo Handling & ULD Dock", "Weight & Balance System / Load Planning", "Penolakan Konsolidasi ULD: Beban Melebihi Batas Sertifikasi AKE", $jsonPayload, $responsePayload, 422);
+                    logTransaction($db, $cargoId, 6, "Build-Up ULD & Kalkulasi Weight & Balance", "Automated Cargo Handling & ULD Dock", "Weight & Balance / AI Loadmaster Agent (" . ($loadmasterResult['engine'] ?? 'langgraph-js') . ")", "Penolakan Konsolidasi ULD: Beban Melebihi Batas Sertifikasi " . $targetUld['uld_type'], $jsonPayload, $responsePayload, 422);
+                    $db->commit();
 
-                    echo json_encode([
-                        'success' => false,
-                        'overload' => true,
-                        'message' => $responsePayload['message'],
+                    return [
+                        'success'          => false,
+                        'overload'         => true,
+                        'message'          => $overloadMsg,
                         'uld_gross_weight' => $newUldWeight,
-                        'max_capacity' => $maxCapacity
-                    ]);
-                    exit;
+                        'max_capacity'     => $maxCapacity,
+                        'loadmaster_agent' => $loadmasterResult
+                    ];
                 }
 
                 $uldStatus = ($newUldWeight >= ($maxCapacity * 0.85)) ? 'FULL' : 'LOADING';
@@ -678,21 +734,29 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $option
                     "weight_and_balance_engine" => [
                         "aircraft" => $targetUld['aircraft_type'] ?? 'Boeing 737-800F',
                         "assigned_compartment" => $targetUld['compartment'],
-                        "center_of_gravity_index" => 28.4,
+                        "center_of_gravity_index" => $cgMac,
                         "cg_safety_envelope" => "18.0% - 34.0% MAC",
                         "within_safety_envelope" => true,
                         "floor_load_limit_status" => "WITHIN_STRUCTURAL_LIMIT"
+                    ],
+                    "ai_agent" => [
+                        "engine" => $loadmasterResult['engine'] ?? null,
+                        "decision" => $loadmasterResult['decision'] ?? null,
+                        "confidence" => $loadmasterResult['confidence'] ?? null,
+                        "risk_score" => $loadmasterResult['risk_score'] ?? null,
+                        "headline" => $loadmasterResult['headline'] ?? null,
+                        "actions" => $loadmasterResult['actions'] ?? []
                     ],
                     "timestamp" => date('c')
                 ];
 
                 $responsePayload = [
                     "status" => "200_OK",
-                    "message" => "Kargo berhasil dikonsolidasikan ke dalam kontainer ULD " . $targetUld['uld_code'] . " (Gross: " . $newUldWeight . " kg). Titik CoG terkunci 28.4% MAC.",
+                    "message" => "Kargo berhasil dikonsolidasikan ke dalam kontainer ULD " . $targetUld['uld_code'] . " (Gross: " . $newUldWeight . " kg). Titik CoG terkunci {$cgMac}% MAC.",
                     "load_position_locked" => true
                 ];
 
-                logTransaction($db, $cargoId, 6, "Build-Up ULD & Kalkulasi Weight & Balance", "Automated Cargo Handling & ULD Dock", "Weight & Balance System / Load Planning", "Konsolidasi Kargo ke ULD & Optimasi Titik Keseimbangan Pesawat", $jsonPayload, $responsePayload);
+                logTransaction($db, $cargoId, 6, "Build-Up ULD & Kalkulasi Weight & Balance", "Automated Cargo Handling & ULD Dock", "Weight & Balance / AI Loadmaster Agent (" . ($loadmasterResult['engine'] ?? 'langgraph-js') . ")", "Konsolidasi Kargo ke ULD & Optimasi Titik Keseimbangan Pesawat", $jsonPayload, $responsePayload);
                 break;
 
             case 7: // TAHAP 7: Update Manifes Penerbangan & Pemuatan ke Pesawat
@@ -810,11 +874,15 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $option
         $masterPayload = syncCargoPayload($db, $cargoId);
 
         $db->commit();
+        $msg = 'Tahap ' . $stage . ' berhasil diproses';
+        if (isset($agentResult)) {
+            $msg = 'Tahap 4 (AI Agent AVSEC): ' . ($agentResult['headline'] ?? 'Diproses');
+        } elseif (isset($loadmasterResult)) {
+            $msg = 'Tahap ' . $stage . ' (AI Agent Loadmaster): ' . ($loadmasterResult['headline'] ?? 'Diproses');
+        }
         $res = [
             'success' => true,
-            'message' => isset($agentResult)
-                ? ('Tahap 4 (AI Agent AVSEC): ' . ($agentResult['headline'] ?? 'Diproses'))
-                : ('Tahap ' . $stage . ' berhasil diproses'),
+            'message' => $msg,
             'stage' => $stage,
             'cargo_id' => $cargoId,
             'cargo' => $updatedCargo,
@@ -825,6 +893,9 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $option
         ];
         if (isset($agentResult)) {
             $res['agent'] = $agentResult;
+        }
+        if (isset($loadmasterResult)) {
+            $res['loadmaster_agent'] = $loadmasterResult;
         }
         if (isset($newTruckRecord)) {
             $res['truck'] = $newTruckRecord;

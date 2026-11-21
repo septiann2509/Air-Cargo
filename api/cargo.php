@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/cargo_payload.php';
 require_once __DIR__ . '/../config/avsec_agent.php';
+require_once __DIR__ . '/../config/loadmaster_agent.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? 'list';
@@ -161,12 +162,14 @@ try {
         // Sinkronkan dan ambil Master JSON Payload Terpadu
         $masterPayload = syncCargoPayload($db, $id);
 
-        // Ambil jejak keputusan AI Agent AVSEC (jika pernah diinspeksi)
+        // Ambil jejak keputusan AI Agent AVSEC & Loadmaster (jika pernah diproses)
         ensureAvsecDecisionTable($db);
         $agentStmt = $db->prepare("SELECT result_json FROM avsec_agent_decisions WHERE cargo_id = ? ORDER BY created_at DESC LIMIT 1");
         $agentStmt->execute([$id]);
         $agentJson = $agentStmt->fetchColumn();
         $agentData = $agentJson ? json_decode($agentJson, true) : null;
+
+        $loadmasterData = getLatestLoadmasterDecision($db, $id);
 
         jsonResponse([
             'success' => true,
@@ -178,7 +181,8 @@ try {
                 'logs' => $logs,
                 'payload' => $masterPayload,
                 'payload_id' => 'CMP-' . $cargo['id'],
-                'agent' => $agentData
+                'agent' => $agentData,
+                'loadmaster_agent' => $loadmasterData
             ]
         ]);
     }

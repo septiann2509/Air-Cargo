@@ -679,14 +679,14 @@ include __DIR__ . '/includes/header.php';
             </div>
         </div>
 
-        <!-- AI AGENT AVSEC PANEL (Perceive → Think → Act) -->
+        <!-- AI AGENT PANEL (AVSEC & LOADMASTER: Perceive → Think → Act) -->
         <div id="ai-agent-panel" class="hidden absolute top-[122px] left-4 z-20 w-[345px] max-w-[calc(100vw-32px)] max-h-[calc(100%-192px)] overflow-y-auto rounded-2xl bg-slate-900/95 backdrop-blur-xl border border-violet-400/40 shadow-2xl text-white" style="scrollbar-width: thin;">
-            <div class="flex items-center justify-between gap-2 px-3.5 py-2 border-b border-white/10 bg-gradient-to-r from-violet-900/70 to-slate-900/60 sticky top-0 z-10">
+            <div id="ai-agent-header" class="flex items-center justify-between gap-2 px-3.5 py-2 border-b border-white/10 bg-gradient-to-r from-violet-900/70 to-slate-900/60 sticky top-0 z-10">
                 <div class="flex items-center gap-2 min-w-0">
-                    <span class="w-6 h-6 rounded-lg bg-violet-500/25 border border-violet-300/40 flex items-center justify-center text-violet-200 text-xs"><i class="fa-solid fa-robot"></i></span>
+                    <span id="ai-agent-icon" class="w-6 h-6 rounded-lg bg-violet-500/25 border border-violet-300/40 flex items-center justify-center text-violet-200 text-xs"><i class="fa-solid fa-robot"></i></span>
                     <div class="min-w-0">
-                        <div class="text-[11px] font-black tracking-wide leading-tight">AI AGENT AVSEC</div>
-                        <div class="text-[8.5px] text-violet-200/80 leading-tight truncate">Petugas keamanan otonom · ICAO Annex 17</div>
+                        <div id="ai-agent-title" class="text-[11px] font-black tracking-wide leading-tight">AI AGENT AVSEC</div>
+                        <div id="ai-agent-subtitle" class="text-[8.5px] text-violet-200/80 leading-tight truncate">Petugas keamanan otonom · ICAO Annex 17</div>
                     </div>
                 </div>
                 <div class="flex items-center gap-1.5 flex-shrink-0">
@@ -697,15 +697,15 @@ include __DIR__ . '/includes/header.php';
             <div class="p-3 space-y-2 text-[10px]">
                 <div id="ai-step-perceive" class="flex gap-2">
                     <span class="ai-dot w-2 h-2 rounded-full mt-1 flex-shrink-0 bg-slate-600"></span>
-                    <div class="min-w-0"><div class="font-extrabold text-sky-300 tracking-wide">1 · PERCEIVE <span class="font-medium text-white/50">— baca manifes &amp; X-Ray</span></div><div class="ai-detail text-white/75 leading-snug mt-0.5">-</div></div>
+                    <div class="min-w-0"><div class="font-extrabold text-sky-300 tracking-wide">1 · PERCEIVE <span id="ai-label-perceive" class="font-medium text-white/50">— baca manifes &amp; X-Ray</span></div><div class="ai-detail text-white/75 leading-snug mt-0.5">-</div></div>
                 </div>
                 <div id="ai-step-think" class="flex gap-2">
                     <span class="ai-dot w-2 h-2 rounded-full mt-1 flex-shrink-0 bg-slate-600"></span>
-                    <div class="min-w-0"><div class="font-extrabold text-amber-300 tracking-wide">2 · THINK <span class="font-medium text-white/50">— cocokkan DGR / ICAO</span></div><div class="ai-detail text-white/75 leading-snug mt-0.5">-</div></div>
+                    <div class="min-w-0"><div class="font-extrabold text-amber-300 tracking-wide">2 · THINK <span id="ai-label-think" class="font-medium text-white/50">— cocokkan DGR / ICAO</span></div><div class="ai-detail text-white/75 leading-snug mt-0.5">-</div></div>
                 </div>
                 <div id="ai-step-act" class="flex gap-2">
                     <span class="ai-dot w-2 h-2 rounded-full mt-1 flex-shrink-0 bg-slate-600"></span>
-                    <div class="min-w-0"><div class="font-extrabold text-emerald-300 tracking-wide">3 · ACT <span class="font-medium text-white/50">— perintah aktuator</span></div><div class="ai-detail text-white/75 leading-snug mt-0.5">-</div></div>
+                    <div class="min-w-0"><div class="font-extrabold text-emerald-300 tracking-wide">3 · ACT <span id="ai-label-act" class="font-medium text-white/50">— perintah aktuator</span></div><div class="ai-detail text-white/75 leading-snug mt-0.5">-</div></div>
                 </div>
                 <div id="ai-decision-block" class="hidden pt-2 border-t border-white/10 space-y-1.5"></div>
             </div>
@@ -962,13 +962,22 @@ const activeCargoData = {
 // Keputusan CLEARED/SUSPECT diambil oleh agen; hasilnya mengendalikan diverter arm,
 // sirine merah, dan status kargo di terowongan X-Ray (Tahap 3).
 // ─────────────────────────────────────────────────────────────────────────────
-let pendingAgent = null;        // hasil keputusan agen dari server
+let pendingAgent = null;        // hasil keputusan agen AVSEC dari server
 let agentFailed = false;        // true bila layanan/API gagal
 let agentRevealed = false;      // keputusan sudah diterapkan ke 3D
 let agentPanelStarted = false;
 let agentWaitStart = 0;
 let agentThinkShown = false;
 let agentRunId = 0;             // mencegah respons lama menimpa run baru
+
+// State AI Agent Loadmaster (Tahap 5 Smart Scale & Tahap 6 ULD Weight & Balance)
+let pendingLoadmaster = null;
+let loadmasterFailed = false;
+let loadmasterStarted = false;
+let loadmasterRevealed = false;
+let loadmasterWaitStart = 0;
+let loadmasterThinkShown = false;
+let liveActualWeightKg = null;
 
 function agentEsc(s) {
     return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -982,6 +991,15 @@ function resetAgentState() {
     agentPanelStarted = false;
     agentThinkShown = false;
     agentWaitStart = 0;
+
+    pendingLoadmaster = null;
+    loadmasterFailed = false;
+    loadmasterStarted = false;
+    loadmasterRevealed = false;
+    loadmasterWaitStart = 0;
+    loadmasterThinkShown = false;
+    liveActualWeightKg = null;
+
     const p = document.getElementById('ai-agent-panel');
     if (p) p.classList.add('hidden');
 }
@@ -994,9 +1012,40 @@ function setAgentStep(key, state, detailHtml) {
     if (detailHtml !== undefined) row.querySelector('.ai-detail').innerHTML = detailHtml;
 }
 
+function setAgentPanelTheme(mode) {
+    const panel = document.getElementById('ai-agent-panel');
+    const hdr = document.getElementById('ai-agent-header');
+    const icon = document.getElementById('ai-agent-icon');
+    const title = document.getElementById('ai-agent-title');
+    const sub = document.getElementById('ai-agent-subtitle');
+    const lp = document.getElementById('ai-label-perceive');
+    const lt = document.getElementById('ai-label-think');
+    const la = document.getElementById('ai-label-act');
+    if (mode === 'loadmaster') {
+        if (panel) panel.className = 'absolute top-[122px] left-4 z-20 w-[345px] max-w-[calc(100vw-32px)] max-h-[calc(100%-192px)] overflow-y-auto rounded-2xl bg-slate-900/95 backdrop-blur-xl border border-teal-400/45 shadow-2xl text-white';
+        if (hdr) hdr.className = 'flex items-center justify-between gap-2 px-3.5 py-2 border-b border-white/10 bg-gradient-to-r from-teal-900/75 to-slate-900/60 sticky top-0 z-10';
+        if (icon) icon.className = 'w-6 h-6 rounded-lg bg-teal-500/25 border border-teal-300/40 flex items-center justify-center text-teal-200 text-xs';
+        if (title) title.textContent = 'AI AGENT LOADMASTER';
+        if (sub) sub.textContent = 'Smart Scale & Balance · IATA Res. 600b ±5%';
+        if (lp) lp.textContent = '— baca e-AWB & IoT Scale';
+        if (lt) lt.textContent = '— uji ±5%, HEA & ULD';
+        if (la) la.textContent = '— kunci CoG / CCA';
+    } else {
+        if (panel) panel.className = 'absolute top-[122px] left-4 z-20 w-[345px] max-w-[calc(100vw-32px)] max-h-[calc(100%-192px)] overflow-y-auto rounded-2xl bg-slate-900/95 backdrop-blur-xl border border-violet-400/40 shadow-2xl text-white';
+        if (hdr) hdr.className = 'flex items-center justify-between gap-2 px-3.5 py-2 border-b border-white/10 bg-gradient-to-r from-violet-900/70 to-slate-900/60 sticky top-0 z-10';
+        if (icon) icon.className = 'w-6 h-6 rounded-lg bg-violet-500/25 border border-violet-300/40 flex items-center justify-center text-violet-200 text-xs';
+        if (title) title.textContent = 'AI AGENT AVSEC';
+        if (sub) sub.textContent = 'Petugas keamanan otonom · ICAO Annex 17';
+        if (lp) lp.textContent = '— baca manifes & X-Ray';
+        if (lt) lt.textContent = '— cocokkan DGR / ICAO';
+        if (la) la.textContent = '— perintah aktuator';
+    }
+}
+
 function startAgentPanel() {
     agentPanelStarted = true;
     agentWaitStart = Date.now();
+    setAgentPanelTheme('avsec');
     const p = document.getElementById('ai-agent-panel');
     if (p) p.classList.remove('hidden');
     const dec = document.getElementById('ai-decision-block');
@@ -1007,6 +1056,133 @@ function startAgentPanel() {
     setAgentStep('think', 'idle', 'Menunggu data persepsi…');
     setAgentStep('act', 'idle', 'Menunggu keputusan…');
     addSimLog('🤖 [AI AGENT] Agen AVSEC otonom aktif: membaca manifes & citra X-Ray.');
+}
+
+function startLoadmasterAgentPanel() {
+    loadmasterStarted = true;
+    loadmasterWaitStart = Date.now();
+    setAgentPanelTheme('loadmaster');
+    const dec = document.getElementById('ai-decision-block');
+    if (dec) { dec.classList.add('hidden'); dec.innerHTML = ''; }
+    const eb = document.getElementById('ai-engine-badge');
+    if (eb) { eb.textContent = 'LangGraph'; eb.className = 'px-1.5 py-0.5 rounded text-[8px] font-extrabold bg-teal-500/25 text-teal-100 border border-teal-300/30'; }
+
+    const declared = Number(activeCargoData.weight || 350);
+    // Simulasi pembacaan fisik sensor Load Cell IoT (deviasi normal +1.8% s/d +3.2% bila tidak melebihi batas)
+    if (!liveActualWeightKg) {
+        liveActualWeightKg = declared >= 100
+            ? Math.round((declared * 1.024) * 10) / 10
+            : Math.round((declared + 0.8) * 10) / 10;
+    }
+
+    setAgentStep('perceive', 'active', `Membaca e-AWB <b>${declared} kg</b> &amp; telemetri IoT Smart Scale 15T…`);
+    setAgentStep('think', 'idle', 'Menunggu stabilisasi sensor Load Cell…');
+    setAgentStep('act', 'idle', 'Menunggu keputusan Loadmaster…');
+    addSimLog(`🤖 [AI LOADMASTER] Agen Loadmaster aktif: membandingkan e-AWB (${declared} kg) vs Smart Floor Scale IoT.`);
+
+    const runId = agentRunId;
+    fetch('api/loadmaster_agent.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            cargo_id: activeCargoData.cargoId || 'CRG-DEMO',
+            actual_weight_kg: liveActualWeightKg,
+            stage: 5,
+            cargo: {
+                cargo_id: activeCargoData.cargoId || 'CRG-DEMO',
+                awb: activeCargoData.awb || '126-DEMO',
+                description: activeCargoData.name,
+                commodity_type: activeCargoData.commodity || 'GENERAL_CARGO',
+                quantity: activeCargoData.qty || 1,
+                declared_weight_kg: declared
+            },
+            uld: {
+                uld_code: 'AKE-12345-GA',
+                uld_type: 'AKE',
+                tare_weight_kg: 75,
+                max_weight_kg: activeCargoData.maxWeight || 1588,
+                compartment: 'AFT-LOWER-1'
+            }
+        })
+    })
+    .then(r => r.json())
+    .then(res => {
+        if (runId !== agentRunId) return;
+        if (res.success && res.agent) pendingLoadmaster = res.agent;
+        else loadmasterFailed = true;
+    })
+    .catch(() => { if (runId === agentRunId) loadmasterFailed = true; });
+}
+
+function agentTickWeighing() {
+    if (!loadmasterStarted) startLoadmasterAgentPanel();
+    if (loadmasterRevealed) return;
+
+    if (!loadmasterThinkShown && simProgress > 0.35) {
+        loadmasterThinkShown = true;
+        const m = pendingLoadmaster?.perception?.manifest || { declared_weight_kg: activeCargoData.weight, quantity: activeCargoData.qty };
+        const st = pendingLoadmaster?.perception?.scale_telemetry || { actual_weight_kg: liveActualWeightKg || activeCargoData.weight };
+        setAgentStep('perceive', 'done',
+            `e-AWB: <b>${agentEsc(m.declared_weight_kg)} kg</b> (${agentEsc(m.quantity)} koli).<br>IoT Load Cell: <b>${agentEsc(st.actual_weight_kg)} kg</b> + Tare ULD 75 kg.`);
+        setAgentStep('think', 'active', 'Mengevaluasi toleransi IATA &plusmn;5%, tag HEA, &amp; batas ULD AKE 1.588 kg…');
+    }
+
+    if (simProgress >= 0.72) {
+        const timedOut = loadmasterWaitStart && (Date.now() - loadmasterWaitStart) > 8000;
+        if (pendingLoadmaster || loadmasterFailed || timedOut) {
+            applyLoadmasterDecision();
+        }
+    }
+}
+
+function applyLoadmasterDecision() {
+    if (loadmasterRevealed) return;
+    loadmasterRevealed = true;
+    const a = pendingLoadmaster;
+    if (!a) {
+        setAgentStep('think', 'done', 'Mode lokal: menghitung deviasi toleransi IATA &amp; batas ULD.');
+        setAgentStep('act', 'done', 'Bobot aktual dikunci ke sistem Weight &amp; Balance.');
+        return;
+    }
+    const isOver = a.decision === 'OVERLOAD_REJECTED' || !!a.uld_overload;
+    const isCca = a.decision === 'CCA_AMENDMENT' || !!a.cca_required;
+
+    const bullets = (a.reasoning || []).slice(0, 3).map(r => `<li>${agentEsc(r)}</li>`).join('');
+    setAgentStep('think', isOver ? 'alert' : 'done', `<ul class="list-disc pl-3.5 space-y-0.5">${bullets}</ul>`);
+
+    const acts = (a.actions || []).map(x => `<li><span class="font-mono text-[9.5px] text-teal-200">${agentEsc(x.device)}</span> → <b>${agentEsc(x.command)}</b>${x.target ? ' · ' + agentEsc(x.target) : ''}</li>`).join('');
+    setAgentStep('act', isOver ? 'alert' : 'done', `<ul class="list-none space-y-0.5">${acts}</ul>`);
+
+    const eb = document.getElementById('ai-engine-badge');
+    if (eb) {
+        const llmTxt = a.llm && a.llm.used ? ` + ${agentEsc(a.llm.model)}` : '';
+        eb.textContent = a.engine === 'langgraph-js' ? ('LangGraph' + llmTxt) : 'Fallback';
+        eb.className = 'px-1.5 py-0.5 rounded text-[8px] font-extrabold border ' + (a.engine === 'langgraph-js'
+            ? 'bg-teal-500/25 text-teal-100 border-teal-300/30'
+            : 'bg-amber-500/25 text-amber-100 border-amber-300/40');
+    }
+
+    const risk = Math.round((a.risk_score || 0) * 100);
+    const conf = Math.round((a.confidence || 0) * 100);
+    const refs = (a.regulation_refs || []).slice(0, 2).map(r => `<div class="text-[9.5px] text-white/55 leading-snug">• ${agentEsc(r)}</div>`).join('');
+    const dec = document.getElementById('ai-decision-block');
+    if (dec) {
+        dec.classList.remove('hidden');
+        dec.innerHTML = `
+            <div class="rounded-xl px-3 py-2 border ${isOver ? 'bg-rose-500/15 border-rose-400/50' : (isCca ? 'bg-amber-500/15 border-amber-400/50' : 'bg-emerald-500/15 border-emerald-400/50')}">
+                <div class="text-[11px] font-black leading-snug ${isOver ? 'text-rose-300' : (isCca ? 'text-amber-300' : 'text-emerald-300')}">${agentEsc(a.headline)}</div>
+                ${a.is_hea ? '<div class="mt-1 inline-block px-1.5 py-0.5 rounded bg-purple-600 text-white text-[9px] font-extrabold">HEA HEAVY CARGO (&ge;150KG)</div>' : ''}
+            </div>
+            <div>
+                <div class="flex justify-between text-[9.5px] text-white/70 mb-0.5"><span>Skor risiko muatan</span><span class="font-mono font-bold ${isOver ? 'text-rose-300' : 'text-emerald-300'}">${risk}%</span></div>
+                <div class="h-1.5 rounded-full bg-slate-700 overflow-hidden"><div class="h-full ${isOver ? 'bg-rose-500' : 'bg-teal-400'}" style="width:${risk}%"></div></div>
+                <div class="flex justify-between text-[9.5px] text-white/70 mt-1"><span>Keyakinan agen · CoG ${agentEsc(String(a.cg_mac ?? 28.4))}% MAC</span><span class="font-mono font-bold text-sky-300">${conf}%</span></div>
+            </div>
+            <div>${refs}</div>`;
+    }
+
+    addSimLog(`🤖 [AI LOADMASTER] ${a.headline}`, isOver);
+    (a.actions || []).forEach(x => addSimLog(`⚙️ [ACT] ${x.device} → ${x.command}${x.target ? ' (' + x.target + ')' : ''}: ${x.description}`, isOver));
 }
 
 // Dipanggil tiap frame pada Fase 3 (kargo di terowongan X-Ray).
@@ -1129,6 +1305,7 @@ function onSelectDbCargo(selectEl) {
         activeCargoData.truckPlate = item.truck_plate || 'B 9482 KXA';
         activeCargoData.driver = item.driver_name || 'Suryadi Pratama';
         activeCargoData.awb = item.awb_number || '126-88492019';
+        liveActualWeightKg = null;
         setXrayChoice(item.xray_result === 'SUSPECT' ? 'SUSPECT' : 'CLEARED');
         addSimLog(`📥 [LOAD DB] Memuat data kargo ${item.awb_number}: "${item.description}" (${item.declared_weight_kg} kg).`);
     } catch(e) { console.error(e); }
@@ -1156,6 +1333,7 @@ function setXrayChoice(choice) {
 
 function loadScenarioPreset(type) {
     activeCargoData.cargoId = '';
+    liveActualWeightKg = null;
     if (type === 'normal') {
         activeCargoData.name = 'Garmen & Tekstil Ekspor Premium';
         activeCargoData.commodity = 'GENERAL_CARGO';
@@ -8849,6 +9027,12 @@ function jumpToProcessStep(stepNum) {
             addSimLog(`⏩ [JUMP] Melompat ke Tahap 4: Central Storage & Perakitan ULD.`);
         }
     } else if (stepNum === 5) {
+        pendingLoadmaster = null;
+        loadmasterFailed = false;
+        loadmasterStarted = false;
+        loadmasterRevealed = false;
+        loadmasterThinkShown = false;
+        liveActualWeightKg = null;
         truckGroup.rotation.y = Math.PI;
         truckGroup.position.set(-5.0, 0, -42.15);
         truckBedPallet.visible = false;
@@ -9306,17 +9490,19 @@ function updateSimulationPipeline(dt) {
     // FASE 5: PENIMBANGAN ULD LANTAI 15 TON (SMART FLOOR SCALE)
     // ═════════════════════════════════════════════════════════════════════════
     else if (simPhase === 5) {
-        document.getElementById('hud-stage-name').innerHTML = 'TAHAP 5: PENIMBANGAN ULD 15T <span class="text-[8px] px-1.5 py-0.5 rounded bg-purple-500/30 text-purple-200 font-extrabold">WEIGHING</span>';
+        document.getElementById('hud-stage-name').innerHTML = 'TAHAP 5: PENIMBANGAN ULD 15T <span class="text-[8px] px-1.5 py-0.5 rounded bg-purple-500/30 text-purple-200 font-extrabold">AI LOADMASTER</span>';
         simProgress += dt * 0.080;
+        agentTickWeighing();
 
+        const targetWt = liveActualWeightKg || activeCargoData.weight;
         const curX = THREE.MathUtils.lerp(0.0, 35.0, easeInOutQuad(Math.min(1.0, simProgress)));
         activeCargoGroup.position.x = curX;
         activeCargoGroup.position.z = 8.0;
 
-        // Penghitung berat aktif pada display digital timbangan
+        // Penghitung berat aktif pada display digital timbangan (termasuk tare kontainer AKE 75 kg di gross)
         if (curX > 18.0) {
             const countT = (curX - 18.0) / 17.0;
-            const dynamicKg = THREE.MathUtils.lerp(0, activeCargoData.weight, Math.min(1.0, countT * 1.25));
+            const dynamicKg = THREE.MathUtils.lerp(0, targetWt, Math.min(1.0, countT * 1.25));
             updateScaleDisplayTexture(dynamicKg, activeCargoData.maxWeight, 'WEIGHING');
             document.getElementById('telemetry-scale').textContent = dynamicKg.toFixed(1) + ' kg';
         }
@@ -9327,22 +9513,25 @@ function updateSimulationPipeline(dt) {
         }
 
         if (simProgress >= 1.0) {
-            const isOverweight = (activeCargoData.weight > activeCargoData.maxWeight);
+            if (!loadmasterRevealed) applyLoadmasterDecision();
+            const grossUld = Number(pendingLoadmaster?.gross_uld_kg ?? (targetWt + 75.0));
+            const isOverweight = !!(pendingLoadmaster?.uld_overload) || (grossUld > activeCargoData.maxWeight);
 
             if (isOverweight) {
-                updateScaleDisplayTexture(activeCargoData.weight, activeCargoData.maxWeight, 'OVERWEIGHT');
+                updateScaleDisplayTexture(targetWt, activeCargoData.maxWeight, 'OVERWEIGHT');
                 updateStepperUI(5, 5);
                 playSound('alert');
                 simActive = false;
-                addSimLog(`⛔ [SCALE REJECT] Berat ${activeCargoData.weight} kg melebihi kapasitas maksimum (${activeCargoData.maxWeight} kg)! TOLAK MUAT!`, true);
+                addSimLog(`⛔ [AI LOADMASTER REJECT] Gross ULD ${grossUld.toFixed(1)} kg (kargo ${targetWt} kg + tare 75 kg) melebihi kapasitas maksimum AKE (${activeCargoData.maxWeight} kg)! TOLAK MUAT!`, true);
 
+                const lmHeadline = pendingLoadmaster?.headline || `Gross ${grossUld.toFixed(1)} kg melebihi batas kontainer AKE (${activeCargoData.maxWeight} kg).`;
                 Swal.fire({
-                    title: 'TOLAK MUAT: KELEBIHAN BEBAN!',
+                    title: 'AI LOADMASTER: TOLAK MUAT (OVERLOAD)!',
                     html: `<div class="text-left text-sm space-y-2">
-                        <p class="text-rose-500 font-bold">⚠️ STATUS: OVERWEIGHT REJECT (SMART SCALE 15T)</p>
-                        <p><strong>Berat Terukur:</strong> <span class="text-rose-500 font-bold">${activeCargoData.weight} kg</span></p>
-                        <p><strong>Batas Maksimum ULD:</strong> ${activeCargoData.maxWeight} kg</p>
-                        <p><strong>Bahaya:</strong> Melebihi batas toleransi keselamatan Weight &amp; Balance pesawat. Gerbang airside dikunci, kontainer ditahan di stasiun timbangan.</p>
+                        <p class="text-rose-500 font-bold">⚠️ STATUS: OVERLOAD REJECTED (SMART SCALE 15T)</p>
+                        <p><strong>Berat Terukur IoT:</strong> <span class="text-rose-400 font-bold">${targetWt} kg</span> (+ Tare AKE 75 kg = <strong>${grossUld.toFixed(1)} kg</strong>)</p>
+                        <p><strong>Batas Maksimum ULD AKE:</strong> ${activeCargoData.maxWeight} kg</p>
+                        <p class="text-xs text-slate-300"><strong>🤖 Keputusan AI Agent:</strong> ${agentEsc(lmHeadline)}</p>
                     </div>`,
                     icon: 'warning',
                     background: '#0D1C42',
@@ -9351,15 +9540,16 @@ function updateSimulationPipeline(dt) {
                     confirmButtonText: 'Tutup'
                 });
             } else {
-                updateScaleDisplayTexture(activeCargoData.weight, activeCargoData.maxWeight, 'PASS');
+                updateScaleDisplayTexture(targetWt, activeCargoData.maxWeight, 'PASS');
                 playSound('pass');
                 airsideShutter.position.y = 5.2; // Buka pintu airside
 
                 simPhase = 6;
                 simProgress = 0;
                 updateStepperUI(6);
-                addSimLog(`✅ [SCALE PASS] Berat ${activeCargoData.weight} kg aman (Toleransi OK). Gerbang Airside dibuka!`);
-                showMilestone('TIMBANGAN PASS', `Berat ${activeCargoData.weight} kg OK. Gerbang Airside terbuka!`);
+                const cgStr = pendingLoadmaster?.cg_mac ?? 28.4;
+                addSimLog(`✅ [AI LOADMASTER PASS] Aktual ${targetWt} kg (Gross ULD ${grossUld.toFixed(1)} kg, CoG ${cgStr}% MAC) aman. Gerbang Airside dibuka!`);
+                showMilestone('AI LOADMASTER PASS', `Aktual ${targetWt} kg OK (CoG ${cgStr}% MAC). Gerbang Airside terbuka!`);
             }
         }
     }

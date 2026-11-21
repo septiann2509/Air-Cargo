@@ -6,7 +6,8 @@
   "main": "src/server.mjs",
   "scripts": {
     "start": "node src/server.mjs",
-    "test": "node src/selftest.mjs"
+    "test": "node src/selftest.mjs",
+    "test:loadmaster": "node src/loadmaster_selftest.mjs"
   },
   "dependencies": {
     "@langchain/core": "^1.3.4",
