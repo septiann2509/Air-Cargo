@@ -52,6 +52,14 @@ if (!$initialCargo) {
     ];
 }
 
+// Fallback ke pre_alert_xray_scenario dari cargo_payload bila belum ada record AVSEC
+if (empty($initialCargo['xray_result']) && !empty($initialCargo['cargo_payload'])) {
+    $decodedPayload = json_decode($initialCargo['cargo_payload'], true);
+    if (!empty($decodedPayload['system_metadata']['pre_alert_xray_scenario'])) {
+        $initialCargo['xray_result'] = $decodedPayload['system_metadata']['pre_alert_xray_scenario'];
+    }
+}
+
 // Override status X-Ray jika diteruskan via parameter URL (?xray=SUSPECT atau ?xray=CLEARED)
 if (!empty($_GET['xray'])) {
     $initialCargo['xray_result'] = strtoupper($_GET['xray']);
@@ -8570,6 +8578,7 @@ function saveToDatabaseApi() {
     const runId = agentRunId;
     const hasCargoId = !!(activeCargoData.cargoId && activeCargoData.cargoId !== 'CRG-DEMO');
     if (hasCargoId) {
+        addSimLog(`🔗 [SINGLE ENTRY SYNC] Menggunakan data kargo terdaftar: ${activeCargoData.cargoId} (Zero Re-entry, tanpa duplikasi DB).`);
         fetch('api/avsec_agent.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

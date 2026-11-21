@@ -33,6 +33,8 @@ function generateVirtualHardwareLayer1($cargo) {
         ? (float)$cargo['actual_weight_kg'] 
         : ($declaredWeight + (($seed % 5) - 2));
 
+    $currentStage = (int)($cargo['current_stage'] ?? 1);
+    $isGateVerified = ($currentStage >= 2) || (($cargo['truck_status'] ?? '') !== 'SCHEDULED');
     $isSuspect = ($cargo['status'] === 'SUSPECT');
     $isCleared = ($cargo['status'] === 'CLEARED' || $cargo['status'] === 'WEIGHED' || $cargo['status'] === 'ALLOCATED' || $cargo['status'] === 'LOADED');
     $isReturned = ($cargo['status'] === 'RETURNED_TO_TRUCK');
@@ -44,9 +46,11 @@ function generateVirtualHardwareLayer1($cargo) {
             "frequency" => "902-928 MHz EPC Gen2",
             "truck_plate" => $cargo['truck_plate'] ?? "B 9482 KXT",
             "driver_name" => $cargo['driver_name'] ?? "Bambang Supriyanto",
+            "transporter_company" => $cargo['transporter_company'] ?? "PT Indotruck Multimoda Logistik",
             "assigned_dock" => $cargo['dock_slot'] ?? "DOCK-04",
-            "barrier_status" => "BARRIER_OPENED",
+            "barrier_status" => $isGateVerified ? "BARRIER_OPENED" : "STANDBY_AWAITING_TRUCK",
             "booking_code" => $cargo['booking_code'] ?? "TAS-SLOT-9482",
+            "truck_status" => $cargo['truck_status'] ?? "SCHEDULED",
             "sensor_health" => "OPTIMAL_100%"
         ],
         "tunnel_scanner" => [
@@ -125,8 +129,8 @@ function generateIntegratedStagesPayload($cargo, $logsByStage, $hardwareFeed) {
 
     $stages = [];
 
-    // TAHAP 1: TMS / TAS
-    $s1Done = ($currentStage >= 2) || ($status !== 'REGISTERED') || isset($logsByStage[1]);
+    // TAHAP 1: TMS / TAS (Hanya data transportasi, gate & slot dock — Zero Re-entry)
+    $s1Done = ($currentStage >= 2) || ($status !== 'REGISTERED');
     $stages[1] = [
         "stage_number" => 1,
         "stage_name" => "Kedatangan Truk & Booking Slot (TMS/TAS)",
@@ -136,20 +140,25 @@ function generateIntegratedStagesPayload($cargo, $logsByStage, $hardwareFeed) {
         "request_payload" => [
             "cargo_payload_id" => $payloadId,
             "event_type" => "TMS_TRUCK_GATE_CHECKIN",
-            "master_sscc" => $cargo['sscc'],
+            "data_source" => "SINGLE_ENTRY_INPUT_KARGO (ZERO_REENTRY)",
+            "filtered_domain" => "TMS_TRANSPORT_AND_DOCK_ONLY",
             "truck_id" => $cargo['truck_arrival_id'] ?? ("TRK-" . date('Ymd') . "-01"),
             "truck_plate" => $cargo['truck_plate'] ?? "B 9482 KXT",
             "driver_name" => $cargo['driver_name'] ?? "Bambang Supriyanto",
             "transporter_company" => $cargo['transporter_company'] ?? "PT Indotruck Multimoda Logistik",
             "dock_slot" => $cargo['dock_slot'] ?? "DOCK-04",
             "booking_code" => $cargo['booking_code'] ?? "TAS-SLOT-9482",
+            "arrival_time" => $cargo['arrival_time'] ?? ($cargo['created_at'] ?? date('c')),
+            "truck_status" => $cargo['truck_status'] ?? "SCHEDULED",
             "hardware_telemetry" => $hardwareFeed['tms_gate'],
             "timestamp" => $cargo['created_at'] ?? date('c')
         ],
         "response_payload" => [
             "cargo_payload_id" => $payloadId,
             "status" => "200_OK",
-            "message" => "Truk " . ($cargo['truck_plate'] ?? "B 9482 KXT") . " diverifikasi di gerbang TAS & dialokasikan ke " . ($cargo['dock_slot'] ?? "DOCK-04"),
+            "message" => $s1Done
+                ? ("Truk " . ($cargo['truck_plate'] ?? "B 9482 KXT") . " diverifikasi di gerbang TAS & dialokasikan ke " . ($cargo['dock_slot'] ?? "DOCK-04"))
+                : ("Booking TAS " . ($cargo['booking_code'] ?? "TAS-SLOT-9482") . " otomatis diterima dari Input Kargo untuk " . ($cargo['dock_slot'] ?? "DOCK-04")),
             "tms_pass_token" => "TAS-TOKEN-" . strtoupper(substr(md5($cargoId . '1'), 0, 8)),
             "next_stage" => "CMS_AIDC_JSON_INGEST"
         ]
@@ -212,7 +221,7 @@ function generateIntegratedStagesPayload($cargo, $logsByStage, $hardwareFeed) {
                 "declared_pieces" => (int)$cargo['quantity'],
                 "declared_weight_kg" => (float)$cargo['declared_weight_kg'],
                 "origin" => "CGK",
-                "destination" => "DPS"
+                "destination" => $cargo['flight_destination'] ?? "DPS"
             ],
             "timestamp" => date('c')
         ],
@@ -228,7 +237,8 @@ function generateIntegratedStagesPayload($cargo, $logsByStage, $hardwareFeed) {
     // TAHAP 4: Pemeriksaan AVSEC X-Ray
     $isSuspect = ($status === 'SUSPECT');
     $isReturned = ($status === 'RETURNED_TO_TRUCK');
-    $s4Done = ($currentStage >= 5) || ($status === 'CLEARED') || isset($logsByStage[4]);
+    $s4Done = ($currentStage >= 5) || ($status === 'CLEARED');
+    $avsecResultText = ($s4Done && !$isSuspect && !$isReturned) ? 'CLEARED' : ($isSuspect ? 'SUSPECT' : ($isReturned ? 'RETURNED_TO_TRUCK' : 'PENDING_SCREENING'));
     $stages[4] = [
         "stage_number" => 4,
         "stage_name" => "Pemeriksaan Keamanan X-Ray (AVSEC System)",
@@ -242,21 +252,21 @@ function generateIntegratedStagesPayload($cargo, $logsByStage, $hardwareFeed) {
             "cargo_id" => $cargoId,
             "awb_number" => $cargo['awb_number'],
             "hardware_telemetry" => $hardwareFeed['avsec_xray'],
-            "inspection_result" => $status === 'CLEARED' ? 'CLEARED' : ($isSuspect ? 'SUSPECT' : ($isReturned ? 'RETURNED_TO_TRUCK' : 'PENDING_SCREENING')),
+            "inspection_result" => $avsecResultText,
             "csd_certificate" => $hardwareFeed['avsec_xray']['csd_certificate'],
             "timestamp" => date('c')
         ],
         "response_payload" => [
             "cargo_payload_id" => $payloadId,
             "status" => $isSuspect ? "403_FORBIDDEN" : "200_OK",
-            "security_clearance" => $status === 'CLEARED' ? 'CLEARED' : ($isSuspect ? 'SUSPECT' : ($isReturned ? 'RETURNED_TO_TRUCK' : 'AWAITING_INSPECTION')),
+            "security_clearance" => ($s4Done && !$isSuspect && !$isReturned) ? 'CLEARED' : ($isSuspect ? 'SUSPECT' : ($isReturned ? 'RETURNED_TO_TRUCK' : 'AWAITING_INSPECTION')),
             "action_required" => $isSuspect ? "HOLD_IN_QUARANTINE_VAULT" : ($isReturned ? "RETURN_CARGO_TO_TRUCK" : "PROCEED_TO_WEIGHING_STATION"),
             "alert_triggered" => $isSuspect
         ]
     ];
 
     // TAHAP 5: Penimbangan Kargo (Smart Floor Scale)
-    $s5Done = ($currentStage >= 6) || in_array($status, ['WEIGHED', 'ALLOCATED', 'LOADED']) || isset($logsByStage[5]);
+    $s5Done = ($currentStage >= 6) || in_array($status, ['WEIGHED', 'ALLOCATED', 'LOADED']);
     $stages[5] = [
         "stage_number" => 5,
         "stage_name" => "Penimbangan Kargo (Smart ULD Weighing Station)",
@@ -286,7 +296,7 @@ function generateIntegratedStagesPayload($cargo, $logsByStage, $hardwareFeed) {
     ];
 
     // TAHAP 6: Build-Up ULD & Kalkulasi Weight & Balance
-    $s6Done = ($status === 'LOADED') || ($currentStage === 7 && $status === 'ALLOCATED') || isset($logsByStage[6]);
+    $s6Done = ($status === 'LOADED') || ($currentStage === 7 && $status === 'ALLOCATED');
     $stages[6] = [
         "stage_number" => 6,
         "stage_name" => "Build-Up ULD & Kalkulasi Weight & Balance",
@@ -317,7 +327,7 @@ function generateIntegratedStagesPayload($cargo, $logsByStage, $hardwareFeed) {
     ];
 
     // TAHAP 7: Update Manifes Penerbangan & Flight Loading
-    $s7Done = ($status === 'LOADED') || isset($logsByStage[7]);
+    $s7Done = ($status === 'LOADED');
     $stages[7] = [
         "stage_number" => 7,
         "stage_name" => "Update Manifes Penerbangan & Pemuatan ke Pesawat",
@@ -356,14 +366,14 @@ function generateIntegratedStagesPayload($cargo, $logsByStage, $hardwareFeed) {
 /**
  * Generate dan susun satu Master JSON Payload utuh untuk kargo tertentu
  */
-function generateMasterCargoPayload($db, $cargoId) {
+function generateMasterCargoPayload($db, $cargoId, $preAlertXray = null) {
     ensureCargoPayloadColumn($db);
 
     // Ambil detail kargo dengan semua relasi
     $stmt = $db->prepare("
         SELECT 
             c.*, 
-            t.truck_plate, t.dock_slot, t.driver_name, t.transporter_company, t.booking_code,
+            t.truck_plate, t.dock_slot, t.driver_name, t.transporter_company, t.booking_code, t.arrival_time, t.status as truck_status,
             u.uld_code, u.uld_type, u.compartment, u.current_weight_kg as uld_weight, u.max_weight_kg as uld_max_weight,
             f.flight_number, f.destination as flight_destination, f.aircraft_type, f.departure_time,
             s.xray_result, s.inspector_id, s.csd_number, s.notes as avsec_notes,
@@ -380,6 +390,17 @@ function generateMasterCargoPayload($db, $cargoId) {
     $cargo = $stmt->fetch();
 
     if (!$cargo) return null;
+
+    // Pertahankan pre_alert_xray_scenario yang sudah diset pada Input Kargo jika ada
+    if ($preAlertXray === null && !empty($cargo['cargo_payload'])) {
+        $prevDoc = json_decode($cargo['cargo_payload'], true);
+        if (is_array($prevDoc) && !empty($prevDoc['system_metadata']['pre_alert_xray_scenario'])) {
+            $preAlertXray = $prevDoc['system_metadata']['pre_alert_xray_scenario'];
+        }
+    }
+    if ($preAlertXray === null) {
+        $preAlertXray = ($cargo['xray_result'] === 'SUSPECT' || $cargo['status'] === 'SUSPECT') ? 'SUSPECT' : 'CLEARED';
+    }
 
     // Ambil log transaksi yang ada
     $logStmt = $db->prepare("SELECT * FROM scan_logs WHERE cargo_id = ? ORDER BY stage ASC, timestamp ASC");
@@ -409,6 +430,8 @@ function generateMasterCargoPayload($db, $cargoId) {
             "generated_by" => "PT Aerospace Consultant Advisory Group",
             "project_topic" => "Topic 6: Air Cargo & Intermodal Terminal",
             "institution" => "ITL Trisakti",
+            "single_entry_zero_reentry" => true,
+            "pre_alert_xray_scenario" => $preAlertXray,
             "last_synced_at" => date('c')
         ],
         "cargo_identity" => [
@@ -426,7 +449,7 @@ function generateMasterCargoPayload($db, $cargoId) {
             "shipper" => $cargo['shipper'],
             "consignee" => $cargo['consignee'],
             "origin" => "CGK (Jakarta)",
-            "destination" => "DPS (Denpasar/Bali)",
+            "destination" => $cargo['flight_destination'] ?? "DPS (Denpasar/Bali)",
             "handling_code" => ($cargo['commodity_type'] === 'PHARMA') ? "COL / PIL (Cold Chain Pharma)" : (($cargo['commodity_type'] === 'PERISHABLE') ? "PER (Perishable)" : "GEN (General Cargo)")
         ],
         "virtual_hardware_layer1_feed" => $hardwareFeed,
@@ -449,8 +472,8 @@ function generateMasterCargoPayload($db, $cargoId) {
 /**
  * Sinkronkan Master JSON Payload ke database cargo_shipments.cargo_payload
  */
-function syncCargoPayload($db, $cargoId) {
-    $masterDoc = generateMasterCargoPayload($db, $cargoId);
+function syncCargoPayload($db, $cargoId, $preAlertXray = null) {
+    $masterDoc = generateMasterCargoPayload($db, $cargoId, $preAlertXray);
     if (!$masterDoc) return null;
 
     $jsonString = json_encode($masterDoc, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);

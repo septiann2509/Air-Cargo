@@ -408,73 +408,6 @@ include __DIR__ . '/includes/header.php';
 
 </div>
 
-<!-- Modal Input Kargo Baru (InJourney Light Card) -->
-<div id="newCargoModal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white w-full max-w-lg rounded-2xl border border-gray-200 p-6 shadow-2xl relative">
-        <button onclick="closeNewCargoModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-700 text-lg transition-colors">
-            <i class="fa-solid fa-xmark"></i>
-        </button>
-        
-        <h3 class="text-base font-extrabold text-[#0D1C42] mb-1 flex items-center gap-2">
-            <i class="fa-solid fa-truck-ramp-box text-[#087F8A]"></i>
-            Input Kargo Inbound Baru (TMS Gate)
-        </h3>
-        <p class="text-xs text-slate-500 mb-5">Sistem akan secara otomatis men-generate nomor SSCC 18 digit standar GS1 dan kode booking slot dock.</p>
-
-        <form id="newCargoForm" onsubmit="handleCreateCargo(event)" class="space-y-3.5 text-xs">
-            <div>
-                <label class="block text-slate-700 font-bold mb-1">Nama Pengirim (Shipper)</label>
-                <input type="text" id="inp_shipper" required value="PT Indo Pharma Laboratories" class="w-full bg-[#F8FAFC] border border-gray-300 rounded-xl px-3.5 py-2.5 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#0CA1AF] focus:border-[#0CA1AF] focus:outline-none transition-all">
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-slate-700 font-bold mb-1">Penerima (Consignee)</label>
-                    <input type="text" id="inp_consignee" required value="Singapore General Hospital Logistics" class="w-full bg-[#F8FAFC] border border-gray-300 rounded-xl px-3.5 py-2.5 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#0CA1AF] focus:border-[#0CA1AF] focus:outline-none transition-all">
-                </div>
-                <div>
-                    <label class="block text-slate-700 font-bold mb-1">Tipe Komoditas</label>
-                    <select id="inp_commodity_type" class="w-full bg-[#F8FAFC] border border-gray-300 rounded-xl px-3.5 py-2.5 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#0CA1AF] focus:border-[#0CA1AF] focus:outline-none transition-all font-sans">
-                        <option value="GENERAL_CARGO">General Cargo (Umum)</option>
-                        <option value="PHARMA" selected>Pharma / Vaksin (Cold Chain)</option>
-                        <option value="PERISHABLE">Perishable (Makanan/Ikan)</option>
-                        <option value="VALUABLE">Valuable Goods (Elektronik)</option>
-                    </select>
-                </div>
-            </div>
-
-            <div>
-                <label class="block text-slate-700 font-bold mb-1">Deskripsi Barang</label>
-                <input type="text" id="inp_description" required value="Vaksin Rantai Dingin & Suplemen Kesehatan" class="w-full bg-[#F8FAFC] border border-gray-300 rounded-xl px-3.5 py-2.5 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#0CA1AF] focus:border-[#0CA1AF] focus:outline-none transition-all">
-            </div>
-
-            <div class="grid grid-cols-3 gap-3">
-                <div>
-                    <label class="block text-slate-700 font-bold mb-1">Jumlah Koli</label>
-                    <input type="number" id="inp_quantity" required value="60" min="1" class="w-full bg-[#F8FAFC] border border-gray-300 rounded-xl px-3.5 py-2.5 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#0CA1AF] focus:border-[#0CA1AF] focus:outline-none transition-all font-mono">
-                </div>
-                <div>
-                    <label class="block text-slate-700 font-bold mb-1">Berat Deklarasi (kg)</label>
-                    <input type="number" step="0.1" id="inp_weight" required value="420.0" min="1" class="w-full bg-[#F8FAFC] border border-gray-300 rounded-xl px-3.5 py-2.5 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#0CA1AF] focus:border-[#0CA1AF] focus:outline-none transition-all font-mono">
-                </div>
-                <div>
-                    <label class="block text-slate-700 font-bold mb-1">Supir Truk</label>
-                    <input type="text" id="inp_driver" required value="Joko Susanto" class="w-full bg-[#F8FAFC] border border-gray-300 rounded-xl px-3.5 py-2.5 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#0CA1AF] focus:border-[#0CA1AF] focus:outline-none transition-all">
-                </div>
-            </div>
-
-            <div class="pt-4 flex items-center justify-end space-x-2.5 border-t border-gray-100">
-                <button type="button" onclick="closeNewCargoModal()" class="px-4 py-2.5 rounded-xl bg-gray-100 text-slate-700 hover:bg-gray-200 text-xs font-bold transition-all">
-                    Batal
-                </button>
-                <button type="submit" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-bold text-xs shadow-lg shadow-teal-500/20 transition-all">
-                    Daftarkan Kargo &amp; Truk
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
 <!-- Dashboard Scripts -->
 <script>
     let commChart = null;
@@ -576,53 +509,6 @@ include __DIR__ . '/includes/header.php';
         });
     }
 
-    function openNewCargoModal() {
-        document.getElementById('newCargoModal').classList.remove('hidden');
-    }
-
-    function closeNewCargoModal() {
-        document.getElementById('newCargoModal').classList.add('hidden');
-    }
-
-    function handleCreateCargo(e) {
-        e.preventDefault();
-        const payload = {
-            shipper: document.getElementById('inp_shipper').value,
-            consignee: document.getElementById('inp_consignee').value,
-            commodity_type: document.getElementById('inp_commodity_type').value,
-            description: document.getElementById('inp_description').value,
-            quantity: parseInt(document.getElementById('inp_quantity').value),
-            declared_weight_kg: parseFloat(document.getElementById('inp_weight').value),
-            driver_name: document.getElementById('inp_driver').value
-        };
-
-        fetch('api/cargo.php?action=create', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        })
-        .then(r => r.json())
-        .then(res => {
-            if (res.success) {
-                closeNewCargoModal();
-                Swal.fire({
-                    title: 'Kargo Berhasil Didaftarkan!',
-                    html: `Nomor AWB: <b class="text-[#087F8A] font-mono">${res.awb_number}</b><br>GS1 SSCC: <b class="text-[#0CA1AF] font-mono">${res.sscc}</b>`,
-                    icon: 'success',
-                    background: '#ffffff',
-                    color: '#0D1C42',
-                    confirmButtonColor: '#087F8A',
-                    customClass: {
-                        popup: 'rounded-2xl shadow-2xl border border-gray-200'
-                    }
-                }).then(() => {
-                    window.location.reload();
-                });
-            } else {
-                Swal.fire('Error', res.message, 'error');
-            }
-        });
-    }
 </script>
 
 <!-- Modal Master JSON Payload Kargo di Dashboard -->

@@ -22,6 +22,18 @@ $cargosQuery = $db->query("
     LIMIT 25
 ");
 $dbCargos = $cargosQuery->fetchAll();
+foreach ($dbCargos as &$cgRow) {
+    $preAlertXray = 'CLEARED';
+    if (!empty($cgRow['cargo_payload'])) {
+        $decodedPayload = json_decode($cgRow['cargo_payload'], true);
+        if (!empty($decodedPayload['system_metadata']['pre_alert_xray_scenario'])) {
+            $preAlertXray = $decodedPayload['system_metadata']['pre_alert_xray_scenario'];
+        }
+    }
+    $cgRow['pre_alert_xray'] = $preAlertXray;
+    unset($cgRow['cargo_payload']);
+}
+unset($cgRow);
 $selectedCargoId = $_GET['cargo_id'] ?? '';
 $initialXrayParam = $_GET['xray'] ?? '';
 
@@ -308,7 +320,7 @@ include __DIR__ . '/includes/header.php';
                             $dockNum = '1';
                             if (strpos($cg['dock_slot'] ?? '', '02') !== false || strpos($cg['dock_slot'] ?? '', '2') !== false) $dockNum = '2';
                             if (strpos($cg['dock_slot'] ?? '', '03') !== false || strpos($cg['dock_slot'] ?? '', '3') !== false) $dockNum = '3';
-                            $isSusp = ($cg['xray_result'] === 'SUSPECT' || $cg['status'] === 'SUSPECT');
+                            $isSusp = ($cg['xray_result'] === 'SUSPECT' || $cg['status'] === 'SUSPECT' || ($cg['pre_alert_xray'] ?? '') === 'SUSPECT');
                             $statusIcon = $isSusp ? '⚠️' : '✅';
                         ?>
                             <option value="<?= htmlspecialchars($cg['id']) ?>" <?= ($cg['id'] === $selectedCargoId) ? 'selected' : '' ?>>
@@ -5979,8 +5991,8 @@ function applyCargoFromDb(cargoId) {
     if (dockStr.includes('02') || dockStr.includes('2')) tNum = 2;
     else if (dockStr.includes('03') || dockStr.includes('3')) tNum = 3;
 
-    // Tentukan skenario berdasarkan xray_result atau status kargo
-    const isSuspect = (c.xray_result === 'SUSPECT' || c.status === 'SUSPECT' || INITIAL_XRAY_PARAM === 'SUSPECT');
+    // Tentukan skenario berdasarkan xray_result, status kargo, atau pre-alert cargo_input
+    const isSuspect = (c.xray_result === 'SUSPECT' || c.status === 'SUSPECT' || c.pre_alert_xray === 'SUSPECT' || INITIAL_XRAY_PARAM === 'SUSPECT');
     const scenario = isSuspect ? 'suspect' : 'normal';
 
     // Update Dropdown UI jika belum cocok

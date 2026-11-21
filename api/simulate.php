@@ -36,18 +36,20 @@ try {
     }
 
     if ($actionType === 'auto_run') {
-        // Jalankan dari stage awal sampai stage 7 secara berurutan
+        // Jalankan dari stage aktif sampai stage 7 secara berurutan
         $results = [];
-        $startStage = ($cargo['current_stage'] == 1 && $cargo['status'] === 'REGISTERED') ? 1 : ((int)$cargo['current_stage'] < 7 ? (int)$cargo['current_stage'] : 1);
+        $startStage = ($cargo['status'] === 'LOADED') ? 1 : max(1, (int)$cargo['current_stage']);
+        $failedMessage = null;
         for ($s = $startStage; $s <= 7; $s++) {
             $res = executeStage($db, $cargoId, $s, 'CLEARED');
             $results[] = $res;
             if (!$res['success']) {
+                $failedMessage = $res['message'] ?? 'Simulasi terhenti pada tahap ' . $s;
                 break;
             }
         }
         $stmtFetch = $db->prepare("
-            SELECT c.*, t.truck_plate, t.dock_slot, t.driver_name, t.transporter_company, t.booking_code
+            SELECT c.*, t.truck_plate, t.dock_slot, t.driver_name, t.transporter_company, t.booking_code, t.arrival_time, t.status as truck_status
             FROM cargo_shipments c
             LEFT JOIN truck_arrivals t ON c.truck_arrival_id = t.id
             WHERE c.id = ?
@@ -55,6 +57,16 @@ try {
         $stmtFetch->execute([$cargoId]);
         $finalCargo = $stmtFetch->fetch();
         $finalPayload = syncCargoPayload($db, $cargoId);
+
+        if ($failedMessage !== null) {
+            jsonResponse([
+                'success' => false,
+                'message' => $failedMessage,
+                'cargo' => $finalCargo,
+                'payload' => $finalPayload,
+                'history' => $results
+            ]);
+        }
 
         jsonResponse([
             'success' => true,
@@ -66,12 +78,11 @@ try {
             'history' => $results
         ]);
     } else {
-        // Jalankan single stage tertentu
+        // Jalankan single stage tertentu (tanpa re-entry input)
         $suspectParam = ($actionType === 'force_suspect') ? 'SUSPECT' : ($input['avsec_decision'] ?? 'CLEARED');
         $stageToRun = ($targetStage > 0) ? $targetStage : ($cargo['current_stage'] + 1);
-        $truckData = $input['truck_data'] ?? null;
-        
-        $res = executeStage($db, $cargoId, $stageToRun, $suspectParam, $truckData);
+
+        $res = executeStage($db, $cargoId, $stageToRun, $suspectParam);
         jsonResponse($res);
     }
 
@@ -80,108 +91,18 @@ try {
 }
 
 /**
- * Helper: Hitung GS1 SSCC 18-digit dengan valid Modulo-10 Check Digit
+ * Eksekutor Tiap Tahapan Simulasi (Zero Re-entry Architecture)
  */
-function generateSsccFromSeed($seedStr) {
-    $seed = abs(crc32($seedStr));
-    $prefix = '389912' . str_pad(($seed % 900000) + 100000, 6, '0', STR_PAD_LEFT);
-    $serial = str_pad(($seed % 90000) + 10000, 5, '0', STR_PAD_LEFT);
-    $sscc17 = $prefix . $serial;
-    $sum = 0;
-    for ($i = 0; $i < 17; $i++) {
-        $digit = (int)$sscc17[$i];
-        $sum += ($i % 2 === 0) ? ($digit * 3) : $digit;
-    }
-    $checkDigit = (10 - ($sum % 10)) % 10;
-    return $sscc17 . $checkDigit;
-}
-
-/**
- * Helper: Menentukan manifes muatan kargo spesifik sesuai armada truk yang tiba
- */
-function getCargoForTruck($truckPlate, $driverName, $transporter) {
-    $plateClean = strtoupper(str_replace(' ', '', $truckPlate));
-    if ($plateClean === 'B8888KGO') {
-        return [
-            'awb' => '126-85258013',
-            'desc' => 'Pakaian & Tekstil Premium Ekspor',
-            'comm_type' => 'GENERAL_CARGO',
-            'qty' => 50,
-            'declared_weight' => 350.00,
-            'shipper' => 'PT Logistik Nusantara',
-            'consignee' => 'Bali Distribution Center',
-            'batch' => 'LOT-TEX-8821',
-            'gtin' => '08997193267836'
-        ];
-    } else if ($plateClean === 'B9182KXA') {
-        return [
-            'awb' => '126-91824401',
-            'desc' => 'Farmasi, Vaksin & Alat Medis',
-            'comm_type' => 'PHARMA',
-            'qty' => 30,
-            'declared_weight' => 185.00,
-            'shipper' => 'Bio Farma BioTech',
-            'consignee' => 'Bali Medika Hospital',
-            'batch' => 'LOT-VAC-9182',
-            'gtin' => '08998304073856'
-        ];
-    } else if ($plateClean === 'B4412PQL') {
-        return [
-            'awb' => '126-44128833',
-            'desc' => 'Komponen Elektronik & Semikonduktor',
-            'comm_type' => 'ELECTRONICS',
-            'qty' => 60,
-            'declared_weight' => 420.00,
-            'shipper' => 'PT Sat Nusapersada Batam',
-            'consignee' => 'Denpasar Electronics Hub',
-            'batch' => 'LOT-ELC-4412',
-            'gtin' => '08991204412993'
-        ];
-    } else if ($plateClean === 'B7777WXY') {
-        return [
-            'awb' => '126-77771290',
-            'desc' => 'Buah Segar & Komoditas Perishable',
-            'comm_type' => 'PERISHABLE',
-            'qty' => 45,
-            'declared_weight' => 260.00,
-            'shipper' => 'PT Nusantara Fresh Produce',
-            'consignee' => 'Bali Agro Trade',
-            'batch' => 'LOT-AGR-7777',
-            'gtin' => '08996577771204'
-        ];
-    } else {
-        $seed = abs(crc32($plateClean));
-        $awbNum = '126-' . str_pad(($seed % 90000000) + 10000000, 8, '0', STR_PAD_LEFT);
-        $commCatalog = [
-            ['desc' => 'Pakaian & Garmen Ekspor', 'type' => 'GENERAL_CARGO', 'weight' => 320.0, 'qty' => 40, 'shipper' => 'PT Global Tekstil Mandiri'],
-            ['desc' => 'Vaksin & Farmasi Cold Chain', 'type' => 'PHARMA', 'weight' => 195.0, 'qty' => 25, 'shipper' => 'PT Kimia Farma Trading'],
-            ['desc' => 'Komponen Otomotif & Spareparts', 'type' => 'GENERAL_CARGO', 'weight' => 480.0, 'qty' => 55, 'shipper' => 'PT Astra Komponen Otomotif'],
-            ['desc' => 'Perangkat Elektronik & Komputer', 'type' => 'ELECTRONICS', 'weight' => 380.0, 'qty' => 50, 'shipper' => 'PT Indonesia Polytron Global'],
-            ['desc' => 'Buah & Sayuran Segar Ekspor', 'type' => 'PERISHABLE', 'weight' => 240.0, 'qty' => 35, 'shipper' => 'PT Segar Alam Semesta']
-        ];
-        $picked = $commCatalog[$seed % count($commCatalog)];
-        return [
-            'awb' => $awbNum,
-            'desc' => $picked['desc'],
-            'comm_type' => $picked['type'],
-            'qty' => $picked['qty'],
-            'declared_weight' => $picked['weight'],
-            'shipper' => !empty($transporter) ? ('Shipper Rekanan ' . $transporter) : $picked['shipper'],
-            'consignee' => 'Bali Distribution Center',
-            'batch' => 'LOT-' . strtoupper(substr(preg_replace('/[^a-zA-Z]/', '', $plateClean) . 'CGO', 0, 3)) . '-' . ($seed % 9000 + 1000),
-            'gtin' => '0899' . str_pad(($seed % 9000000000) + 1000000000, 10, '0', STR_PAD_LEFT)
-        ];
-    }
-}
-
-/**
- * Eksekutor Tiap Tahapan Simulasi
- */
-function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $truckData = null) {
+function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED') {
     $stmt = $db->prepare("
-        SELECT c.*, t.truck_plate, t.driver_name, t.dock_slot
+        SELECT c.*,
+               t.truck_plate, t.driver_name, t.transporter_company, t.dock_slot, t.booking_code, t.arrival_time, t.status AS truck_status,
+               u.uld_code, u.uld_type, u.compartment,
+               f.flight_number, f.aircraft_type, f.destination AS flight_destination
         FROM cargo_shipments c
         LEFT JOIN truck_arrivals t ON c.truck_arrival_id = t.id
+        LEFT JOIN uld_containers u ON c.uld_id = u.id
+        LEFT JOIN flight_manifests f ON u.flight_id = f.id
         WHERE c.id = ?
     ");
     $stmt->execute([$cargoId]);
@@ -209,61 +130,67 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $truckD
         ensureAvsecDecisionTable($db); // DDL sebelum transaksi dimulai
     }
 
+    // Validasi urutan tahapan agar tetap linear (tidak melompati tahap yang belum selesai)
+    $currentStageInt = max(1, (int)$cargo['current_stage']);
+    if ($stage > $currentStageInt && $cargo['status'] !== 'LOADED') {
+        return [
+            'success' => false,
+            'message' => "Tahap {$stage} belum dapat diproses. Silakan selesaikan Tahap {$currentStageInt} terlebih dahulu."
+        ];
+    }
+
     $db->beginTransaction();
 
     try {
         switch ($stage) {
-            case 1: // TAHAP 1: Kedatangan Truk & Booking Slot (TMS / TAS Gate)
-                // Ambil data input dari staff atau gunakan data default
-                $truckPlate = !empty($truckData['truck_plate']) ? trim($truckData['truck_plate']) : 'B 8888 KGO';
-                $driverName = !empty($truckData['driver_name']) ? trim($truckData['driver_name']) : 'Bambang Pamungkas';
-                $transporter = !empty($truckData['transporter_company']) ? trim($truckData['transporter_company']) : 'PT Angkasa Pura Logistik';
-                $dockSlot = !empty($truckData['dock_slot']) ? trim($truckData['dock_slot']) : 'DOCK-02';
-                $bookingCode = !empty($truckData['booking_code']) ? trim($truckData['booking_code']) : ('TAS-SLOT-' . rand(1000, 9999));
-                $truckStatus = !empty($truckData['status']) ? trim($truckData['status']) : 'ARRIVED';
+            case 1: // TAHAP 1: Verifikasi Kedatangan Truk & Gate Check-In (TMS / TAS Gate — Zero Re-entry)
+                $truckId = $cargo['truck_arrival_id'];
 
-                // Buat record baru di tabel truck_arrivals
-                $truckId = 'TRK-' . date('Ymd') . '-' . rand(100, 999);
-                $stmtInsertTruck = $db->prepare("
-                    INSERT INTO truck_arrivals (id, truck_plate, driver_name, transporter_company, dock_slot, booking_code, arrival_time, status)
-                    VALUES (?, ?, ?, ?, ?, ?, NOW(), ?)
-                ");
-                $stmtInsertTruck->execute([
-                    $truckId, $truckPlate, $driverName, $transporter, $dockSlot, $bookingCode, $truckStatus
-                ]);
+                if ($truckId) {
+                    $truckPlate = $cargo['truck_plate'] ?: 'B 9482 KXT';
+                    $driverName = $cargo['driver_name'] ?: 'Bambang Supriyanto';
+                    $transporter = $cargo['transporter_company'] ?: 'PT Intermodal Logistik Sejahtera';
+                    $dockSlot = $cargo['dock_slot'] ?: 'DOCK-04';
+                    $bookingCode = $cargo['booking_code'] ?: ('TAS-SLOT-' . rand(1000, 9999));
 
-                // Tentukan manifes kargo yang sinkron secara spesifik dengan muatan truk ini
-                $cargoInfo = getCargoForTruck($truckPlate, $driverName, $transporter);
-                $sscc18 = generateSsccFromSeed($truckPlate . $cargoInfo['awb']);
-                $expiryDate = date('Y-m-d', strtotime('+1 year'));
+                    $stmtUpdateTruck = $db->prepare("
+                        UPDATE truck_arrivals
+                        SET status = CASE WHEN status = 'SCHEDULED' THEN 'ARRIVED' ELSE status END,
+                            arrival_time = CASE WHEN status = 'SCHEDULED' THEN NOW() ELSE arrival_time END
+                        WHERE id = ?
+                    ");
+                    $stmtUpdateTruck->execute([$truckId]);
+                } else {
+                    // Fallback aman jika ada kargo lama tanpa truck_arrival_id (tanpa menimpa data kargo)
+                    $truckId = 'TRK-' . date('Ymd-His') . '-' . rand(10, 99);
+                    $truckPlate = 'B 9482 KXT';
+                    $driverName = 'Bambang Supriyanto';
+                    $transporter = 'PT Indotruck Multimoda Logistik';
+                    $dockSlot = 'DOCK-02';
+                    $bookingCode = 'TAS-SLOT-' . rand(1000, 9999);
 
-                // Update kargo aktif dengan data spesifik muatan truk ini
+                    $db->prepare("
+                        INSERT INTO truck_arrivals (id, truck_plate, driver_name, transporter_company, dock_slot, booking_code, arrival_time, status)
+                        VALUES (?, ?, ?, ?, ?, ?, NOW(), 'ARRIVED')
+                    ")->execute([$truckId, $truckPlate, $driverName, $transporter, $dockSlot, $bookingCode]);
+
+                    $db->prepare("UPDATE cargo_shipments SET truck_arrival_id = ? WHERE id = ?")->execute([$truckId, $cargoId]);
+                }
+
+                // Majukan tahap ke 2 (status ARRIVED) TANPA mengubah/menimpa data master kargo
                 $updateCargo = $db->prepare("
-                    UPDATE cargo_shipments 
-                    SET awb_number = ?, sscc = ?, gtin = ?, batch_no = ?, expiry_date = ?,
-                        shipper = ?, consignee = ?, description = ?, commodity_type = ?,
-                        quantity = ?, declared_weight_kg = ?, actual_weight_kg = ?,
-                        current_stage = 2, status = 'ARRIVED', truck_arrival_id = ?
+                    UPDATE cargo_shipments
+                    SET current_stage = CASE WHEN current_stage < 2 THEN 2 ELSE current_stage END,
+                        status = CASE WHEN current_stage <= 1 OR status = 'REGISTERED' THEN 'ARRIVED' ELSE status END
                     WHERE id = ?
                 ");
-                $updateCargo->execute([
-                    $cargoInfo['awb'], $sscc18, $cargoInfo['gtin'], $cargoInfo['batch'], $expiryDate,
-                    $cargoInfo['shipper'], $cargoInfo['consignee'], $cargoInfo['desc'], $cargoInfo['comm_type'],
-                    $cargoInfo['qty'], $cargoInfo['declared_weight'], $cargoInfo['declared_weight'] + 4.0,
-                    $truckId, $cargoId
-                ]);
+                $updateCargo->execute([$cargoId]);
 
-                // Ambil data kargo terbaru setelah tersimpan
-                $stmtFetch = $db->prepare("
-                    SELECT c.*, t.truck_plate, t.dock_slot, t.driver_name, t.transporter_company, t.booking_code
-                    FROM cargo_shipments c
-                    LEFT JOIN truck_arrivals t ON c.truck_arrival_id = t.id
-                    WHERE c.id = ?
-                ");
-                $stmtFetch->execute([$cargoId]);
-                $updatedCargo = $stmtFetch->fetch();
+                $stmtTruckRow = $db->prepare("SELECT id, truck_plate, driver_name, transporter_company, dock_slot, booking_code, arrival_time, status FROM truck_arrivals WHERE id = ?");
+                $stmtTruckRow->execute([$truckId]);
+                $verifiedTruck = $stmtTruckRow->fetch();
 
-                $newTruckRecord = [
+                $newTruckRecord = $verifiedTruck ?: [
                     'id' => $truckId,
                     'truck_plate' => $truckPlate,
                     'driver_name' => $driverName,
@@ -271,28 +198,22 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $truckD
                     'dock_slot' => $dockSlot,
                     'booking_code' => $bookingCode,
                     'arrival_time' => date('Y-m-d H:i:s'),
-                    'status' => $truckStatus
+                    'status' => 'ARRIVED'
                 ];
 
+                // Payload Stage 1 HANYA berisi data yang dibutuhkan oleh TMS (Zero Re-entry & Data Minimization)
                 $jsonPayload = [
                     "cargo_payload_id" => "CMP-" . $cargoId,
-                    "master_sscc" => $sscc18,
                     "event_type" => "TMS_TRUCK_GATE_CHECKIN",
+                    "data_source" => "SINGLE_ENTRY_INPUT_KARGO (ZERO_REENTRY)",
+                    "filtered_domain" => "TMS_TRANSPORT_AND_DOCK_ONLY",
                     "truck_id" => $truckId,
-                    "truck_plate" => $truckPlate,
-                    "driver_name" => $driverName,
-                    "transporter" => $transporter,
-                    "assigned_dock" => $dockSlot,
-                    "booking_code" => $bookingCode,
-                    "linked_cargo_manifest" => [
-                        "e_awb_number" => $cargoInfo['awb'],
-                        "sscc_18" => $sscc18,
-                        "commodity" => $cargoInfo['desc'],
-                        "commodity_type" => $cargoInfo['comm_type'],
-                        "pieces" => $cargoInfo['qty'],
-                        "declared_weight_kg" => $cargoInfo['declared_weight'],
-                        "shipper" => $cargoInfo['shipper']
-                    ],
+                    "truck_plate" => $newTruckRecord['truck_plate'],
+                    "driver_name" => $newTruckRecord['driver_name'],
+                    "transporter_company" => $newTruckRecord['transporter_company'],
+                    "assigned_dock" => $newTruckRecord['dock_slot'],
+                    "booking_code" => $newTruckRecord['booking_code'],
+                    "arrival_time" => $newTruckRecord['arrival_time'],
                     "tas_booking_status" => "CONFIRMED_VALID_TIMESLOT",
                     "gate_barrier_status" => "BARRIER_OPENED",
                     "hardware_specs" => [
@@ -305,19 +226,26 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $truckD
 
                 $responsePayload = [
                     "status" => "200_OK",
-                    "message" => "Truk " . $truckPlate . " (" . $driverName . ") & Muatan e-AWB " . $cargoInfo['awb'] . " berhasil diverifikasi di gerbang TAS & dialokasikan ke " . $dockSlot,
+                    "message" => "Truk " . $newTruckRecord['truck_plate'] . " (" . $newTruckRecord['driver_name'] . ") berhasil diverifikasi otomatis di gerbang TAS & diarahkan ke " . $newTruckRecord['dock_slot'],
                     "tms_pass_token" => "TAS-TOKEN-" . strtoupper(bin2hex(random_bytes(4))),
                     "next_stage" => "CMS_AIDC_JSON_INGEST"
                 ];
 
-                logTransaction($db, $cargoId, 1, "Kedatangan Truk & Booking Slot (TMS/TAS)", "TMS RFID Gate Reader & Barrier Gate", "Intermodal TMS / Truck Appointment System (TAS)", "Verifikasi Waktu Kedatangan & Pembukaan Gerbang Otomatis", $jsonPayload, $responsePayload);
+                logTransaction($db, $cargoId, 1, "Kedatangan Truk & Booking Slot (TMS/TAS)", "TMS RFID Gate Reader & Barrier Gate", "Intermodal TMS / Truck Appointment System (TAS)", "Verifikasi Gate Otomatis dari Data Input Kargo (Zero Re-entry)", $jsonPayload, $responsePayload);
                 break;
 
             case 2: // TAHAP 2: Pemindaian Data Inbound (JSON Ingestion)
                 $scanTime = date('Y-m-d H:i:s');
+                if (!empty($cargo['truck_arrival_id'])) {
+                    $db->prepare("UPDATE truck_arrivals SET status = 'UNLOADING' WHERE id = ? AND status IN ('SCHEDULED', 'ARRIVED')")
+                       ->execute([$cargo['truck_arrival_id']]);
+                }
+
                 $update = $db->prepare("
                     UPDATE cargo_shipments 
-                    SET current_stage = 3, status = 'SCANNED', scan_time = ? 
+                    SET current_stage = CASE WHEN current_stage < 3 THEN 3 ELSE current_stage END,
+                        status = CASE WHEN current_stage <= 2 OR status IN ('REGISTERED', 'ARRIVED') THEN 'SCANNED' ELSE status END,
+                        scan_time = ? 
                     WHERE id = ?
                 ");
                 $update->execute([$scanTime, $cargoId]);
@@ -358,10 +286,20 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $truckD
             case 3: // TAHAP 3: Registrasi Data & e-AWB Matching di CMS
                 $update = $db->prepare("
                     UPDATE cargo_shipments 
-                    SET current_stage = 4, status = 'SECURITY_CHECK' 
+                    SET current_stage = CASE WHEN current_stage < 4 THEN 4 ELSE current_stage END,
+                        status = CASE WHEN current_stage <= 3 OR status IN ('REGISTERED', 'ARRIVED', 'SCANNED') THEN 'SECURITY_CHECK' ELSE status END
                     WHERE id = ?
                 ");
                 $update->execute([$cargoId]);
+
+                if (!empty($cargo['truck_arrival_id'])) {
+                    $pendingStmt = $db->prepare("SELECT COUNT(*) FROM cargo_shipments WHERE truck_arrival_id = ? AND current_stage < 3");
+                    $pendingStmt->execute([$cargo['truck_arrival_id']]);
+                    if ((int)$pendingStmt->fetchColumn() === 0) {
+                        $db->prepare("UPDATE truck_arrivals SET status = 'COMPLETED' WHERE id = ? AND status IN ('SCHEDULED', 'ARRIVED', 'UNLOADING')")
+                           ->execute([$cargo['truck_arrival_id']]);
+                    }
+                }
 
                 $jsonPayload = [
                     "cargo_payload_id" => "CMP-" . $cargoId,
@@ -510,9 +448,9 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $truckD
 
             case 5: // TAHAP 5: Penimbangan Kargo (Smart ULD Weighing Station)
                 $declared = (float)$cargo['declared_weight_kg'];
-                $jitter = rand(-2, 4); // selisih kg realistis
-                $actual = max(10, $declared + $jitter);
-                $discrepancy = $actual - $declared;
+                $jitter = ($declared >= 20) ? rand(-2, 4) : round(rand(-5, 5) / 10, 1); // selisih kg realistis
+                $actual = max(0.5, round($declared + $jitter, 1));
+                $discrepancy = round($actual - $declared, 2);
                 $maxToleranceAllowed = $declared * 0.05; // 5% toleransi
                 $tolerance = abs($discrepancy) <= $maxToleranceAllowed ? 'WITHIN_TOLERANCE' : 'DISCREPANCY_WARNING';
 
@@ -599,7 +537,17 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $truckD
                 $targetUld = $stmtUld->fetch();
 
                 if (!$targetUld) {
-                    // Fallback create or pick any ULD
+                    $stmtUldAny = $db->query("
+                        SELECT u.*, f.flight_number, f.aircraft_type, f.destination 
+                        FROM uld_containers u
+                        JOIN flight_manifests f ON u.flight_id = f.id
+                        ORDER BY u.current_weight_kg ASC
+                        LIMIT 1
+                    ");
+                    $targetUld = $stmtUldAny->fetch();
+                }
+
+                if (!$targetUld) {
                     $targetUld = [
                         'id' => 'ULD-AKE-12345',
                         'uld_code' => 'AKE-12345-GA',
@@ -734,15 +682,44 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $truckD
                 return ['success' => false, 'message' => 'Tahapan ' . $stage . ' tidak valid'];
         }
 
-        // Selalu ambil data kargo paling mutakhir beserta info truknya
+        // Selalu ambil data kargo paling mutakhir beserta info truk, ULD, flight, dan AVSEC
         $stmtCargoAfter = $db->prepare("
-            SELECT c.*, t.truck_plate, t.dock_slot, t.driver_name, t.transporter_company, t.booking_code
+            SELECT c.*, 
+                   t.truck_plate, t.dock_slot, t.driver_name, t.transporter_company, t.booking_code, t.arrival_time, t.status as truck_status,
+                   u.uld_code, u.uld_type, u.compartment, u.current_weight_kg as uld_weight, u.max_weight_kg as uld_max_weight,
+                   f.flight_number, f.destination as flight_destination, f.aircraft_type, f.departure_time, f.max_cargo_weight_kg as flight_max_weight,
+                   s.xray_result, s.inspector_id, s.csd_number, s.check_time, s.notes as avsec_notes
             FROM cargo_shipments c
             LEFT JOIN truck_arrivals t ON c.truck_arrival_id = t.id
+            LEFT JOIN uld_containers u ON c.uld_id = u.id
+            LEFT JOIN flight_manifests f ON u.flight_id = f.id
+            LEFT JOIN security_checks s ON s.cargo_id = c.id
             WHERE c.id = ?
         ");
         $stmtCargoAfter->execute([$cargoId]);
         $updatedCargo = $stmtCargoAfter->fetch();
+
+        $tmsData = [
+            'truck_id' => $updatedCargo['truck_arrival_id'],
+            'truck_plate' => $updatedCargo['truck_plate'],
+            'driver_name' => $updatedCargo['driver_name'],
+            'transporter_company' => $updatedCargo['transporter_company'],
+            'dock_slot' => $updatedCargo['dock_slot'],
+            'booking_code' => $updatedCargo['booking_code'],
+            'arrival_time' => $updatedCargo['arrival_time'],
+            'truck_status' => $updatedCargo['truck_status'] ?? 'ARRIVED',
+            'gate_verified' => ((int)$updatedCargo['current_stage'] >= 2 || $updatedCargo['status'] !== 'REGISTERED'),
+            'source_system' => 'Single Entry (Input Kargo)',
+            'zero_reentry' => true
+        ];
+
+        $tmsTrucks = $db->query("
+            SELECT id, truck_plate, driver_name, transporter_company, dock_slot, booking_code, arrival_time, status
+            FROM truck_arrivals
+            ORDER BY arrival_time DESC, created_at DESC
+            LIMIT 20
+        ")->fetchAll();
+        $tmsTotalTrucks = (int)$db->query("SELECT COUNT(*) FROM truck_arrivals")->fetchColumn();
 
         // Sinkronkan Master JSON Payload terbaru ke database
         $masterPayload = syncCargoPayload($db, $cargoId);
@@ -756,6 +733,9 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $truckD
             'stage' => $stage,
             'cargo_id' => $cargoId,
             'cargo' => $updatedCargo,
+            'tms_data' => $tmsData,
+            'tms_trucks' => $tmsTrucks,
+            'tms_total_trucks' => $tmsTotalTrucks,
             'payload' => $masterPayload
         ];
         if (isset($agentResult)) {

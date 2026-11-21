@@ -13,7 +13,7 @@ $flights = $flightsStmt->fetchAll();
 
 // Ambil daftar kargo yang sudah dibuat
 $cargosStmt = $db->query("
-    SELECT c.*, t.truck_plate, t.dock_slot
+    SELECT c.*, t.truck_plate, t.dock_slot, t.driver_name, t.transporter_company, t.booking_code, t.status as truck_status
     FROM cargo_shipments c
     LEFT JOIN truck_arrivals t ON c.truck_arrival_id = t.id
     ORDER BY c.created_at DESC
@@ -21,7 +21,7 @@ $cargosStmt = $db->query("
 ");
 $existingCargos = $cargosStmt->fetchAll();
 
-$pageTitle = 'Input Data Kargo — Simulasi 3D Terminal';
+$pageTitle = 'Input Data Kargo (Single Entry) — Terminal Terintegrasi';
 $bodyClass = 'bg-[#F8FAFC] text-slate-800';
 include __DIR__ . '/includes/header.php';
 
@@ -78,25 +78,33 @@ if (!function_exists('getStatusBadgeClass')) {
         <!-- Section 1: Page Header Card -->
         <div class="bg-white p-6 rounded-2xl border border-gray-200/90 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div>
-                <div class="flex items-center space-x-2.5">
+                <div class="flex items-center space-x-2.5 flex-wrap gap-y-1">
                     <span class="w-2.5 h-6 rounded-full bg-gradient-to-b from-[#0CA1AF] to-[#087F8A]"></span>
-                    <h1 class="text-2xl lg:text-3xl font-extrabold text-[#0D1C42] tracking-tight">Input Data Kargo untuk Simulasi 3D</h1>
+                    <h1 class="text-2xl lg:text-3xl font-extrabold text-[#0D1C42] tracking-tight">Input Data Kargo (Single Entry Point)</h1>
                     <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#087F8A]/10 text-[#087F8A] border border-[#087F8A]/30 uppercase tracking-wider">
-                        LIVE INPUT
+                        ZERO RE-ENTRY
                     </span>
                 </div>
                 <p class="text-xs lg:text-sm text-slate-500 mt-1 pl-5">
-                    Masukkan data kargo yang akan dikirimkan melalui truk ke terminal bandara. Data ini akan digunakan dalam simulasi 3D denah terminal.
+                    Input data cukup dilakukan <strong class="text-[#0D1C42]">satu kali di sini</strong>. Data armada truk otomatis masuk ke <strong class="text-[#087F8A]">Dashboard TMS</strong> (hanya data transportasi &amp; dock yang dibutuhkan TMS), dan data kargo mengalir otomatis ke <strong class="text-[#0D1C42]">CMS, AVSEC, Weight &amp; Balance, hingga Denah 3D</strong> tanpa input ulang.
                 </p>
             </div>
             <div class="flex flex-wrap items-center gap-3">
-                <a href="simulation_live.php" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#0CA1AF] to-[#087F8A] text-white font-bold text-xs shadow-md shadow-teal-900/10 hover:opacity-95 transition-all">
+                <a href="simulation.php?system=tms" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#0CA1AF] to-[#087F8A] text-white font-bold text-xs shadow-md shadow-teal-900/10 hover:opacity-95 transition-all">
+                    <i class="fa-solid fa-truck"></i>
+                    <span>Buka Dashboard TMS</span>
+                </a>
+                <a href="simulation_live.php" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-teal-300 bg-teal-50 text-[#087F8A] hover:bg-teal-100 font-bold text-xs transition-all">
                     <i class="fa-solid fa-gamepad"></i>
                     <span>Simulasi Live</span>
                 </a>
                 <a href="simulation.php" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#087F8A]/30 bg-white text-[#087F8A] hover:bg-[#087F8A]/5 font-bold text-xs transition-all">
                     <i class="fa-solid fa-microchip"></i>
                     <span>Simulasi 7-Tahap</span>
+                </a>
+                <a href="layout_3d.php" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 font-bold text-xs transition-all">
+                    <i class="fa-solid fa-cubes text-[#087F8A]"></i>
+                    <span>Denah 3D</span>
                 </a>
             </div>
         </div>
@@ -185,13 +193,18 @@ if (!function_exists('getStatusBadgeClass')) {
                             </div>
                         </div>
 
-                        <!-- Group 3: Data Truk Pengangkut -->
+                        <!-- Group 3: Data Truk Pengangkut (Otomatis Masuk ke Dashboard TMS) -->
                         <div class="p-5 rounded-2xl bg-slate-50/70 border border-slate-200/80 space-y-4">
-                            <h3 class="text-sm font-bold text-[#0D1C42] mb-3 flex items-center gap-2">
-                                <i class="fa-solid fa-truck text-[#087F8A]"></i>
-                                Data Truk Pengangkut
-                            </h3>
-                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                                <h3 class="text-sm font-bold text-[#0D1C42] flex items-center gap-2">
+                                    <i class="fa-solid fa-truck text-[#087F8A]"></i>
+                                    Data Truk Pengangkut (Auto-Sync ke TMS)
+                                </h3>
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-50 text-[#087F8A] border border-teal-200">
+                                    Otomatis Masuk ke TMS
+                                </span>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-xs font-bold text-[#0D1C42] mb-1.5" for="driver_name">
                                         Nama Sopir
@@ -208,17 +221,27 @@ if (!function_exists('getStatusBadgeClass')) {
                                     <input type="text" id="truck_plate" name="truck_plate" 
                                            value="B 9482 XX" 
                                            placeholder="B 9482 XX"
+                                           class="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 bg-white text-sm text-slate-800 focus:border-[#0CA1AF] focus:ring-2 focus:ring-[#0CA1AF]/20 focus:outline-none transition-all uppercase font-mono">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-[#0D1C42] mb-1.5" for="transporter_company">
+                                        Vendor / Perusahaan Transporter
+                                    </label>
+                                    <input type="text" id="transporter_company" name="transporter_company" 
+                                           value="PT Intermodal Logistik Sejahtera" 
+                                           placeholder="PT Intermodal Logistik Sejahtera"
                                            class="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 bg-white text-sm text-slate-800 focus:border-[#0CA1AF] focus:ring-2 focus:ring-[#0CA1AF]/20 focus:outline-none transition-all">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-bold text-[#0D1C42] mb-1.5" for="dock_slot">
-                                        Alokasi Dermaga (Truk)
+                                        Alokasi Dermaga (Dock Slot TMS)
                                     </label>
                                     <select id="dock_slot" name="dock_slot" 
                                             class="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 bg-white text-sm text-slate-800 focus:border-[#0CA1AF] focus:ring-2 focus:ring-[#0CA1AF]/20 focus:outline-none transition-all font-semibold">
-                                        <option value="DOCK-01">Truk 1 (Dermaga 01)</option>
-                                        <option value="DOCK-02">Truk 2 (Dermaga 02)</option>
-                                        <option value="DOCK-03" selected>Truk 3 (Dermaga 03)</option>
+                                        <option value="DOCK-01">Dermaga 01 (DOCK-01)</option>
+                                        <option value="DOCK-02">Dermaga 02 (DOCK-02)</option>
+                                        <option value="DOCK-03" selected>Dermaga 03 (DOCK-03)</option>
+                                        <option value="DOCK-04">Dermaga 04 (DOCK-04)</option>
                                     </select>
                                 </div>
                             </div>
@@ -300,14 +323,21 @@ if (!function_exists('getStatusBadgeClass')) {
                                 </div>
                             </div>
 
-                            <div class="bg-white p-2.5 rounded-xl border border-slate-200 text-xs">
-                                <span class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Data Truk Pengangkut</span>
+                            <div class="bg-white p-2.5 rounded-xl border border-slate-200 text-xs space-y-1.5">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[10px] uppercase font-bold text-slate-400">Data Masuk ke TMS (Filter Khusus TMS)</span>
+                                    <span class="text-[9px] px-1.5 py-0.5 rounded bg-teal-50 text-[#087F8A] font-bold border border-teal-200">Zero Re-entry</span>
+                                </div>
                                 <div class="flex items-center justify-between">
                                     <span id="prev-plate" class="font-mono font-bold text-slate-800">B 9482 XX</span>
                                     <span class="text-slate-500 text-[11px] flex items-center gap-1">
                                         <i class="fa-solid fa-id-card text-slate-400 text-[10px]"></i>
                                         <span id="prev-driver">Suryadi Pratama</span>
                                     </span>
+                                </div>
+                                <div class="flex items-center justify-between text-[11px] text-slate-500 pt-1 border-t border-slate-100">
+                                    <span id="prev-transporter" class="truncate max-w-[180px]">PT Intermodal Logistik Sejahtera</span>
+                                    <span class="font-mono text-[#087F8A] font-semibold">TAS: Auto-generated</span>
                                 </div>
                             </div>
 
@@ -325,10 +355,14 @@ if (!function_exists('getStatusBadgeClass')) {
                 </div>
 
                 <!-- Section 3: Submit Buttons Row -->
-                <div class="mt-8 pt-6 border-t border-gray-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3">
+                <div class="mt-8 pt-6 border-t border-gray-100 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center justify-end gap-3">
                     <button type="reset" onclick="setTimeout(updatePreview, 50)" class="px-5 py-3 rounded-xl font-bold text-slate-600 border border-slate-300 bg-white hover:bg-slate-50 transition-all text-xs lg:text-sm flex items-center justify-center gap-2 cursor-pointer shadow-sm">
                         <i class="fa-solid fa-rotate-left"></i>
                         <span>Reset Form</span>
+                    </button>
+                    <button type="button" onclick="submitCargoForm('tms')" class="px-4 py-3 rounded-xl font-bold text-[#0D1C42] border-2 border-[#087F8A] bg-teal-50/70 hover:bg-teal-100/70 transition-all text-xs lg:text-sm flex items-center justify-center gap-2 cursor-pointer shadow-sm">
+                        <i class="fa-solid fa-truck text-[#087F8A]"></i>
+                        <span>Simpan &amp; Buka Dashboard TMS</span>
                     </button>
                     <button type="button" onclick="submitCargoForm('sim')" class="px-4 py-3 rounded-xl font-bold text-[#087F8A] border-2 border-[#087F8A] bg-white hover:bg-[#087F8A]/5 transition-all text-xs lg:text-sm flex items-center justify-center gap-2 cursor-pointer shadow-sm">
                         <i class="fa-solid fa-chart-simple"></i>
@@ -349,7 +383,7 @@ if (!function_exists('getStatusBadgeClass')) {
                     <span class="w-2.5 h-6 rounded-full bg-gradient-to-b from-[#0CA1AF] to-[#087F8A]"></span>
                     <div>
                         <h2 class="text-lg lg:text-xl font-extrabold text-[#0D1C42]">Kargo yang Sudah Terdaftar</h2>
-                        <p class="text-xs text-slate-500">Daftar kargo terbaru dalam sistem yang siap divisualisasikan dalam simulasi 3D atau simulasi 7-tahap.</p>
+                        <p class="text-xs text-slate-500">Daftar kargo hasil Single Entry Point yang otomatis terintegrasi ke Dashboard TMS, Simulasi 7-Tahap, dan Denah 3D.</p>
                     </div>
                 </div>
                 <span class="px-3 py-1 rounded-full text-xs font-bold bg-[#087F8A]/10 text-[#087F8A] border border-[#087F8A]/20 self-start sm:self-auto">
@@ -366,7 +400,7 @@ if (!function_exists('getStatusBadgeClass')) {
                             <th class="py-3 px-4">Tipe</th>
                             <th class="py-3 px-4">Berat</th>
                             <th class="py-3 px-4">Status</th>
-                            <th class="py-3 px-4">Truk</th>
+                            <th class="py-3 px-4">Truk (TMS)</th>
                             <th class="py-3 px-4 text-center">Aksi</th>
                         </tr>
                     </thead>
@@ -379,7 +413,15 @@ if (!function_exists('getStatusBadgeClass')) {
                                 </td>
                             </tr>
                         <?php else: ?>
-                            <?php foreach ($existingCargos as $cargo): ?>
+                            <?php foreach ($existingCargos as $cargo): 
+                                $xrayHint = $cargo['status'];
+                                if (!empty($cargo['cargo_payload'])) {
+                                    $decodedPayload = json_decode($cargo['cargo_payload'], true);
+                                    if (is_array($decodedPayload) && !empty($decodedPayload['system_metadata']['pre_alert_xray_scenario'])) {
+                                        $xrayHint = $decodedPayload['system_metadata']['pre_alert_xray_scenario'];
+                                    }
+                                }
+                            ?>
                                 <tr class="hover:bg-slate-50/60 transition-colors">
                                     <td class="py-3 px-4">
                                         <div class="font-bold text-[#0D1C42] font-mono text-xs"><?= htmlspecialchars($cargo['awb_number']) ?></div>
@@ -409,10 +451,16 @@ if (!function_exists('getStatusBadgeClass')) {
                                     </td>
                                     <td class="py-3 px-4">
                                         <div class="font-mono font-bold text-slate-700"><?= htmlspecialchars($cargo['truck_plate'] ?? '-') ?></div>
-                                        <div class="text-[10px] text-slate-400"><?= htmlspecialchars($cargo['dock_slot'] ?? '-') ?></div>
+                                        <div class="text-[10px] text-slate-400"><?= htmlspecialchars($cargo['dock_slot'] ?? '-') ?> &bull; <?= htmlspecialchars($cargo['booking_code'] ?? '-') ?></div>
                                     </td>
                                     <td class="py-3 px-4 text-center">
-                                        <div class="flex items-center justify-center gap-1.5">
+                                        <div class="flex items-center justify-center gap-1.5 flex-wrap">
+                                            <a href="simulation.php?system=tms&cargo_id=<?= urlencode($cargo['id']) ?>" 
+                                               class="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-600 hover:text-white transition-all shadow-xs" 
+                                               title="Lihat Data Truk di Dashboard TMS">
+                                                <i class="fa-solid fa-truck"></i>
+                                                <span>TMS</span>
+                                            </a>
                                             <a href="simulation_live.php?cargo_id=<?= urlencode($cargo['id']) ?>&autostart=1" 
                                                class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-teal-600 text-white hover:bg-teal-700 transition-all shadow-xs" 
                                                title="Simulasi Live (Input &amp; Visual)">
@@ -424,6 +472,18 @@ if (!function_exists('getStatusBadgeClass')) {
                                                title="Simulasi 7-Tahap">
                                                 <i class="fa-solid fa-chart-column text-[#087F8A]"></i>
                                                 <span>7-Tahap</span>
+                                            </a>
+                                            <a href="layout_3d.php?cargo_id=<?= urlencode($cargo['id']) ?>&xray=<?= urlencode($xrayHint) ?>" 
+                                               class="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-bold bg-[#087F8A]/10 text-[#087F8A] hover:bg-[#087F8A] hover:text-white transition-all shadow-xs" 
+                                               title="Denah 3D Terminal">
+                                                <i class="fa-solid fa-cubes"></i>
+                                                <span>Denah 3D</span>
+                                            </a>
+                                            <a href="simulation_live.php?cargo_id=<?= urlencode($cargo['id']) ?>&xray=<?= urlencode($xrayHint) ?>&autostart=1" 
+                                               class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-teal-600 text-white hover:bg-teal-700 transition-all shadow-xs" 
+                                               title="Simulasi Live (Visual 3D)">
+                                                <i class="fa-solid fa-gamepad text-amber-300"></i>
+                                                <span>Live</span>
                                             </a>
                                         </div>
                                     </td>
@@ -450,6 +510,10 @@ function updatePreview() {
     document.getElementById('prev-weight').textContent = (form.declared_weight_kg.value || '350') + ' kg';
     document.getElementById('prev-qty').textContent = (form.quantity.value || '50') + ' koli';
     document.getElementById('prev-driver').textContent = form.driver_name.value || 'Auto-assign';
+    const transEl = document.getElementById('prev-transporter');
+    if (transEl && form.transporter_company) {
+        transEl.textContent = form.transporter_company.value || 'PT Intermodal Logistik Sejahtera';
+    }
     const dockText = form.dock_slot ? form.dock_slot.options[form.dock_slot.selectedIndex]?.text : '';
     document.getElementById('prev-plate').textContent = (form.truck_plate.value || 'Auto-assign') + (dockText ? ' • ' + dockText : '');
     
@@ -490,7 +554,7 @@ function updateFlowDiagram(injectAnomaly) {
     `;
 }
 
-function submitCargoForm(redirectTo = '3d') {
+function submitCargoForm(redirectTo = 'tms') {
     const form = document.getElementById('cargoForm');
     if (!form.checkValidity()) {
         form.reportValidity();
@@ -502,8 +566,8 @@ function submitCargoForm(redirectTo = '3d') {
     data.xray_result = form.querySelector('#inject_xray_anomaly')?.checked ? 'SUSPECT' : 'CLEARED';
     
     Swal.fire({
-        title: 'Memproses Data Kargo...',
-        text: 'Mendaftarkan kargo ke database dan menyiapkan simulasi...',
+        title: 'Memproses Single-Entry Kargo...',
+        text: 'Menyimpan data & menyinkronkan data armada ke Dashboard TMS (Zero Re-entry)...',
         allowOutsideClick: false,
         didOpen: () => { Swal.showLoading(); },
         background: '#ffffff',
@@ -527,31 +591,49 @@ function submitCargoForm(redirectTo = '3d') {
     })
     .then(res => {
         if (res.success) {
+            const btnLabel = redirectTo === 'live'
+                ? '🎮 Buka Simulasi Live (All-in-One)'
+                : (redirectTo === '3d'
+                    ? '🎮 Buka Denah 3D'
+                    : (redirectTo === 'tms' ? '🚛 Buka Dashboard TMS (Tahap 1)' : '📊 Buka Simulasi 7-Tahap'));
+
             Swal.fire({
-                title: 'Kargo Berhasil Didaftarkan!',
-                html: `<div class="text-left text-sm space-y-1">
-                    <p><strong>Cargo ID:</strong> ${res.cargo_id}</p>
-                    <p><strong>AWB:</strong> ${res.awb_number}</p>
-                    <p><strong>SSCC:</strong> ${res.sscc}</p>
-                    <p><strong>Truk:</strong> ${res.truck_plate} (${res.dock_slot})</p>
-                    <p><strong>X-Ray:</strong> <span class="${res.xray_result === 'SUSPECT' ? 'text-rose-600 font-bold' : 'text-emerald-600 font-bold'}">${res.xray_result}</span></p>
-                    ${res.agent ? `<p class="text-xs text-slate-600 pt-1"><strong>🤖 AI Agent AVSEC</strong> (${res.agent.engine}, keyakinan ${Math.round((res.agent.confidence||0)*100)}%):<br>${res.agent.headline}</p>` : ''}
+                title: 'Kargo Terdaftar (Zero Re-entry)!',
+                html: `<div class="text-left text-xs space-y-2">
+                    <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                        <p class="text-[10px] font-bold uppercase text-slate-400">Master Kargo (CMS / AVSEC / W&amp;B)</p>
+                        <p><strong>Cargo ID:</strong> <span class="font-mono">${res.cargo_id}</span></p>
+                        <p><strong>AWB:</strong> <span class="font-mono">${res.awb_number}</span></p>
+                        <p><strong>SSCC:</strong> <span class="font-mono">${res.sscc}</span></p>
+                        <p><strong>X-Ray:</strong> <span class="${res.xray_result === 'SUSPECT' ? 'text-rose-600 font-bold' : 'text-emerald-600 font-bold'}">${res.xray_result}</span></p>
+                        ${res.agent ? `<p class="text-xs text-slate-600 pt-1"><strong>🤖 AI Agent AVSEC</strong> (${res.agent.engine}, keyakinan ${Math.round((res.agent.confidence||0)*100)}%):<br>${res.agent.headline}</p>` : ''}
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-teal-50/70 border border-teal-200 space-y-1">
+                        <p class="text-[10px] font-bold uppercase text-[#087F8A]">Otomatis Masuk ke Dashboard TMS</p>
+                        <p><strong>Armada &amp; Dock:</strong> <span class="font-mono">${res.truck_plate} (${res.dock_slot})</span></p>
+                        <p><strong>Supir &amp; Vendor:</strong> ${res.driver_name} &bull; ${res.transporter_company}</p>
+                        <p><strong>Kode Booking TAS:</strong> <span class="font-mono text-[#087F8A] font-bold">${res.booking_code}</span></p>
+                    </div>
                 </div>`,
                 icon: 'success',
                 background: '#ffffff',
                 color: '#0D1C42',
                 confirmButtonColor: '#087F8A',
-                confirmButtonText: redirectTo === 'sim' ? '📊 Buka Simulasi 7-Tahap' : '🎮 Buka Simulasi Live (All-in-One)',
+                confirmButtonText: btnLabel,
                 showCancelButton: true,
                 cancelButtonText: 'Tutup',
                 cancelButtonColor: '#94a3b8',
                 customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
             }).then(result => {
                 if (result.isConfirmed) {
-                    if (redirectTo === 'sim') {
-                        window.location.href = `simulation.php?cargo_id=${res.cargo_id}`;
-                    } else {
+                    if (redirectTo === 'live') {
                         window.location.href = `simulation_live.php?cargo_id=${res.cargo_id}&xray=${res.xray_result}&autostart=1`;
+                    } else if (redirectTo === '3d') {
+                        window.location.href = `layout_3d.php?cargo_id=${res.cargo_id}&xray=${res.xray_result}`;
+                    } else if (redirectTo === 'tms') {
+                        window.location.href = `simulation.php?system=tms&cargo_id=${res.cargo_id}`;
+                    } else {
+                        window.location.href = `simulation.php?cargo_id=${res.cargo_id}`;
                     }
                 } else {
                     window.location.reload();
