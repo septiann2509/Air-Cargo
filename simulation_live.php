@@ -671,6 +671,38 @@ include __DIR__ . '/includes/header.php';
             </div>
         </div>
 
+        <!-- AI AGENT AVSEC PANEL (Perceive → Think → Act) -->
+        <div id="ai-agent-panel" class="hidden absolute top-[122px] left-4 z-20 w-[345px] max-w-[calc(100vw-32px)] max-h-[calc(100%-192px)] overflow-y-auto rounded-2xl bg-slate-900/95 backdrop-blur-xl border border-violet-400/40 shadow-2xl text-white" style="scrollbar-width: thin;">
+            <div class="flex items-center justify-between gap-2 px-3.5 py-2 border-b border-white/10 bg-gradient-to-r from-violet-900/70 to-slate-900/60 sticky top-0 z-10">
+                <div class="flex items-center gap-2 min-w-0">
+                    <span class="w-6 h-6 rounded-lg bg-violet-500/25 border border-violet-300/40 flex items-center justify-center text-violet-200 text-xs"><i class="fa-solid fa-robot"></i></span>
+                    <div class="min-w-0">
+                        <div class="text-[11px] font-black tracking-wide leading-tight">AI AGENT AVSEC</div>
+                        <div class="text-[8.5px] text-violet-200/80 leading-tight truncate">Petugas keamanan otonom · ICAO Annex 17</div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-1.5 flex-shrink-0">
+                    <span id="ai-engine-badge" class="px-1.5 py-0.5 rounded text-[8px] font-extrabold bg-violet-500/25 text-violet-100 border border-violet-300/30">LangGraph</span>
+                    <button onclick="document.getElementById('ai-agent-panel').classList.add('hidden')" class="text-slate-400 hover:text-white text-sm leading-none cursor-pointer" title="Tutup panel">&times;</button>
+                </div>
+            </div>
+            <div class="p-3 space-y-2 text-[10px]">
+                <div id="ai-step-perceive" class="flex gap-2">
+                    <span class="ai-dot w-2 h-2 rounded-full mt-1 flex-shrink-0 bg-slate-600"></span>
+                    <div class="min-w-0"><div class="font-extrabold text-sky-300 tracking-wide">1 · PERCEIVE <span class="font-medium text-white/50">— baca manifes &amp; X-Ray</span></div><div class="ai-detail text-white/75 leading-snug mt-0.5">-</div></div>
+                </div>
+                <div id="ai-step-think" class="flex gap-2">
+                    <span class="ai-dot w-2 h-2 rounded-full mt-1 flex-shrink-0 bg-slate-600"></span>
+                    <div class="min-w-0"><div class="font-extrabold text-amber-300 tracking-wide">2 · THINK <span class="font-medium text-white/50">— cocokkan DGR / ICAO</span></div><div class="ai-detail text-white/75 leading-snug mt-0.5">-</div></div>
+                </div>
+                <div id="ai-step-act" class="flex gap-2">
+                    <span class="ai-dot w-2 h-2 rounded-full mt-1 flex-shrink-0 bg-slate-600"></span>
+                    <div class="min-w-0"><div class="font-extrabold text-emerald-300 tracking-wide">3 · ACT <span class="font-medium text-white/50">— perintah aktuator</span></div><div class="ai-detail text-white/75 leading-snug mt-0.5">-</div></div>
+                </div>
+                <div id="ai-decision-block" class="hidden pt-2 border-t border-white/10 space-y-1.5"></div>
+            </div>
+        </div>
+
         <!-- FLOATING MILESTONE BANNER TOAST -->
         <div id="milestone-banner" class="hud-chip !px-6 !py-3 bg-gradient-to-r from-teal-950 via-slate-900 to-teal-950 border-2 border-teal-400 shadow-2xl flex items-center gap-3">
             <div id="milestone-icon" class="w-8 h-8 rounded-full bg-teal-500/20 text-teal-300 flex items-center justify-center text-sm font-black border border-teal-400">
@@ -905,6 +937,7 @@ let simProgress = 0;
 let simCameraMode = 'follow';
 
 const activeCargoData = {
+    cargoId: <?= json_encode(($initialCargo['id'] ?? '') !== 'CRG-DEMO' ? ($initialCargo['id'] ?? '') : '') ?>,
     name: <?= json_encode($initialCargo['description'] ?? 'Vaksin & Peralatan Medis Biofarma') ?>,
     commodity: <?= json_encode($initialCargo['commodity_type'] ?? 'PHARMA') ?>,
     qty: <?= (int)($initialCargo['quantity'] ?? 48) ?>,
@@ -916,10 +949,171 @@ const activeCargoData = {
     awb: <?= json_encode($initialCargo['awb_number'] ?? '126-88492019') ?>
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// AI AGENT AVSEC (LangGraph.js via api/cargo_input.php): Perceive → Think → Act
+// Keputusan CLEARED/SUSPECT diambil oleh agen; hasilnya mengendalikan diverter arm,
+// sirine merah, dan status kargo di terowongan X-Ray (Tahap 3).
+// ─────────────────────────────────────────────────────────────────────────────
+let pendingAgent = null;        // hasil keputusan agen dari server
+let agentFailed = false;        // true bila layanan/API gagal
+let agentRevealed = false;      // keputusan sudah diterapkan ke 3D
+let agentPanelStarted = false;
+let agentWaitStart = 0;
+let agentThinkShown = false;
+let agentRunId = 0;             // mencegah respons lama menimpa run baru
+
+function agentEsc(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function resetAgentState() {
+    agentRunId++;
+    pendingAgent = null;
+    agentFailed = false;
+    agentRevealed = false;
+    agentPanelStarted = false;
+    agentThinkShown = false;
+    agentWaitStart = 0;
+    const p = document.getElementById('ai-agent-panel');
+    if (p) p.classList.add('hidden');
+}
+
+function setAgentStep(key, state, detailHtml) {
+    const row = document.getElementById('ai-step-' + key);
+    if (!row) return;
+    const cls = { idle: 'bg-slate-600', active: 'bg-amber-400 animate-pulse', done: 'bg-emerald-400', alert: 'bg-rose-500' };
+    row.querySelector('.ai-dot').className = 'ai-dot w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0 ' + (cls[state] || cls.idle);
+    if (detailHtml !== undefined) row.querySelector('.ai-detail').innerHTML = detailHtml;
+}
+
+function startAgentPanel() {
+    agentPanelStarted = true;
+    agentWaitStart = Date.now();
+    const p = document.getElementById('ai-agent-panel');
+    if (p) p.classList.remove('hidden');
+    const dec = document.getElementById('ai-decision-block');
+    if (dec) { dec.classList.add('hidden'); dec.innerHTML = ''; }
+    const eb = document.getElementById('ai-engine-badge');
+    if (eb) { eb.textContent = 'LangGraph'; eb.className = 'px-1.5 py-0.5 rounded text-[8px] font-extrabold bg-violet-500/25 text-violet-100 border border-violet-300/30'; }
+    setAgentStep('perceive', 'active', `Memindai manifes <b>"${agentEsc(activeCargoData.name)}"</b> dan citra dual-view X-Ray…`);
+    setAgentStep('think', 'idle', 'Menunggu data persepsi…');
+    setAgentStep('act', 'idle', 'Menunggu keputusan…');
+    addSimLog('🤖 [AI AGENT] Agen AVSEC otonom aktif: membaca manifes & citra X-Ray.');
+}
+
+// Dipanggil tiap frame pada Fase 3 (kargo di terowongan X-Ray).
+function agentTickXray() {
+    if (!agentPanelStarted) startAgentPanel();
+    if (agentRevealed) return;
+
+    if (!agentThinkShown && simProgress > 0.18) {
+        agentThinkShown = true;
+        if (pendingAgent) {
+            const s = pendingAgent.perception?.xray?.summary || {};
+            const m = pendingAgent.perception?.manifest || {};
+            setAgentStep('perceive', 'done',
+                `Manifes: <b>${agentEsc(m.description)}</b> (${agentEsc(m.commodity_type)}).<br>X-Ray: ${agentEsc(s.object_count ?? '-')} objek · Z-eff rata-rata ${agentEsc(s.mean_z_eff ?? '-')} · densitas maks ${agentEsc(s.max_density_gcm3 ?? '-')} g/cm³.`);
+        } else {
+            setAgentStep('perceive', 'done', 'Data manifes & citra X-Ray terbaca.');
+        }
+        setAgentStep('think', 'active', 'Mencocokkan dengan basis aturan IATA DGR &amp; ICAO Annex 17…');
+    }
+
+    if (simProgress >= 0.5) {
+        const timedOut = agentWaitStart && (Date.now() - agentWaitStart) > 15000;
+        if (pendingAgent || agentFailed || timedOut) {
+            applyAgentDecision();
+        } else {
+            simProgress = 0.5; // tahan kargo di tengah terowongan sampai agen memutuskan
+        }
+    }
+}
+
+function applyAgentDecisionVisuals(decision) {
+    activeCargoData.xrayResult = decision;
+    if (decision === 'SUSPECT') {
+        cBox1.material = MAT.cardboardBoxSuspect;
+        cTag.material.color.setHex(0xEF4444);
+        xrBeaconMat.color.setHex(0xEF4444);
+        redAlarmStrobe.intensity = 6.0; // sirine merah dinyalakan oleh agen
+        playSound('alert');
+    } else {
+        cBox1.material = MAT.cardboardBox;
+        cTag.material.color.setHex(0x0CA1AF);
+        xrBeaconMat.color.setHex(0x10B981);
+    }
+}
+
+function applyAgentDecision() {
+    if (agentRevealed) return;
+    agentRevealed = true;
+    if (!agentPanelStarted) startAgentPanel();
+    const a = pendingAgent;
+
+    if (!a) {
+        const d = activeCargoData.xrayResult === 'SUSPECT' ? 'SUSPECT' : 'CLEARED';
+        setAgentStep('perceive', 'done', 'Layanan AI Agent tidak dapat dihubungi.');
+        setAgentStep('think', 'alert', `Mode lokal: memakai skenario simulasi (<b>${d}</b>).`);
+        setAgentStep('act', d === 'SUSPECT' ? 'alert' : 'done', 'Aktuator dikendalikan oleh logika simulasi lokal.');
+        addSimLog('⚠️ [AI AGENT] Layanan agen tidak tersedia — memakai skenario lokal.', d === 'SUSPECT');
+        applyAgentDecisionVisuals(d);
+        setXrayChoice(d);
+        return;
+    }
+
+    const isSus = a.decision === 'SUSPECT';
+    const s = a.perception?.xray?.summary || {};
+    const m = a.perception?.manifest || {};
+    setAgentStep('perceive', 'done',
+        `Manifes: <b>${agentEsc(m.description)}</b> (${agentEsc(m.commodity_type)}).<br>X-Ray: ${agentEsc(s.object_count ?? '-')} objek · Z-eff rata-rata ${agentEsc(s.mean_z_eff ?? '-')} · densitas maks ${agentEsc(s.max_density_gcm3 ?? '-')} g/cm³.`);
+
+    const bullets = (a.reasoning || []).slice(0, 4).map(r => `<li>${agentEsc(r)}</li>`).join('');
+    setAgentStep('think', isSus ? 'alert' : 'done', `<ul class="list-disc pl-3.5 space-y-0.5">${bullets}</ul>`);
+
+    const acts = (a.actions || []).map(x => `<li><span class="font-mono text-[9.5px] text-violet-200">${agentEsc(x.device)}</span> → <b>${agentEsc(x.command)}</b>${x.target ? ' · ' + agentEsc(x.target) : ''}</li>`).join('');
+    setAgentStep('act', isSus ? 'alert' : 'done', `<ul class="list-none space-y-0.5">${acts}</ul>`);
+
+    const eb = document.getElementById('ai-engine-badge');
+    if (eb) {
+        const llmTxt = a.llm && a.llm.used ? ` + ${agentEsc(a.llm.model)}` : '';
+        eb.textContent = a.engine === 'langgraph-js' ? ('LangGraph' + llmTxt) : 'Fallback';
+        eb.className = 'px-1.5 py-0.5 rounded text-[8px] font-extrabold border ' + (a.engine === 'langgraph-js'
+            ? 'bg-violet-500/25 text-violet-100 border-violet-300/30'
+            : 'bg-amber-500/25 text-amber-100 border-amber-300/40');
+    }
+
+    const risk = Math.round((a.risk_score || 0) * 100);
+    const conf = Math.round((a.confidence || 0) * 100);
+    const refs = (a.regulation_refs || []).slice(0, 2).map(r => `<div class="text-[9.5px] text-white/55 leading-snug">• ${agentEsc(r)}</div>`).join('');
+    const dec = document.getElementById('ai-decision-block');
+    if (dec) {
+        dec.classList.remove('hidden');
+        dec.innerHTML = `
+            <div class="rounded-xl px-3 py-2 border ${isSus ? 'bg-rose-500/15 border-rose-400/50' : 'bg-emerald-500/15 border-emerald-400/50'}">
+                <div class="text-[11px] font-black leading-snug ${isSus ? 'text-rose-300' : 'text-emerald-300'}">${agentEsc(a.headline)}</div>
+                ${a.mismatch ? '<div class="mt-1 inline-block px-1.5 py-0.5 rounded bg-rose-600 text-white text-[9px] font-extrabold">KETIDAKSESUAIAN DEKLARASI</div>' : ''}
+            </div>
+            <div>
+                <div class="flex justify-between text-[9.5px] text-white/70 mb-0.5"><span>Skor risiko</span><span class="font-mono font-bold ${isSus ? 'text-rose-300' : 'text-emerald-300'}">${risk}%</span></div>
+                <div class="h-1.5 rounded-full bg-slate-700 overflow-hidden"><div class="h-full ${isSus ? 'bg-rose-500' : 'bg-emerald-400'}" style="width:${risk}%"></div></div>
+                <div class="flex justify-between text-[9.5px] text-white/70 mt-1"><span>Keyakinan agen</span><span class="font-mono font-bold text-sky-300">${conf}%</span></div>
+            </div>
+            ${a.human_review_required ? '<div class="text-[9.5px] text-amber-200"><i class="fa-solid fa-user-shield mr-1"></i>Menunggu pemeriksaan sekunder supervisor AVSEC (human-in-the-loop).</div>' : ''}
+            <div>${refs}</div>`;
+    }
+
+    addSimLog(`🤖 [AI AGENT] ${a.headline}`, isSus);
+    (a.actions || []).forEach(x => addSimLog(`⚙️ [ACT] ${x.device} → ${x.command}${x.target ? ' (' + x.target + ')' : ''}: ${x.description}`, isSus && x.command !== 'OFF'));
+
+    applyAgentDecisionVisuals(a.decision);
+    setXrayChoice(a.decision);
+}
+
 function onSelectDbCargo(selectEl) {
     if (!selectEl || !selectEl.value) return;
     try {
         const item = JSON.parse(selectEl.value);
+        activeCargoData.cargoId = item.id || '';
         activeCargoData.name = item.description || '';
         activeCargoData.commodity = item.commodity_type || 'GENERAL_CARGO';
         activeCargoData.qty = item.quantity || 40;
@@ -953,6 +1147,7 @@ function setXrayChoice(choice) {
 }
 
 function loadScenarioPreset(type) {
+    activeCargoData.cargoId = '';
     if (type === 'normal') {
         activeCargoData.name = 'Garmen & Tekstil Ekspor Premium';
         activeCargoData.commodity = 'GENERAL_CARGO';
@@ -3192,10 +3387,6 @@ function createModernTerminalArchitecture() {
         canopyGroup.add(downlight);
     }
 
-    // Signboard Arsitektur Fasad Kanopi Luar (Flush Mounted 3D)
-    const canopySign = makeMountedSignboard("INJOURNEY CARGO TERMINAL", "INBOUND LOGISTICS DOCKS (BAY 1 - 3)", 18.0, 1.8, "#0CA1AF");
-    canopySign.position.set(0, 2.7, -canopyD / 2 - 0.05);
-    signsGroup.add(canopySign);
 
     canopyGroup.add(canopyRoof, fasciaFront, fasciaStripe);
     archGroup.add(canopyGroup);
@@ -8346,18 +8537,13 @@ function startLiveSimulation() {
     document.getElementById('telemetry-scale').textContent = `${activeCargoData.weight} kg`;
     const telemX = document.getElementById('telemetry-xray');
     if (telemX) {
-        telemX.textContent = activeCargoData.xrayResult;
-        telemX.className = activeCargoData.xrayResult === 'SUSPECT' ? 'font-black text-rose-400 font-mono text-xs' : 'font-black text-emerald-400 font-mono text-xs';
+        telemX.textContent = 'STANDBY';
+        telemX.className = 'font-black text-amber-300 font-mono text-xs';
     }
 
-    // Warna Boks
-    if (activeCargoData.xrayResult === 'SUSPECT') {
-        cBox1.material = MAT.cardboardBoxSuspect;
-        cTag.material.color.setHex(0xEF4444);
-    } else {
-        cBox1.material = MAT.cardboardBox;
-        cTag.material.color.setHex(0x0CA1AF);
-    }
+    // Warna Boks: awalnya netral. Warna SUSPECT baru terungkap setelah AI Agent AVSEC memutuskan di terowongan X-Ray.
+    cBox1.material = MAT.cardboardBox;
+    cTag.material.color.setHex(0x0CA1AF);
 
     resetLiveSimulation(false);
 
@@ -8381,6 +8567,32 @@ function startLiveSimulation() {
 }
 
 function saveToDatabaseApi() {
+    const runId = agentRunId;
+    const hasCargoId = !!(activeCargoData.cargoId && activeCargoData.cargoId !== 'CRG-DEMO');
+    if (hasCargoId) {
+        fetch('api/avsec_agent.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                cargo_id: activeCargoData.cargoId,
+                scenario: activeCargoData.xrayResult,
+                cargo: {
+                    cargo_id: activeCargoData.cargoId,
+                    awb: activeCargoData.awb,
+                    description: activeCargoData.name,
+                    commodity_type: activeCargoData.commodity,
+                    quantity: activeCargoData.qty,
+                    declared_weight_kg: activeCargoData.weight
+                }
+            })
+        }).then(r => r.json()).then(res => {
+            if (runId !== agentRunId) return;
+            if (res.success && res.agent) pendingAgent = res.agent;
+            else agentFailed = true;
+        }).catch(err => { console.warn('Agent API sync:', err); if (runId === agentRunId) agentFailed = true; });
+        return;
+    }
+
     fetch('api/cargo_input.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -8394,13 +8606,19 @@ function saveToDatabaseApi() {
             driver_name: activeCargoData.driver
         })
     }).then(r => r.json()).then(res => {
+        if (runId !== agentRunId) return; // simulasi sudah di-reset/diulang
         if (res.success) {
+            if (res.cargo_id) activeCargoData.cargoId = res.cargo_id;
             addSimLog(`💾 [DATABASE] Kargo tercatat di sistem: ${res.cargo_id} (SSCC: ${res.sscc}).`);
+            if (res.agent) pendingAgent = res.agent; else agentFailed = true;
+        } else {
+            agentFailed = true;
         }
-    }).catch(err => console.warn('API sync background:', err));
+    }).catch(err => { console.warn('API sync background:', err); if (runId === agentRunId) agentFailed = true; });
 }
 
 function resetLiveSimulation(fullReset = true) {
+    resetAgentState();
     simActive = false;
     isSimPaused = false;
     simPhase = 0;
@@ -8447,6 +8665,11 @@ function resetLiveSimulation(fullReset = true) {
     if (telemR) {
         telemR.textContent = 'STANDBY';
         telemR.className = 'font-black text-emerald-400 font-mono text-xs';
+    }
+    const telemXReset = document.getElementById('telemetry-xray');
+    if (telemXReset) {
+        telemXReset.textContent = 'STANDBY';
+        telemXReset.className = 'font-black text-amber-300 font-mono text-xs';
     }
     document.getElementById('telemetry-door').textContent = 'STANDBY';
     document.getElementById('telemetry-elevator').textContent = '0.55 m';
@@ -8529,6 +8752,9 @@ function jumpToProcessStep(stepNum) {
         activeCargoData.driver = <?= json_encode($initialCargo['driver_name'] ?? 'Suryadi Pratama') ?>;
         activeCargoData.awb = <?= json_encode($initialCargo['awb_number'] ?? '126-88492019') ?>;
     }
+
+    // Lompat ke tahap setelah X-Ray: terapkan keputusan AI Agent bila sudah tersedia
+    if (stepNum >= 4 && pendingAgent && !agentRevealed) applyAgentDecision();
 
     if (activeCargoData.xrayResult === 'SUSPECT') {
         cBox1.material = MAT.cardboardBoxSuspect;
@@ -8938,6 +9164,7 @@ function updateSimulationPipeline(dt) {
     else if (simPhase === 3) {
         document.getElementById('hud-stage-name').innerHTML = 'TAHAP 3: PEMERIKSAAN X-RAY AVSEC <span class="text-[8px] px-1.5 py-0.5 rounded bg-amber-500/30 text-amber-200 font-extrabold">SCANNING</span>';
         simProgress += dt * 0.082;
+        agentTickXray(); // AI Agent AVSEC: Perceive → Think → Act
 
         // Kargo meluncur dari Portal RFID (-27.0) masuk terowongan X-Ray Line 2 (-18.5) hingga keluar di (-16.5)!
         const easedZ = THREE.MathUtils.lerp(-27.0, -16.5, easeInOutQuad(Math.min(1.0, simProgress)));
@@ -9006,12 +9233,17 @@ function updateSimulationPipeline(dt) {
                 simActive = false;
                 addSimLog(`🛑 [KARANTINA COMPLETE] Kargo ${activeCargoData.name} diisolasi di Ruang Karantina. DILARANG ke Pesawat!`, true);
 
+                const agentModalHtml = pendingAgent
+                    ? `<p><strong>🤖 Keputusan AI Agent:</strong> ${agentEsc(pendingAgent.headline)}</p>
+                       <p class="text-xs text-slate-300"><strong>Regulasi:</strong> ${agentEsc((pendingAgent.regulation_refs || []).join(' · '))}</p>`
+                    : `<p><strong>Hasil X-Ray:</strong> Terdeteksi bahan berbahaya / anomali kerapatan fisik.</p>`;
+
                 Swal.fire({
                     title: 'BARANG DITAHAN DI RUANG KARANTINA!',
                     html: `<div class="text-left text-sm space-y-2">
                         <p class="text-rose-500 font-bold">⚠️ STATUS: SUSPECT &amp; HOLD (LOCATION 3B)</p>
-                        <p><strong>Nama Barang:</strong> ${activeCargoData.name}</p>
-                        <p><strong>Hasil X-Ray:</strong> Terdeteksi bahan berbahaya / anomali kerapatan fisik.</p>
+                        <p><strong>Nama Barang:</strong> ${agentEsc(activeCargoData.name)}</p>
+                        ${agentModalHtml}
                         <p><strong>Protokol Lapangan:</strong> Kargo telah dialihkan oleh diverter arm ke Ruang Karantina untuk pemeriksaan sekunder ETD &amp; investigasi kepolisian. <em>Kargo dilarang keras dimuat ke pesawat!</em></p>
                     </div>`,
                     icon: 'error',

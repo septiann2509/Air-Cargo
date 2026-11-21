@@ -159,3 +159,20 @@ INSERT INTO `cargo_shipments` (`id`, `awb_number`, `sscc`, `gtin`, `batch_no`, `
 ('CGO-20260926-001', '126-98741022', '389912345000000128', '08991234567890', 'LOT-BIO-9988', '2027-06-30', 'PT Bio Farma Internasional', 'Bali Medical Distribution Ltd', 'Vaksin & Produk Medis Cold Chain', 'PHARMA', 80, 480.00, NULL, 'TRK-20260926-01', NULL, NULL, 1, 'REGISTERED'),
 ('CGO-20260926-002', '126-44589211', '389912345000000135', '08994567891234', 'BATCH-TEX-2026', '2029-12-31', 'PT Sinar Garmen Nusantara', 'Tropical Resort Boutique Bali', 'Pakaian & Tekstil Premium Ekspor', 'GENERAL_CARGO', 120, 320.00, NULL, 'TRK-20260926-01', NULL, NULL, 1, 'REGISTERED'),
 ('CGO-20260926-003', '126-77812049', '389912345000000142', '08997788990011', 'LOT-EXP-4401', '2026-11-20', 'PT Sumber Laut Tropis', 'Gourmet Seafood Resto Denpasar', 'Fresh Tuna Loin Perishable Pack', 'PERISHABLE', 50, 290.00, NULL, 'TRK-20260926-01', NULL, NULL, 1, 'REGISTERED');
+
+-- 10. Tabel: avsec_agent_decisions (Jejak audit keputusan AI Agent AVSEC / LangGraph)
+CREATE TABLE IF NOT EXISTS `avsec_agent_decisions` (
+    `id` VARCHAR(50) PRIMARY KEY,
+    `cargo_id` VARCHAR(50) NOT NULL,
+    `decision` ENUM('CLEARED','SUSPECT') NOT NULL,
+    `risk_score` DECIMAL(4,2) NOT NULL DEFAULT 0,
+    `confidence` DECIMAL(4,2) NOT NULL DEFAULT 0,
+    `engine` VARCHAR(40) NOT NULL DEFAULT 'langgraph-js',
+    `llm_model` VARCHAR(60) NULL,
+    `mismatch` TINYINT(1) NOT NULL DEFAULT 0,
+    `headline` VARCHAR(500) NULL,
+    `result_json` LONGTEXT NULL,
+    `created_at` DATETIME NOT NULL,
+    INDEX (`cargo_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+

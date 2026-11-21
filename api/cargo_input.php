@@ -4,8 +4,10 @@
 // dan menyiapkan data untuk simulasi 3D di layout_3d.php
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/cargo_payload.php';
+require_once __DIR__ . '/../config/avsec_agent.php';
 
-$method = $_SERVER['REQUEST_METHOD'];
+ob_start();
+$method = $_SERVER['REQUEST_METHOD'] ?? '';
 if ($method !== 'POST') {
     jsonResponse(['success' => false, 'message' => 'Only POST allowed'], 405);
 }
@@ -16,6 +18,7 @@ if (!$input) {
 }
 
 $db = getDb();
+ensureAvsecDecisionTable($db); // DDL harus sebelum transaksi dimulai
 
 try {
     $db->beginTransaction();
@@ -45,7 +48,10 @@ try {
     $declaredWeight = max(1, (float)($input['declared_weight_kg'] ?? 350.0));
     $driverName = $input['driver_name'] ?: 'Suryadi Pratama';
     $truckPlate = $input['truck_plate'] ?: ('B ' . rand(1000, 9999) . ' ' . chr(rand(65, 90)) . chr(rand(65, 90)));
-    $xrayResult = ($input['xray_result'] ?? 'CLEARED') === 'SUSPECT' ? 'SUSPECT' : 'CLEARED';
+    // Pilihan form = isi fisik kargo yang "terlihat" oleh pemindai X-Ray simulasi (skenario).
+    // Keputusan akhir CLEARED/SUSPECT diambil oleh AI Agent AVSEC pada Tahap 4 (lihat langkah 8).
+    $xrayScenario = ($input['xray_result'] ?? 'CLEARED') === 'SUSPECT' ? 'SUSPECT' : 'CLEARED';
+    $xrayResult = $xrayScenario;
     
     $gtin = $input['gtin'] ?? ('0899' . rand(1000000000, 9999999999));
     $batchNo = $input['batch_no'] ?? ('LOT-' . strtoupper(substr($commodityType, 0, 3)) . '-' . rand(1000, 9999));
@@ -146,12 +152,27 @@ try {
     ")->execute(['LOG-' . uniqid(), $cargoId, json_encode(['event_type' => 'CMS_AWB_MATCHING', 'e_awb_number' => $awbNumber, 'matched_sscc' => $sscc], JSON_PRETTY_PRINT), json_encode(['status' => '200_OK', 'cms_status' => 'AWB_VERIFIED'], JSON_PRETTY_PRINT)]);
 
     // ─── 8. Auto-simulasi X-Ray (Tahap 4) ───
+    // AI Agent AVSEC (LangGraph): Perceive → Think → Act
+    $agent = avsecAgentInspect([
+        'cargo_id' => $cargoId,
+        'awb' => $awbNumber,
+        'description' => $description,
+        'commodity_type' => $commodityType,
+        'quantity' => $quantity,
+        'declared_weight_kg' => $declaredWeight,
+        'shipper' => $shipper,
+        'consignee' => $consignee,
+    ], $xrayScenario);
+    $xrayResult = $agent['decision'] === 'SUSPECT' ? 'SUSPECT' : 'CLEARED';
     $isSuspect = ($xrayResult === 'SUSPECT');
+    $agentScan = $agent['perception']['xray']['summary'] ?? [];
     $csdNum = $isSuspect ? null : ('CSD-ID-' . date('Ymd') . '-' . rand(1000, 9999));
     $inspectorId = 'AVSEC-OPR-07';
-    $xrayNotes = $isSuspect 
-        ? 'Peringatan: Terdeteksi kepadatan tinggi mencurigakan (Potensi Dangerous Goods)' 
-        : 'Pemeriksaan normal. Tidak ditemukan bahan berbahaya.';
+    $xrayNotes = '[AI AGENT ' . ($agent['engine'] ?? 'avsec') . '] ' . ($agent['headline'] ?? ($isSuspect ? 'SUSPECT' : 'CLEARED'));
+    $densityReading = isset($agentScan['mean_z_eff'])
+        ? ('Z-eff ' . $agentScan['mean_z_eff'] . ' / ' . ($agentScan['max_density_gcm3'] ?? '-') . ' g/cm3')
+        : ($isSuspect ? 'High Density Z-effective > 20' : 'Standard Organic Z=7-8');
+    saveAvsecDecision($db, $cargoId, $agent);
 
     $db->prepare("DELETE FROM security_checks WHERE cargo_id = ?")->execute([$cargoId]);
     
@@ -160,7 +181,7 @@ try {
         VALUES (?, ?, 'Dual-View High-Energy X-Ray (180x180cm, 320kV)', ?, ?, ?, NOW(), ?, ?)
     ")->execute([
         'SEC-' . uniqid(), $cargoId, $xrayResult, $inspectorId, $csdNum,
-        $isSuspect ? 'High Density Z-effective > 20' : 'Standard Organic Z=7-8',
+        $densityReading,
         $xrayNotes
     ]);
 
@@ -171,8 +192,9 @@ try {
         'event_type' => 'SECURITY_SCREENING_EVALUATION',
         'cargo_id' => $cargoId,
         'cargo_payload_id' => 'CMP-' . $cargoId,
-        'payload' => $masterPayload,
+        'notes' => $xrayNotes,
         'inspection_result' => $xrayResult,
+        'ai_agent' => ['engine' => $agent['engine'] ?? null, 'confidence' => $agent['confidence'] ?? null, 'risk_score' => $agent['risk_score'] ?? null, 'mismatch' => $agent['mismatch'] ?? false, 'actions' => $agent['actions'] ?? []],
         'inspector_badge' => $inspectorId,
         'csd_certificate' => $csdNum,
         'timestamp' => date('c')
@@ -244,6 +266,9 @@ try {
         }
     }
 
+    // Sinkronkan Master Cargo Payload Utuh ke Database
+    $masterPayload = syncCargoPayload($db, $cargoId);
+
     $db->commit();
 
     // ─── 10. Return Response ───
@@ -260,7 +285,9 @@ try {
         'dock_slot' => $dock,
         'xray_result' => $xrayResult,
         'final_status' => $finalStatus,
-        'scenario' => $isSuspect ? 'suspect' : 'normal'
+        'scenario' => $isSuspect ? 'suspect' : 'normal',
+        'xray_scenario' => $xrayScenario,
+        'agent' => $agent
     ]);
 
 } catch (Exception $e) {

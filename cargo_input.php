@@ -90,9 +90,9 @@ if (!function_exists('getStatusBadgeClass')) {
                 </p>
             </div>
             <div class="flex flex-wrap items-center gap-3">
-                <a href="layout_3d.php" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#0CA1AF] to-[#087F8A] text-white font-bold text-xs shadow-md shadow-teal-900/10 hover:opacity-95 transition-all">
-                    <i class="fa-solid fa-cubes"></i>
-                    <span>Lihat Denah 3D</span>
+                <a href="simulation_live.php" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#0CA1AF] to-[#087F8A] text-white font-bold text-xs shadow-md shadow-teal-900/10 hover:opacity-95 transition-all">
+                    <i class="fa-solid fa-gamepad"></i>
+                    <span>Simulasi Live</span>
                 </a>
                 <a href="simulation.php" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#087F8A]/30 bg-white text-[#087F8A] hover:bg-[#087F8A]/5 font-bold text-xs transition-all">
                     <i class="fa-solid fa-microchip"></i>
@@ -103,7 +103,7 @@ if (!function_exists('getStatusBadgeClass')) {
 
         <!-- Section 2: Input Form Card (2-column grid on large screens) -->
         <div class="bg-white p-6 lg:p-8 rounded-2xl border border-gray-200/90 shadow-sm">
-            <form id="cargoForm" action="api/cargo_input.php" method="POST" onsubmit="event.preventDefault(); submitCargoForm('3d');">
+            <form id="cargoForm" action="api/cargo_input.php" method="POST" onsubmit="event.preventDefault(); submitCargoForm('live');">
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
                     
                     <!-- Left column (lg:col-span-7) -->
@@ -224,28 +224,25 @@ if (!function_exists('getStatusBadgeClass')) {
                             </div>
                         </div>
 
-                        <!-- Group 4: Opsi Simulasi X-Ray -->
-                        <div class="p-5 rounded-2xl bg-slate-50/70 border border-slate-200/80 space-y-4">
-                            <h3 class="text-sm font-bold text-[#0D1C42] mb-3 flex items-center gap-2">
-                                <i class="fa-solid fa-shield-halved text-[#087F8A]"></i>
-                                Opsi Simulasi X-Ray
-                            </h3>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <label class="relative flex items-center p-3.5 rounded-xl border-2 border-emerald-400 bg-emerald-50/50 cursor-pointer hover:bg-emerald-50 transition-all">
-                                    <input type="radio" name="xray_result" value="CLEARED" checked class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 border-gray-300">
-                                    <div class="ml-3">
-                                        <span class="block text-xs font-bold text-emerald-800">✅ CLEARED</span>
-                                        <span class="block text-[11px] text-emerald-600 font-medium">Barang Aman (Lolos X-Ray)</span>
-                                    </div>
-                                </label>
-                                <label class="relative flex items-center p-3.5 rounded-xl border-2 border-rose-300 bg-rose-50/50 cursor-pointer hover:bg-rose-50 transition-all">
-                                    <input type="radio" name="xray_result" value="SUSPECT" class="w-4 h-4 text-rose-600 focus:ring-rose-500 border-gray-300">
-                                    <div class="ml-3">
-                                        <span class="block text-xs font-bold text-rose-800">⚠️ SUSPECT</span>
-                                        <span class="block text-[11px] text-rose-600 font-medium">Barang Berbahaya (Masuk Karantina)</span>
-                                    </div>
-                                </label>
+                        <!-- Group 4: Screening Otomatis AI Agent AVSEC -->
+                        <div class="p-5 rounded-2xl bg-violet-50/70 border border-violet-200/90 space-y-3">
+                            <div class="flex items-center justify-between gap-2">
+                                <h3 class="text-sm font-bold text-[#0D1C42] flex items-center gap-2">
+                                    <i class="fa-solid fa-robot text-violet-600"></i>
+                                    Screening Keamanan AVSEC (Otonom)
+                                </h3>
+                                <span class="text-[10px] font-extrabold text-violet-700 bg-white border border-violet-200 rounded-full px-2.5 py-0.5">LangGraph AI Agent</span>
                             </div>
+                            <p class="text-xs text-slate-600 leading-relaxed">
+                                Status <strong>CLEARED</strong> atau <strong>SUSPECT</strong> tidak dipilih manual. <strong>AI Agent AVSEC</strong> akan menganalisis deskripsi barang, tipe komoditas, dan hasil pindaian X-Ray secara otonom di Tahap 4.
+                            </p>
+                            <label class="flex items-start gap-2.5 p-3 rounded-xl bg-white border border-violet-200 cursor-pointer hover:border-violet-400 transition-all">
+                                <input type="checkbox" id="inject_xray_anomaly" name="inject_xray_anomaly" value="1" class="mt-0.5 w-4 h-4 text-rose-600 focus:ring-rose-500 border-gray-300 rounded">
+                                <div class="text-xs">
+                                    <span class="font-bold text-[#0D1C42] block">Uji Penyelundupan Tersembunyi (Simulasi Sensor X-Ray)</span>
+                                    <span class="text-[11px] text-slate-500">Opsional: centang untuk menyisipkan benda berbahaya tak terdeklarasi di dalam paket guna menguji ketelitian AI Agent.</span>
+                                </div>
+                            </label>
                         </div>
 
                     </div>
@@ -258,8 +255,8 @@ if (!function_exists('getStatusBadgeClass')) {
                                     <span class="w-2 h-4 rounded-full bg-[#087F8A]"></span>
                                     <h3 class="text-sm font-bold text-[#0D1C42]">Preview Data Kargo</h3>
                                 </div>
-                                <span id="prev-xray" class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                    ✅ CLEARED
+                                <span id="prev-xray" class="px-3 py-1 rounded-full text-xs font-bold bg-violet-50 text-violet-700 border border-violet-200">
+                                    🤖 Evaluasi AI Agent
                                 </span>
                             </div>
 
@@ -336,10 +333,6 @@ if (!function_exists('getStatusBadgeClass')) {
                     <button type="button" onclick="submitCargoForm('sim')" class="px-4 py-3 rounded-xl font-bold text-[#087F8A] border-2 border-[#087F8A] bg-white hover:bg-[#087F8A]/5 transition-all text-xs lg:text-sm flex items-center justify-center gap-2 cursor-pointer shadow-sm">
                         <i class="fa-solid fa-chart-simple"></i>
                         <span>Simulasi 7-Tahap</span>
-                    </button>
-                    <button type="button" onclick="submitCargoForm('3d')" class="px-4 py-3 rounded-xl font-bold text-slate-700 border border-slate-300 bg-slate-100 hover:bg-slate-200 transition-all text-xs lg:text-sm flex items-center justify-center gap-2 cursor-pointer shadow-sm">
-                        <i class="fa-solid fa-cubes"></i>
-                        <span>Denah 3D Terminal</span>
                     </button>
                     <button type="button" onclick="submitCargoForm('live')" class="px-6 py-3 rounded-xl font-extrabold text-white shadow-xl shadow-teal-900/30 hover:opacity-95 transition-all text-xs lg:text-sm flex items-center justify-center gap-2 cursor-pointer ring-2 ring-teal-400/40" style="background: linear-gradient(135deg, #0CA1AF 0%, #087F8A 50%, #014D54 100%);">
                         <i class="fa-solid fa-gamepad text-amber-300 text-sm"></i>
@@ -424,16 +417,10 @@ if (!function_exists('getStatusBadgeClass')) {
                                                class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-teal-600 text-white hover:bg-teal-700 transition-all shadow-xs" 
                                                title="Simulasi Live (Input &amp; Visual)">
                                                 <i class="fa-solid fa-gamepad text-amber-300"></i>
-                                                <span>Live</span>
-                                            </a>
-                                            <a href="layout_3d.php?cargo_id=<?= urlencode($cargo['id']) ?>&xray=<?= urlencode($cargo['status']) ?>" 
-                                               class="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-bold bg-[#087F8A]/10 text-[#087F8A] hover:bg-[#087F8A] hover:text-white transition-all shadow-xs" 
-                                               title="Denah 3D Terminal">
-                                                <i class="fa-solid fa-cubes"></i>
-                                                <span>Denah 3D</span>
+                                                <span>Live 3D</span>
                                             </a>
                                             <a href="simulation.php?cargo_id=<?= urlencode($cargo['id']) ?>" 
-                                               class="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-bold border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-all shadow-xs" 
+                                               class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-all shadow-xs" 
                                                title="Simulasi 7-Tahap">
                                                 <i class="fa-solid fa-chart-column text-[#087F8A]"></i>
                                                 <span>7-Tahap</span>
@@ -464,58 +451,43 @@ function updatePreview() {
     document.getElementById('prev-qty').textContent = (form.quantity.value || '50') + ' koli';
     document.getElementById('prev-driver').textContent = form.driver_name.value || 'Auto-assign';
     const dockText = form.dock_slot ? form.dock_slot.options[form.dock_slot.selectedIndex]?.text : '';
-    document.getElementById('prev-plate').textContent = (form.truck_plate.value || 'Auto-assign') + (dockText ? ' &bull; ' + dockText : '');
+    document.getElementById('prev-plate').textContent = (form.truck_plate.value || 'Auto-assign') + (dockText ? ' • ' + dockText : '');
     
-    // Update X-Ray preview
-    const xrayResult = form.querySelector('input[name=xray_result]:checked')?.value || 'CLEARED';
+    // Update badge status AVSEC (dievaluasi otonom oleh AI Agent saat Tahap 4)
+    const injectAnomaly = !!form.querySelector('#inject_xray_anomaly')?.checked;
     const xrayBadge = document.getElementById('prev-xray');
-    if (xrayResult === 'SUSPECT') {
-        xrayBadge.textContent = '⚠️ SUSPECT';
-        xrayBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-300 animate-pulse';
+    if (injectAnomaly) {
+        xrayBadge.textContent = '🤖 Uji Anomali X-Ray';
+        xrayBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-300';
     } else {
-        xrayBadge.textContent = '✅ CLEARED';
-        xrayBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200';
+        xrayBadge.textContent = '🤖 Evaluasi AI Agent';
+        xrayBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-violet-50 text-violet-700 border border-violet-200';
     }
     
     // Update flow diagram
-    updateFlowDiagram(xrayResult);
+    updateFlowDiagram(injectAnomaly);
 }
 
-function updateFlowDiagram(xrayResult) {
+function updateFlowDiagram(injectAnomaly) {
     const flowContainer = document.getElementById('flow-diagram');
-    if (xrayResult === 'SUSPECT') {
-        flowContainer.innerHTML = `
-            <div class="flex items-center flex-wrap gap-2 justify-center">
-                <span class="px-2 py-1 rounded-lg bg-blue-100 text-blue-700 text-xs font-bold">🚚 Truk</span>
-                <i class="fa-solid fa-arrow-right text-slate-400"></i>
-                <span class="px-2 py-1 rounded-lg bg-teal-100 text-teal-700 text-xs font-bold">📡 RFID</span>
-                <i class="fa-solid fa-arrow-right text-slate-400"></i>
-                <span class="px-2 py-1 rounded-lg bg-amber-100 text-amber-700 text-xs font-bold">🔍 X-Ray</span>
-                <i class="fa-solid fa-arrow-right text-rose-400"></i>
-                <span class="px-2 py-1 rounded-lg bg-rose-100 text-rose-700 text-xs font-bold animate-pulse">🛑 KARANTINA</span>
-            </div>
-            <p class="text-xs text-rose-600 font-semibold mt-2 text-center">⚠️ Barang terdeteksi berbahaya — akan dialihkan ke Ruang Karantina!</p>
-        `;
-    } else {
-        flowContainer.innerHTML = `
-            <div class="flex items-center flex-wrap gap-2 justify-center">
-                <span class="px-2 py-1 rounded-lg bg-blue-100 text-blue-700 text-xs font-bold">🚚 Truk</span>
-                <i class="fa-solid fa-arrow-right text-slate-400"></i>
-                <span class="px-2 py-1 rounded-lg bg-teal-100 text-teal-700 text-xs font-bold">📡 RFID</span>
-                <i class="fa-solid fa-arrow-right text-slate-400"></i>
-                <span class="px-2 py-1 rounded-lg bg-amber-100 text-amber-700 text-xs font-bold">🔍 X-Ray</span>
-                <i class="fa-solid fa-arrow-right text-emerald-400"></i>
-                <span class="px-2 py-1 rounded-lg bg-emerald-100 text-emerald-700 text-xs font-bold">✅ Aman</span>
-                <i class="fa-solid fa-arrow-right text-slate-400"></i>
-                <span class="px-2 py-1 rounded-lg bg-green-100 text-green-700 text-xs font-bold">📦 Storage</span>
-                <i class="fa-solid fa-arrow-right text-slate-400"></i>
-                <span class="px-2 py-1 rounded-lg bg-purple-100 text-purple-700 text-xs font-bold">⚖️ Timbangan</span>
-                <i class="fa-solid fa-arrow-right text-slate-400"></i>
-                <span class="px-2 py-1 rounded-lg bg-sky-100 text-sky-700 text-xs font-bold">✈️ Pesawat</span>
-            </div>
-            <p class="text-xs text-emerald-600 font-semibold mt-2 text-center">✅ Barang aman — akan dimuat ke pesawat!</p>
-        `;
-    }
+    flowContainer.innerHTML = `
+        <div class="flex items-center flex-wrap gap-1.5 justify-center">
+            <span class="px-2 py-1 rounded-lg bg-blue-100 text-blue-700 text-xs font-bold">🚚 Truk</span>
+            <i class="fa-solid fa-arrow-right text-slate-400"></i>
+            <span class="px-2 py-1 rounded-lg bg-teal-100 text-teal-700 text-xs font-bold">📡 RFID</span>
+            <i class="fa-solid fa-arrow-right text-slate-400"></i>
+            <span class="px-2 py-1 rounded-lg bg-violet-100 text-violet-700 text-xs font-bold">🤖 X-Ray + AI Agent</span>
+            <i class="fa-solid fa-code-branch text-slate-400"></i>
+            <span class="px-2 py-1 rounded-lg bg-emerald-100 text-emerald-700 text-xs font-bold">✈️ Pesawat</span>
+            <span class="text-slate-400 text-[10px] font-bold">/</span>
+            <span class="px-2 py-1 rounded-lg bg-rose-100 text-rose-700 text-xs font-bold">🛑 Karantina 3B</span>
+        </div>
+        <p class="text-[11px] ${injectAnomaly ? 'text-amber-700' : 'text-violet-700'} font-semibold mt-2 text-center">
+            ${injectAnomaly
+                ? '🧪 Mode uji penyelundupan aktif: sensor X-Ray menyisipkan objek mencurigakan untuk dideteksi AI Agent.'
+                : '🤖 AI Agent AVSEC akan menentukan jalur (Lolos ke Pesawat vs Karantina Zone 3B) secara otomatis.'}
+        </p>
+    `;
 }
 
 function submitCargoForm(redirectTo = '3d') {
@@ -527,7 +499,7 @@ function submitCargoForm(redirectTo = '3d') {
     
     const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
-    data.xray_result = form.querySelector('input[name=xray_result]:checked')?.value || 'CLEARED';
+    data.xray_result = form.querySelector('#inject_xray_anomaly')?.checked ? 'SUSPECT' : 'CLEARED';
     
     Swal.fire({
         title: 'Memproses Data Kargo...',
@@ -544,7 +516,15 @@ function submitCargoForm(redirectTo = '3d') {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
     })
-    .then(r => r.json())
+    .then(async r => {
+        const text = await r.text();
+        try {
+            return JSON.parse(text);
+        } catch (e) {
+            console.error('Server non-JSON response:', text);
+            throw new Error('Respon server tidak valid JSON: ' + (text.length > 80 ? text.substring(0, 80) + '...' : text));
+        }
+    })
     .then(res => {
         if (res.success) {
             Swal.fire({
@@ -555,24 +535,23 @@ function submitCargoForm(redirectTo = '3d') {
                     <p><strong>SSCC:</strong> ${res.sscc}</p>
                     <p><strong>Truk:</strong> ${res.truck_plate} (${res.dock_slot})</p>
                     <p><strong>X-Ray:</strong> <span class="${res.xray_result === 'SUSPECT' ? 'text-rose-600 font-bold' : 'text-emerald-600 font-bold'}">${res.xray_result}</span></p>
+                    ${res.agent ? `<p class="text-xs text-slate-600 pt-1"><strong>🤖 AI Agent AVSEC</strong> (${res.agent.engine}, keyakinan ${Math.round((res.agent.confidence||0)*100)}%):<br>${res.agent.headline}</p>` : ''}
                 </div>`,
                 icon: 'success',
                 background: '#ffffff',
                 color: '#0D1C42',
                 confirmButtonColor: '#087F8A',
-                confirmButtonText: redirectTo === 'live' ? '🎮 Buka Simulasi Live (All-in-One)' : (redirectTo === '3d' ? '🎮 Buka Denah 3D' : '📊 Buka Simulasi 7-Tahap'),
+                confirmButtonText: redirectTo === 'sim' ? '📊 Buka Simulasi 7-Tahap' : '🎮 Buka Simulasi Live (All-in-One)',
                 showCancelButton: true,
                 cancelButtonText: 'Tutup',
                 cancelButtonColor: '#94a3b8',
                 customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
             }).then(result => {
                 if (result.isConfirmed) {
-                    if (redirectTo === 'live') {
-                        window.location.href = `simulation_live.php?cargo_id=${res.cargo_id}&xray=${res.xray_result}&autostart=1`;
-                    } else if (redirectTo === '3d') {
-                        window.location.href = `layout_3d.php?cargo_id=${res.cargo_id}&xray=${res.xray_result}`;
-                    } else {
+                    if (redirectTo === 'sim') {
                         window.location.href = `simulation.php?cargo_id=${res.cargo_id}`;
+                    } else {
+                        window.location.href = `simulation_live.php?cargo_id=${res.cargo_id}&xray=${res.xray_result}&autostart=1`;
                     }
                 } else {
                     window.location.reload();

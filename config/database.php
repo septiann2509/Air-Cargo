@@ -46,6 +46,9 @@ function getDb() {
 
 function jsonResponse($data, $statusCode = 200) {
     http_response_code($statusCode);
+    while (ob_get_level() > 0) {
+        ob_end_clean();
+    }
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     exit;

@@ -50,7 +50,7 @@
                         <li><a href="dashboard.php" class="hover:text-white transition-colors">Dashboard Eksekutif</a></li>
                         <li><a href="simulation.php" class="hover:text-white transition-colors">Simulasi 7-Tahap PoC</a></li>
                         <li><a href="database_viewer.php" class="hover:text-white transition-colors">Database Viewer Live</a></li>
-                        <li><a href="layout_3d.php" class="hover:text-white transition-colors">Denah 3D Terminal (WebGL)</a></li>
+                        <li><a href="simulation_live.php" class="hover:text-white transition-colors">Simulasi Live (3D Studio)</a></li>
                     </ul>
                 </div>
 

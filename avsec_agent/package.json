@@ -1,0 +1,18 @@
+{
+  "name": "avsec-agent",
+  "version": "1.0.0",
+  "description": "Autonomous AVSEC Security Agent (Perceive -> Think -> Act) berbasis LangGraph.js untuk Air Cargo Intermodal Terminal",
+  "type": "module",
+  "main": "src/server.mjs",
+  "scripts": {
+    "start": "node src/server.mjs",
+    "test": "node src/selftest.mjs"
+  },
+  "dependencies": {
+    "@langchain/core": "^1.3.4",
+    "@langchain/langgraph": "^1.7.5"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

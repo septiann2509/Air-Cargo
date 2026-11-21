@@ -90,12 +90,6 @@ include __DIR__ . '/includes/header.php';
                     <span>Auto-Run Demo (1-Click)</span>
                 </button>
 
-                <!-- Denah 3D Terminal Link Button -->
-                <a href="layout_3d.php" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-teal-50 text-[#087F8A] hover:text-[#0CA1AF] text-xs font-bold border border-teal-200 shadow-sm transition-all flex items-center">
-                    <i class="fa-solid fa-cubes mr-1.5 text-xs text-[#0CA1AF]"></i>
-                    <span>Denah 3D</span>
-                </a>
-
                 <!-- Reset Button -->
                 <button onclick="confirmResetData()" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-600 hover:text-rose-600 text-xs font-bold border border-gray-300 shadow-sm transition-colors flex items-center">
                     <i class="fa-solid fa-rotate-left mr-1.5"></i> Reset Demo
@@ -1266,6 +1260,25 @@ include __DIR__ . '/includes/header.php';
                             <pre id="avsec-json-stream-display" class="font-mono text-[11px] leading-relaxed text-emerald-400 bg-[#060D1A] p-3.5 rounded-xl border border-slate-800/90 overflow-x-auto max-h-56 scrollbar-thin select-all"><code>// Memuat stream data keamanan AVSEC...</code></pre>
                         </div>
 
+                        <!-- AI Agent AVSEC Reasoning Card (LangGraph Perceive → Think → Act) -->
+                        <div id="avsec-ai-agent-box" class="hidden p-4 rounded-2xl border border-violet-200 bg-violet-50/75 shadow-sm mb-5 space-y-2.5">
+                            <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-violet-200/70">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-7 h-7 rounded-lg bg-violet-600 text-white flex items-center justify-center text-xs shadow-sm"><i class="fa-solid fa-robot"></i></span>
+                                    <div>
+                                        <h4 class="text-xs font-black text-[#0D1C42]">Penalaran Otonom AI Agent AVSEC</h4>
+                                        <p class="text-[10px] text-slate-500">Perceive (Manifes &amp; X-Ray) &rarr; Think (DGR / ICAO Annex 17) &rarr; Act (Karantina &amp; CSD)</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-1.5 text-[10px] font-mono">
+                                    <span id="avsec-agent-engine-badge" class="px-2 py-0.5 rounded-full font-bold bg-violet-100 text-violet-800 border border-violet-200">langgraph-js</span>
+                                    <span id="avsec-agent-metrics" class="px-2 py-0.5 rounded-full font-bold bg-white text-slate-700 border border-slate-200">Risiko 0% &bull; Keyakinan 0%</span>
+                                </div>
+                            </div>
+                            <div id="avsec-agent-headline" class="text-xs font-bold text-[#0D1C42] bg-white px-3 py-2 rounded-xl border border-violet-100">-</div>
+                            <div id="avsec-agent-trace" class="grid grid-cols-1 md:grid-cols-3 gap-2 text-[11px]"></div>
+                        </div>
+
                         <!-- Interactive CSD Certificate Card (Ditampilkan saat CLEARED) -->
                         <div id="avsec-certificate-wrap" class="p-5 rounded-2xl border border-emerald-300 bg-emerald-50/50 shadow-sm mb-5">
                             <div class="flex items-start justify-between">
@@ -1323,16 +1336,18 @@ include __DIR__ . '/includes/header.php';
                             </div>
                         </div>
 
-                        <!-- AVSEC Action Triggers -->
-                        <div class="pt-1 flex flex-wrap items-center gap-3">
-                            <button onclick="executeStageAction(4, 'CLEARED')" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-500/25 transition-all flex items-center transform hover:-translate-y-0.5">
-                                <i class="fa-solid fa-shield-check mr-2"></i>
-                                <span>Simulasi Loloskan X-Ray (CLEARED &amp; Terbit CSD)</span>
-                            </button>
-                            <button onclick="executeStageAction(4, 'SUSPECT')" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-bold text-xs shadow-md shadow-rose-500/25 transition-all flex items-center transform hover:-translate-y-0.5">
-                                <i class="fa-solid fa-triangle-exclamation mr-1.5"></i>
-                                <span>Simulasi Temuan Bahaya (SUSPECT &amp; Masuk Karantina)</span>
-                            </button>
+                        <!-- AVSEC AI Agent Trigger (Tanpa pilihan manual CLEARED/SUSPECT) -->
+                        <div class="pt-1 space-y-2.5">
+                            <label class="inline-flex items-center gap-2 text-xs text-slate-600 cursor-pointer select-none">
+                                <input type="checkbox" id="avsec-dash-inject-anomaly" class="w-3.5 h-3.5 text-rose-600 rounded border-gray-300">
+                                <span>Sisipkan anomali berbahaya tersembunyi di sensor X-Ray (opsional uji penyelundupan)</span>
+                            </label>
+                            <div class="flex flex-wrap items-center gap-3">
+                                <button type="button" onclick="executeStageAction(4, document.getElementById('avsec-dash-inject-anomaly')?.checked ? 'SUSPECT' : 'AUTO')" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-[#087F8A] hover:from-violet-500 hover:to-[#0CA1AF] text-white font-bold text-xs shadow-md shadow-violet-500/25 transition-all flex items-center transform hover:-translate-y-0.5 cursor-pointer">
+                                    <i class="fa-solid fa-robot mr-2"></i>
+                                    <span>Jalankan Screening Otonom AI Agent AVSEC</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
 

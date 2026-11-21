@@ -3,6 +3,7 @@
 
 let currentCargoData = null;
 let currentMasterPayload = null;
+let currentAgentDecision = null;
 let currentStageView = 1;
 let currentSystemDashboard = 'all';
 let activePayloadTab = 'request';
@@ -85,6 +86,7 @@ function initSimulation(cargoId, targetStageView = null, targetSystem = null) {
             if (res.success) {
                 currentCargoData = res.data.cargo;
                 currentMasterPayload = res.data.payload || null;
+                currentAgentDecision = res.data.agent || null;
                 renderCargoHeader(currentCargoData);
                 renderAuditTimeline(res.data.logs);
                 updateStepperState(currentCargoData.current_stage, currentCargoData.status);
@@ -132,6 +134,10 @@ function renderCargoHeader(c) {
     }
 
     // e-Label info
+    const destEl = document.getElementById('label-dest');
+    if (destEl) {
+        destEl.textContent = c.flight_destination || c.flight_dest || (c.consignee && /singapore/i.test(c.consignee) ? 'SIN - SINGAPORE' : 'DPS - DENPASAR');
+    }
     document.getElementById('label-consignee').textContent = c.consignee;
     document.getElementById('label-awb').textContent = c.awb_number;
     document.getElementById('label-qty').textContent = c.quantity + ' BOX';
@@ -434,26 +440,28 @@ function renderStageActionButtons(stage) {
     const isLoaded = (c.status === 'LOADED' && currentCargoStage === 7);
     container.innerHTML = '';
 
-    // ── TAHAP 4: SCREENING X-RAY AVSEC ──
+    // ── TAHAP 4: SCREENING X-RAY AVSEC (OTONOM AI AGENT) ──
     if (stage === 4) {
         if (c.status === 'CLEARED' || (currentCargoStage > 4 && c.status !== 'SUSPECT' && c.status !== 'RETURNED_TO_TRUCK')) {
             container.innerHTML = `
                 <div class="w-full mb-1 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center justify-between">
-                    <span class="font-bold"><i class="fa-solid fa-circle-check text-emerald-600 mr-1.5"></i> Pemeriksaan Keamanan AVSEC Lolos (CLEARED) &mdash; Sertifikat CSD Diterbitkan</span>
+                    <span class="font-bold"><i class="fa-solid fa-circle-check text-emerald-600 mr-1.5"></i> AI Agent AVSEC Menyatakan Lolos (CLEARED) &mdash; Sertifikat CSD Diterbitkan</span>
                     <span class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-mono font-bold">CLEARED</span>
+                </div>
+                <div class="w-full mb-1">
+                    <label class="inline-flex items-center gap-2 text-[11.5px] text-slate-600 cursor-pointer select-none">
+                        <input type="checkbox" id="stage4-inject-anomaly" class="w-3.5 h-3.5 text-rose-600 rounded border-gray-300">
+                        <span>Sisipkan anomali berbahaya tersembunyi di sensor X-Ray (jika ingin menguji ulang skenario penyelundupan)</span>
+                    </label>
                 </div>
                 <button onclick="selectStageView(5)" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-bold text-xs shadow-md shadow-teal-500/25 transition-all flex items-center transform hover:-translate-y-0.5 cursor-pointer">
                     <i class="fa-solid fa-scale-balanced mr-2 text-sm"></i>
                     <span>Lanjut ke Tahap 5 (Penimbangan Smart Scale)</span>
                     <i class="fa-solid fa-arrow-right ml-2 text-xs"></i>
                 </button>
-                <button onclick="executeStageAction(4, 'CLEARED')" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 hover:text-emerald-700 text-xs font-bold border border-gray-300 shadow-sm transition-all flex items-center cursor-pointer">
-                    <i class="fa-solid fa-rotate mr-1.5 text-xs text-emerald-600"></i>
-                    <span>Simulasi Ulang Lolos (CLEARED)</span>
-                </button>
-                <button onclick="executeStageAction(4, 'SUSPECT')" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-rose-50 text-rose-700 hover:text-rose-800 text-xs font-bold border border-rose-300 shadow-sm transition-all flex items-center cursor-pointer">
-                    <i class="fa-solid fa-triangle-exclamation mr-1.5 text-xs text-rose-500"></i>
-                    <span>Simulasi Temuan Bahaya (SUSPECT)</span>
+                <button onclick="executeStageAction(4, document.getElementById('stage4-inject-anomaly')?.checked ? 'SUSPECT' : 'AUTO')" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-violet-50 text-violet-700 text-xs font-bold border border-violet-300 shadow-sm transition-all flex items-center cursor-pointer">
+                    <i class="fa-solid fa-robot mr-1.5 text-xs"></i>
+                    <span>Screening Ulang AI Agent AVSEC</span>
                 </button>
                 <button onclick="selectStageView(3)" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-600 hover:text-[#087F8A] text-xs font-bold border border-gray-300 shadow-sm transition-colors flex items-center cursor-pointer">
                     <i class="fa-solid fa-arrow-left mr-1.5 text-xs"></i>
@@ -491,22 +499,24 @@ function renderStageActionButtons(stage) {
                     <i class="fa-solid fa-truck mr-1.5"></i>
                     <span>Kembali ke TMS &amp; Verifikasi Armada Baru</span>
                 </button>
-                <button onclick="executeStageAction(4, 'CLEARED')" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-emerald-50 text-emerald-800 text-xs font-bold border border-emerald-300 shadow-sm transition-all flex items-center cursor-pointer">
-                    <i class="fa-solid fa-rotate mr-1.5 text-xs text-emerald-600"></i>
-                    <span>Simulasi Ulang Lolos (CLEARED)</span>
+                <button onclick="executeStageAction(4, 'AUTO')" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-violet-50 text-violet-700 text-xs font-bold border border-violet-300 shadow-sm transition-all flex items-center cursor-pointer">
+                    <i class="fa-solid fa-robot mr-1.5 text-xs"></i>
+                    <span>Screening Ulang AI Agent AVSEC</span>
                 </button>
             `;
             return;
         } else {
-            // Belum screening X-Ray
+            // Belum screening X-Ray — diputuskan sepenuhnya oleh AI Agent
             container.innerHTML = `
-                <button onclick="executeStageAction(4, 'CLEARED')" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-500/20 transition-all flex items-center transform hover:-translate-y-0.5 cursor-pointer">
-                    <i class="fa-solid fa-shield-halved mr-1.5"></i>
-                    <span>Simulasi Loloskan X-Ray (CLEARED)</span>
-                </button>
-                <button onclick="executeStageAction(4, 'SUSPECT')" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-bold text-xs shadow-md shadow-rose-500/20 transition-all flex items-center transform hover:-translate-y-0.5 cursor-pointer">
-                    <i class="fa-solid fa-triangle-exclamation mr-1.5"></i>
-                    <span>Simulasi Temuan Bahaya (SUSPECT)</span>
+                <div class="w-full mb-1">
+                    <label class="inline-flex items-center gap-2 text-[11.5px] text-slate-600 cursor-pointer select-none">
+                        <input type="checkbox" id="stage4-inject-anomaly" class="w-3.5 h-3.5 text-rose-600 rounded border-gray-300">
+                        <span>Sisipkan anomali berbahaya tersembunyi di sensor X-Ray (opsional uji penyelundupan)</span>
+                    </label>
+                </div>
+                <button onclick="executeStageAction(4, document.getElementById('stage4-inject-anomaly')?.checked ? 'SUSPECT' : 'AUTO')" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-[#087F8A] hover:from-violet-500 hover:to-[#0CA1AF] text-white font-bold text-xs shadow-md shadow-violet-500/25 transition-all flex items-center transform hover:-translate-y-0.5 cursor-pointer">
+                    <i class="fa-solid fa-robot mr-2"></i>
+                    <span>Jalankan Screening Otonom AI Agent AVSEC</span>
                 </button>
                 <button onclick="selectStageView(5)" class="px-4 py-2.5 rounded-xl bg-white hover:bg-teal-50 text-[#0D1C42] hover:text-[#087F8A] text-xs font-bold border border-teal-300 shadow-sm transition-all flex items-center transform hover:-translate-y-0.5 cursor-pointer">
                     <i class="fa-solid fa-scale-balanced mr-1.5 text-xs text-[#087F8A]"></i>
@@ -711,10 +721,14 @@ function doExecuteStageAction(stage, avsecDecision) {
             if (res.payload) {
                 currentMasterPayload = res.payload;
             }
+            if (res.agent) {
+                currentAgentDecision = res.agent;
+            }
 
+            const resultIsSuspect = (avsecDecision === 'SUSPECT') || (stage === 4 && res.cargo && res.cargo.status === 'SUSPECT');
             let iconType = 'success';
             let btnColor = '#087F8A';
-            if (avsecDecision === 'SUSPECT') {
+            if (resultIsSuspect) {
                 iconType = 'warning';
                 btnColor = '#e11d48';
             } else if (avsecDecision === 'RETURN_TO_TRUCK') {
@@ -723,7 +737,7 @@ function doExecuteStageAction(stage, avsecDecision) {
             }
 
             Swal.fire({
-                title: 'Tahap Berhasil Diproses!',
+                title: resultIsSuspect ? 'Peringatan AVSEC: SUSPECT!' : 'Tahap Berhasil Diproses!',
                 text: res.message,
                 icon: iconType,
                 background: '#ffffff',
@@ -732,7 +746,7 @@ function doExecuteStageAction(stage, avsecDecision) {
                 customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
             }).then(() => {
                 let nextView = stage;
-                if ((avsecDecision === 'CLEARED' || avsecDecision === 'RELEASE') && stage < 7) {
+                if (!resultIsSuspect && (avsecDecision === 'CLEARED' || avsecDecision === 'RELEASE') && stage < 7) {
                     nextView = stage + 1;
                 } else if (avsecDecision === 'RETURN_TO_TRUCK') {
                     nextView = 1;
@@ -2480,6 +2494,19 @@ function renderAVSECDashboard(c) {
         }
     };
 
+    if (currentAgentDecision) {
+        avsecJson.ai_agent_evaluation = {
+            engine: currentAgentDecision.engine,
+            decision: currentAgentDecision.decision,
+            risk_score: currentAgentDecision.risk_score,
+            confidence: currentAgentDecision.confidence,
+            mismatch_detected: !!currentAgentDecision.mismatch,
+            headline: currentAgentDecision.headline,
+            actions: currentAgentDecision.actions
+        };
+    }
+    renderAvsecAgentPanelBox(currentAgentDecision);
+
     if (jsonDisplay) jsonDisplay.textContent = JSON.stringify(avsecJson, null, 2);
     const avsecDisp = document.getElementById('avsecPayloadDisplay');
     if (avsecDisp) avsecDisp.textContent = JSON.stringify(avsecJson, null, 2);
@@ -2623,4 +2650,41 @@ function downloadMasterPayloadJson() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+}
+
+function renderAvsecAgentPanelBox(agent) {
+    const box = document.getElementById('avsec-ai-agent-box');
+    if (!box) return;
+    if (!agent || !agent.decision) {
+        box.classList.add('hidden');
+        return;
+    }
+    box.classList.remove('hidden');
+    const isSus = agent.decision === 'SUSPECT';
+    box.className = 'p-4 rounded-2xl border shadow-sm mb-5 space-y-2.5 ' +
+        (isSus ? 'border-rose-300 bg-rose-50/70' : 'border-violet-200 bg-violet-50/75');
+
+    const badge = document.getElementById('avsec-agent-engine-badge');
+    if (badge) {
+        badge.textContent = agent.engine || 'langgraph-js';
+    }
+    const metrics = document.getElementById('avsec-agent-metrics');
+    if (metrics) {
+        metrics.textContent = 'Risiko ' + Math.round((agent.risk_score || 0) * 100) + '% · Keyakinan ' + Math.round((agent.confidence || 0) * 100) + '%';
+    }
+    const headline = document.getElementById('avsec-agent-headline');
+    if (headline) {
+        headline.textContent = agent.headline || agent.decision;
+        headline.className = 'text-xs font-bold px-3 py-2 rounded-xl border ' +
+            (isSus ? 'bg-white text-rose-800 border-rose-200' : 'bg-white text-emerald-800 border-emerald-200');
+    }
+    const traceEl = document.getElementById('avsec-agent-trace');
+    if (traceEl && Array.isArray(agent.trace)) {
+        traceEl.innerHTML = agent.trace.map(t => `
+            <div class="p-2.5 rounded-xl bg-white border border-slate-200/80">
+                <div class="font-extrabold text-[10px] uppercase tracking-wider ${t.node === 'act' && isSus ? 'text-rose-700' : 'text-[#087F8A]'}">${escapeHtml(t.title || t.node)}</div>
+                <div class="text-slate-600 mt-1 leading-snug">${escapeHtml(t.detail || '')}</div>
+            </div>
+        `).join('');
+    }
 }

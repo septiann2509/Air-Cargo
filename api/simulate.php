@@ -2,6 +2,7 @@
 // api/simulate.php
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/cargo_payload.php';
+require_once __DIR__ . '/../config/avsec_agent.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 if ($method !== 'POST') {
@@ -21,7 +22,12 @@ $db = getDb();
 
 try {
     // Ambil data kargo saat ini
-    $stmt = $db->prepare("SELECT * FROM cargo_shipments WHERE id = ?");
+    $stmt = $db->prepare("
+        SELECT c.*, t.truck_plate, t.driver_name, t.dock_slot
+        FROM cargo_shipments c
+        LEFT JOIN truck_arrivals t ON c.truck_arrival_id = t.id
+        WHERE c.id = ?
+    ");
     $stmt->execute([$cargoId]);
     $cargo = $stmt->fetch();
 
@@ -52,7 +58,9 @@ try {
 
         jsonResponse([
             'success' => true,
-            'message' => 'Auto-run simulasi selesai hingga tahap akhir (LOADED)',
+            'message' => ($finalCargo['status'] ?? '') === 'SUSPECT'
+                ? 'Auto-run dihentikan di Tahap 4 (AVSEC): AI Agent mendeteksi potensi Dangerous Goods dan mengunci kargo di Ruang Karantina.'
+                : 'Auto-run simulasi selesai hingga tahap akhir (LOADED)',
             'cargo' => $finalCargo,
             'payload' => $finalPayload,
             'history' => $results
@@ -170,7 +178,12 @@ function getCargoForTruck($truckPlate, $driverName, $transporter) {
  * Eksekutor Tiap Tahapan Simulasi
  */
 function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $truckData = null) {
-    $stmt = $db->prepare("SELECT * FROM cargo_shipments WHERE id = ?");
+    $stmt = $db->prepare("
+        SELECT c.*, t.truck_plate, t.driver_name, t.dock_slot
+        FROM cargo_shipments c
+        LEFT JOIN truck_arrivals t ON c.truck_arrival_id = t.id
+        WHERE c.id = ?
+    ");
     $stmt->execute([$cargoId]);
     $cargo = $stmt->fetch();
 
@@ -190,6 +203,10 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $truckD
             'success' => false,
             'message' => 'Kargo ini telah ditolak di AVSEC dan dikembalikan ke armada truk semula. Tidak dapat dilanjutkan ke tahapan penimbangan atau pemuatan.'
         ];
+    }
+
+    if ((int)$stage === 4) {
+        ensureAvsecDecisionTable($db); // DDL sebelum transaksi dimulai
     }
 
     $db->beginTransaction();
@@ -376,30 +393,48 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $truckD
                 logTransaction($db, $cargoId, 3, "Registrasi Data di CMS", "CMS Core Server", "Cargo Management Software (CMS)", "Pencocokan e-AWB & Alokasi Alur Pemeriksaan Keamanan", $jsonPayload, $responsePayload);
                 break;
 
-            case 4: // TAHAP 4: Pemeriksaan Keamanan X-Ray (AVSEC System)
-                $isSuspect = ($avsecDecision === 'SUSPECT');
+            case 4: // TAHAP 4: Pemeriksaan Keamanan X-Ray (AVSEC System + AI Agent LangGraph)
                 $isRelease = ($avsecDecision === 'RELEASE');
                 $isReturn = ($avsecDecision === 'RETURN_TO_TRUCK');
+                $agentResult = null;
+                $densityReading = null;
 
                 if ($isReturn) {
+                    $isSuspect = false;
                     $statusResult = 'RETURNED_TO_TRUCK';
                     $notes = 'Kargo Ditolak di AVSEC dan dikembalikan ke armada truk semula (' . ($cargo['truck_plate'] ?? 'Truk Pengangkut') . '). Dibatalkan dari manifes penerbangan.';
+                    $densityReading = 'Threat Confirmed / Rejected';
                     $csdNum = null;
                 } else if ($isRelease) {
+                    $isSuspect = false;
                     $statusResult = 'CLEARED';
-                    $notes = 'Pemeriksaan fisik sekunder (Hand Search & ETD) selesai di Ruang Khusus Karantina AVSEC. Dinyatakan AMAN dan dirilis.';
+                    $notes = 'Pemeriksaan fisik sekunder (Hand Search & ETD) selesai di Ruang Khusus Karantina AVSEC (Human-in-the-Loop). Dinyatakan AMAN dan dirilis.';
+                    $densityReading = 'Standard Organic (Z=7-8) / ETD Cleared';
                     $csdNum = 'CSD-ID-' . date('Ymd') . '-SEC-' . rand(1000, 9999);
-                } else if ($isSuspect) {
-                    $statusResult = 'SUSPECT';
-                    $notes = 'Peringatan AVSEC: Terdeteksi anomali kepadatan tinggi mencurigakan (Z > 20). Kargo dikunci otomatis di Ruang Khusus Karantina.';
-                    $csdNum = null;
                 } else {
-                    $statusResult = 'CLEARED';
-                    $notes = 'Screening Sinar-X Dual-View (320kV) selesai tanpa temuan mencurigakan. Kargo aman.';
-                    $csdNum = 'CSD-ID-' . date('Ymd') . '-' . rand(1000, 9999);
+                    $scenarioParam = ($avsecDecision === 'SUSPECT') ? 'SUSPECT' : 'CLEARED';
+                    $agentResult = avsecAgentInspect([
+                        'cargo_id' => $cargoId,
+                        'awb' => $cargo['awb_number'] ?? '',
+                        'description' => $cargo['description'] ?? '',
+                        'commodity_type' => $cargo['commodity_type'] ?? 'GENERAL_CARGO',
+                        'quantity' => (int)($cargo['quantity'] ?? 1),
+                        'declared_weight_kg' => (float)($cargo['declared_weight_kg'] ?? 0),
+                        'shipper' => $cargo['shipper'] ?? '',
+                        'consignee' => $cargo['consignee'] ?? '',
+                    ], $scenarioParam);
+                    $statusResult = ($agentResult['decision'] === 'SUSPECT') ? 'SUSPECT' : 'CLEARED';
+                    $isSuspect = ($statusResult === 'SUSPECT');
+                    $agentScan = $agentResult['perception']['xray']['summary'] ?? [];
+                    $densityReading = isset($agentScan['mean_z_eff'])
+                        ? ('Z-eff ' . $agentScan['mean_z_eff'] . ' / ' . ($agentScan['max_density_gcm3'] ?? '-') . ' g/cm3')
+                        : ($isSuspect ? 'High Density Atomic Number Z-effective > 20' : 'Standard Organic (Z=7-8) / Light Metal');
+                    $notes = '[AI AGENT ' . ($agentResult['engine'] ?? 'langgraph-js') . '] ' . ($agentResult['headline'] ?? $statusResult);
+                    $csdNum = $isSuspect ? null : ('CSD-ID-' . date('Ymd') . '-' . rand(1000, 9999));
+                    saveAvsecDecision($db, $cargoId, $agentResult);
                 }
 
-                $inspectorId = 'AVSEC-OPR-07';
+                $inspectorId = $agentResult ? 'AI-AGENT-AVSEC' : 'AVSEC-OPR-07';
 
                 // Hapus check sebelumnya jika ada
                 $del = $db->prepare("DELETE FROM security_checks WHERE cargo_id = ?");
@@ -417,7 +452,7 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $truckD
                     $statusResult,
                     $inspectorId,
                     $csdNum,
-                    $isSuspect ? 'High Density Atomic Number Z-effective > 20' : ($isReturn ? 'Threat Confirmed / Rejected' : 'Standard Organic (Z=7-8) / Light Metal'),
+                    $densityReading,
                     $notes
                 ]);
 
@@ -451,6 +486,14 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $truckD
                     "inspector_badge" => $inspectorId,
                     "csd_certificate" => $csdNum,
                     "quarantine_room_status" => $isSuspect ? "LOCKED_IN_VAULT" : ($isReturn ? "EXPELLED_TO_TRUCK" : "CLEAR_PASS"),
+                    "ai_agent" => $agentResult ? [
+                        "engine" => $agentResult['engine'] ?? null,
+                        "confidence" => $agentResult['confidence'] ?? null,
+                        "risk_score" => $agentResult['risk_score'] ?? null,
+                        "mismatch" => $agentResult['mismatch'] ?? false,
+                        "headline" => $agentResult['headline'] ?? null,
+                        "actions" => $agentResult['actions'] ?? []
+                    ] : null,
                     "timestamp" => date('c')
                 ];
 
@@ -707,12 +750,17 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $truckD
         $db->commit();
         $res = [
             'success' => true,
-            'message' => 'Tahap ' . $stage . ' berhasil diproses',
+            'message' => isset($agentResult)
+                ? ('Tahap 4 (AI Agent AVSEC): ' . ($agentResult['headline'] ?? 'Diproses'))
+                : ('Tahap ' . $stage . ' berhasil diproses'),
             'stage' => $stage,
             'cargo_id' => $cargoId,
             'cargo' => $updatedCargo,
             'payload' => $masterPayload
         ];
+        if (isset($agentResult)) {
+            $res['agent'] = $agentResult;
+        }
         if (isset($newTruckRecord)) {
             $res['truck'] = $newTruckRecord;
         }
