@@ -1476,33 +1476,100 @@ include __DIR__ . '/includes/header.php';
                         <!-- 3-Col Visual Cards: Parameter & Kriteria Batas Berat -->
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
                             
-                            <!-- Scale Visual: Toleransi -->
-                            <div class="p-4 rounded-xl bg-slate-50 border border-gray-200 text-center shadow-sm">
-                                <span class="text-[9px] uppercase tracking-wider text-slate-500 font-bold block">Toleransi Timbangan</span>
-                                <div id="lb-scale-weight" class="text-2xl font-black font-mono text-[#0D1C42] my-1">- KG</div>
-                                <span class="text-[9px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Batas Toleransi &plusmn;5%</span>
-                                <div class="mt-2 text-[10px] text-slate-600 border-t border-gray-200 pt-1.5">
-                                    Deklarasi e-AWB: <strong id="lb-scale-declared" class="text-[#0D1C42]">-</strong>
+                            <!-- Scale Visual: Toleransi IATA ±5% & HEA Tag -->
+                            <div class="p-4 rounded-xl bg-slate-50 border border-gray-200 shadow-sm flex flex-col justify-between">
+                                <div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-[9px] uppercase tracking-wider text-slate-500 font-bold">Smart Floor Scale 15T</span>
+                                        <span id="lb-hea-badge" class="hidden text-[9px] text-purple-700 font-bold bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
+                                            <i class="fa-solid fa-weight-hanging mr-1"></i> HEA
+                                        </span>
+                                    </div>
+                                    <div id="lb-scale-weight" class="text-2xl font-black font-mono text-[#0D1C42] my-1 text-center">- KG</div>
+                                    <div class="text-center my-1">
+                                        <span id="lb-tolerance-badge" class="text-[9px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 inline-block">
+                                            Batas Toleransi IATA &plusmn;5%
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="mt-2 text-[10px] text-slate-600 border-t border-gray-200 pt-1.5 space-y-0.5">
+                                    <div class="flex justify-between">
+                                        <span class="text-slate-500">Deklarasi e-AWB:</span>
+                                        <strong id="lb-scale-declared" class="text-[#0D1C42] font-mono">-</strong>
+                                    </div>
+                                    <div class="flex justify-between text-[9px] text-slate-400">
+                                        <span>Standar Akurasi:</span>
+                                        <span class="font-mono text-slate-600">OIML R76 Class III</span>
+                                    </div>
                                 </div>
                             </div>
 
-                            <!-- ULD Container Visual: Max Berat ULD -->
-                            <div class="p-4 rounded-xl bg-teal-50/60 border border-teal-200 text-center shadow-sm">
-                                <span class="text-[9px] uppercase tracking-wider text-[#087F8A] font-bold block">Batas Beban Kontainer ULD</span>
-                                <div id="lb-uld-code" class="text-base font-black font-mono text-[#0D1C42] my-1 truncate">AKE-12345-GA</div>
-                                <span class="text-[10px] font-bold text-[#087F8A] block">Batas Maks: 1.588 kg (AKE)</span>
-                                <div class="mt-2 text-[10px] text-slate-600 border-t border-teal-200/60 pt-1.5">
-                                    Status: <strong class="text-emerald-700 font-bold">Layak Dimuat</strong>
+                            <!-- ULD Container Visual: Max Berat ULD AKE & Breakdown Tare/Net/Gross -->
+                            <div class="p-4 rounded-xl bg-teal-50/60 border border-teal-200 shadow-sm flex flex-col justify-between">
+                                <div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-[9px] uppercase tracking-wider text-[#087F8A] font-bold">Kontainer ULD (AKE/LD3)</span>
+                                        <span id="lb-uld-status-badge" class="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                                            Layak Dimuat
+                                        </span>
+                                    </div>
+                                    <div id="lb-uld-code" class="text-lg font-black font-mono text-[#0D1C42] my-1 text-center truncate">AKE-12345-GA</div>
+                                    <!-- Progress Bar ULD Capacity -->
+                                    <div class="my-1">
+                                        <div class="flex justify-between text-[9px] text-slate-500 mb-0.5">
+                                            <span>Utilisasi Kapasitas</span>
+                                            <span id="lb-uld-utilization" class="font-bold text-[#087F8A]">0.0% Terisi</span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
+                                            <div id="lb-uld-progress-bar" class="bg-teal-500 h-1.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-2 text-[10px] text-slate-600 border-t border-teal-200/60 pt-1.5 space-y-0.5">
+                                    <div class="flex justify-between">
+                                        <span class="text-slate-500">Net Kargo:</span>
+                                        <span id="lb-cargo-net-wt" class="font-mono font-bold text-slate-700">-</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-slate-500">Tare ULD (AKE):</span>
+                                        <span id="lb-uld-tare-wt" class="font-mono text-slate-600">75.0 kg</span>
+                                    </div>
+                                    <div class="flex justify-between border-t border-teal-200/40 pt-0.5 font-bold">
+                                        <span class="text-[#0D1C42]">Total Gross:</span>
+                                        <span id="lb-uld-gross-wt" class="font-mono text-emerald-700">- / 1.588 kg</span>
+                                    </div>
                                 </div>
                             </div>
 
                             <!-- Aircraft Limit & Center of Gravity (CoG) Visual -->
-                            <div class="p-4 rounded-xl bg-slate-50 border border-gray-200 text-center shadow-sm">
-                                <span class="text-[9px] uppercase tracking-wider text-slate-500 font-bold block">Batas Muatan Pesawat &amp; Trim</span>
-                                <div class="text-2xl font-black font-mono text-emerald-600 my-1">18.500 KG</div>
-                                <span class="text-[9px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Boeing 737-800F (GA-707)</span>
-                                <div class="mt-2 text-[10px] text-slate-500 border-t border-gray-200 pt-1.5">
-                                    CoG: <strong>28.4% MAC (Trim Optimal)</strong>
+                            <div class="p-4 rounded-xl bg-slate-50 border border-gray-200 shadow-sm flex flex-col justify-between">
+                                <div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-[9px] uppercase tracking-wider text-slate-500 font-bold">Trim &amp; Beban Pesawat</span>
+                                        <span class="text-[9px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-mono">
+                                            GA-707
+                                        </span>
+                                    </div>
+                                    <div class="text-2xl font-black font-mono text-emerald-600 my-1 text-center">18.500 KG</div>
+                                    <div class="text-center my-1">
+                                        <span class="text-[9px] text-[#087F8A] font-bold bg-teal-50 px-2 py-0.5 rounded border border-teal-200 inline-block">
+                                            Boeing 737-800F Belly Cargo
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="mt-2 text-[10px] text-slate-600 border-t border-gray-200 pt-1.5 space-y-0.5">
+                                    <div class="flex justify-between">
+                                        <span class="text-slate-500">Kompartemen:</span>
+                                        <strong class="text-[#0D1C42] font-mono">AFT-LOWER-1</strong>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-slate-500">Center of Gravity:</span>
+                                        <strong class="text-emerald-700 font-mono">28.4% MAC (Safe)</strong>
+                                    </div>
+                                    <div class="flex justify-between text-[9px] text-slate-400">
+                                        <span>Envelope Limit:</span>
+                                        <span class="font-mono text-slate-600">18.0% - 34.0% MAC</span>
+                                    </div>
                                 </div>
                             </div>
 
@@ -1510,15 +1577,19 @@ include __DIR__ . '/includes/header.php';
 
                         <!-- Interactive Action Triggers for Stages 5, 6, 7 -->
                         <div class="pt-1 flex flex-wrap items-center gap-3">
-                            <button onclick="executeStageAction(5, 'CLEARED')" class="px-4 py-2.5 rounded-xl bg-white hover:bg-teal-50 text-[#087F8A] hover:text-[#0CA1AF] text-xs font-bold border border-teal-300 shadow-sm transition-all flex items-center transform hover:-translate-y-0.5">
+                            <button onclick="executeStageAction(5, 'CLEARED')" class="px-4 py-2.5 rounded-xl bg-white hover:bg-teal-50 text-[#087F8A] hover:text-[#0CA1AF] text-xs font-bold border border-teal-300 shadow-sm transition-all flex items-center transform hover:-translate-y-0.5 cursor-pointer">
                                 <i class="fa-solid fa-scale-balanced mr-1.5"></i>
                                 <span>Timbang di Smart Scale (Tahap 5)</span>
                             </button>
-                            <button onclick="executeStageAction(6, 'CLEARED')" class="px-4 py-2.5 rounded-xl bg-white hover:bg-teal-50 text-[#087F8A] hover:text-[#0CA1AF] text-xs font-bold border border-teal-300 shadow-sm transition-all flex items-center transform hover:-translate-y-0.5">
+                            <button onclick="openToleranceTestModal()" class="px-3.5 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold border border-amber-300 shadow-sm transition-all flex items-center transform hover:-translate-y-0.5 cursor-pointer" title="Simulasikan Uji Toleransi IATA ±5% dan Batas Maksimal ULD">
+                                <i class="fa-solid fa-vial mr-1.5 text-amber-600"></i>
+                                <span>Uji Toleransi IATA &amp; ULD</span>
+                            </button>
+                            <button onclick="executeStageAction(6, 'CLEARED')" class="px-4 py-2.5 rounded-xl bg-white hover:bg-teal-50 text-[#087F8A] hover:text-[#0CA1AF] text-xs font-bold border border-teal-300 shadow-sm transition-all flex items-center transform hover:-translate-y-0.5 cursor-pointer">
                                 <i class="fa-solid fa-boxes-packing mr-1.5"></i>
                                 <span>Konsolidasi ke ULD (Tahap 6)</span>
                             </button>
-                            <button onclick="executeStageAction(7, 'CLEARED')" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-bold text-xs shadow-md shadow-teal-500/25 transition-all flex items-center transform hover:-translate-y-0.5">
+                            <button onclick="executeStageAction(7, 'CLEARED')" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-bold text-xs shadow-md shadow-teal-500/25 transition-all flex items-center transform hover:-translate-y-0.5 cursor-pointer">
                                 <i class="fa-solid fa-plane-departure mr-2"></i>
                                 <span>Finalisasi Manifes &amp; Flight Loading (Tahap 7)</span>
                             </button>

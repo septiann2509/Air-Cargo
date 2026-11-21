@@ -88,21 +88,35 @@ function generateVirtualHardwareLayer1($cargo) {
             "device_name" => "Smart ULD Pit Floor Scale (15 Ton Capacity)",
             "dimensions" => "3.5m x 2.5m Industrial Steel Platform",
             "sensor_type" => "IP68 Hermetic Stainless Load Cells",
+            "oiml_standard" => "OIML R76 Class III (Accuracy ±1.0 kg)",
+            "iata_resolution" => "IATA CSC Res. 600b (Weight Tolerance ±5.0%)",
             "declared_weight_kg" => $declaredWeight,
             "actual_weight_kg" => $actualWeight,
             "discrepancy_kg" => round($actualWeight - $declaredWeight, 2),
-            "tolerance_evaluation" => (abs($actualWeight - $declaredWeight) <= ($declaredWeight * 0.05)) ? "WITHIN_TOLERANCE_5%" : "DISCREPANCY_WARNING"
+            "discrepancy_percent" => $declaredWeight > 0 ? round((($actualWeight - $declaredWeight) / $declaredWeight) * 100, 2) : 0.0,
+            "max_tolerance_allowed_kg" => round($declaredWeight * 0.05, 2),
+            "tolerance_limit_percent" => 5.0,
+            "tolerance_evaluation" => (abs($actualWeight - $declaredWeight) <= ($declaredWeight * 0.05)) ? "PASSED_WITHIN_TOLERANCE" : "EXCEEDED_TOLERANCE_WARNING",
+            "is_heavy_cargo" => ($declaredWeight >= 150.0 || $actualWeight >= 150.0),
+            "iata_special_handling" => ($declaredWeight >= 150.0 || $actualWeight >= 150.0) ? "HEA (Heavy Cargo >=150kg - Forklift Only)" : "GEN (General Cargo)"
         ],
         "uld_workstation" => [
             "station_id" => "WS-ULD-BUILDUP-03",
             "station_name" => "Automated ULD Workstation & Stacking Conveyor",
             "assigned_uld_code" => $cargo['uld_code'] ?? "AKE-12345-GA",
             "uld_type" => $cargo['uld_type'] ?? "AKE",
+            "container_spec" => "IATA Certified LD3 Lower Deck Container",
             "compartment" => $cargo['compartment'] ?? "AFT-LOWER-1",
             "tare_weight_kg" => 75.0,
             "cargo_payload_kg" => $actualWeight,
-            "gross_weight_kg" => 75.0 + $actualWeight,
+            "gross_weight_kg" => round(75.0 + $actualWeight, 2),
+            "max_gross_weight_capacity_kg" => 1588.0,
+            "max_net_cargo_capacity_kg" => 1513.0,
+            "is_overload" => (75.0 + $actualWeight) > 1588.0,
+            "utilization_percent" => round(((75.0 + $actualWeight) / 1588.0) * 100, 1),
+            "structural_status" => ((75.0 + $actualWeight) <= 1588.0) ? "COMPLIANT_WITHIN_AKE_LIMIT" : "OVERLOAD_EXCEEDS_AKE_LIMIT",
             "center_of_gravity_percent" => 28.4,
+            "cg_safety_envelope" => "18.0% - 34.0% MAC",
             "envelope_compliance" => "WITHIN_SAFETY_LIMITS"
         ],
         "ramp_loader" => [
@@ -267,6 +281,13 @@ function generateIntegratedStagesPayload($cargo, $logsByStage, $hardwareFeed) {
 
     // TAHAP 5: Penimbangan Kargo (Smart Floor Scale)
     $s5Done = ($currentStage >= 6) || in_array($status, ['WEIGHED', 'ALLOCATED', 'LOADED']);
+    $declaredWeight = (float)($cargo['declared_weight_kg'] ?? 350.0);
+    $actualWeight = (float)($cargo['actual_weight_kg'] ?? $declaredWeight);
+    $diffKg = round($actualWeight - $declaredWeight, 2);
+    $diffPercent = $declaredWeight > 0 ? round(($diffKg / $declaredWeight) * 100, 2) : 0.0;
+    $isWithinTolerance = (abs($diffPercent) <= 5.0);
+    $isHeavyCargo = ($declaredWeight >= 150.0 || $actualWeight >= 150.0);
+
     $stages[5] = [
         "stage_number" => 5,
         "stage_name" => "Penimbangan Kargo (Smart ULD Weighing Station)",
@@ -278,25 +299,41 @@ function generateIntegratedStagesPayload($cargo, $logsByStage, $hardwareFeed) {
             "event_type" => "CARGO_WEIGHT_ACQUISITION",
             "master_sscc" => $cargo['sscc'],
             "hardware_telemetry" => $hardwareFeed['smart_floor_scale'],
+            "weight_analysis" => [
+                "declared_gross_weight_kg" => $declaredWeight,
+                "actual_scale_weight_kg" => $actualWeight,
+                "discrepancy_kg" => $diffKg,
+                "discrepancy_percent" => $diffPercent . "%",
+                "iata_tolerance_limit" => "±5.00% (Maks ±" . round($declaredWeight * 0.05, 2) . " kg)",
+                "tolerance_status" => $isWithinTolerance ? "PASSED_WITHIN_TOLERANCE" : "EXCEEDED_TOLERANCE_WARNING",
+                "special_handling" => $isHeavyCargo ? "HEA (Heavy Cargo >=150kg)" : "GEN (General Cargo)"
+            ],
             "flight_loading_criteria" => [
                 "max_uld_gross_weight_kg" => 1588.0,
                 "max_aircraft_payload_kg" => 18500.0,
                 "aircraft_type" => "Boeing 737-800F (GA-707)",
-                "criteria_status" => "APPROVED_FOR_FLIGHT_LOADING"
+                "criteria_status" => ($actualWeight <= 1513.0) ? "APPROVED_FOR_AKE_LOADING" : "REQUIRES_PMC_OR_BREAKBULK"
             ],
             "weighed_at" => date('c')
         ],
         "response_payload" => [
             "cargo_payload_id" => $payloadId,
             "status" => "200_OK",
-            "message" => "Data berat aktual berhasil disinkronkan ke CMS & Modul Weight & Balance",
+            "message" => $isWithinTolerance 
+                ? "Data berat aktual terverifikasi dalam batas toleransi IATA (±5%). Siap untuk ULD build-up."
+                : "Peringatan: Selisih berat aktual melebihi toleransi IATA (±5%). Dokumen e-AWB diterbitkan amandemen CCA, berat fisik disinkronkan ke Weight & Balance.",
             "allow_uld_buildup" => true,
-            "criteria_result" => "PASSED"
+            "criteria_result" => $isWithinTolerance ? "PASSED_WITHIN_TOLERANCE" : "DISCREPANCY_FLAGGED_PASSED_PHYSICAL",
+            "document_amendment_required" => !$isWithinTolerance
         ]
     ];
 
     // TAHAP 6: Build-Up ULD & Kalkulasi Weight & Balance
     $s6Done = ($status === 'LOADED') || ($currentStage === 7 && $status === 'ALLOCATED');
+    $tareWeightUld = 75.0;
+    $grossUldWeight = round($tareWeightUld + $actualWeight, 2);
+    $isUldOverload = ($grossUldWeight > 1588.0);
+
     $stages[6] = [
         "stage_number" => 6,
         "stage_name" => "Build-Up ULD & Kalkulasi Weight & Balance",
@@ -309,10 +346,21 @@ function generateIntegratedStagesPayload($cargo, $logsByStage, $hardwareFeed) {
             "master_sscc" => $cargo['sscc'],
             "cargo_id" => $cargoId,
             "hardware_telemetry" => $hardwareFeed['uld_workstation'],
+            "container_breakdown" => [
+                "assigned_uld" => $cargo['uld_code'] ?? "AKE-12345-GA",
+                "container_type" => "AKE (LD3 Contour)",
+                "tare_weight_kg" => $tareWeightUld,
+                "net_cargo_weight_kg" => $actualWeight,
+                "total_gross_weight_kg" => $grossUldWeight,
+                "max_certified_capacity_kg" => 1588.0,
+                "capacity_utilization" => round(($grossUldWeight / 1588.0) * 100, 1) . "%",
+                "structural_status" => $isUldOverload ? "OVERLOAD_EXCEEDS_AKE_LIMIT" : "COMPLIANT_WITHIN_LIMIT"
+            ],
             "weight_and_balance_engine" => [
                 "aircraft" => "Boeing 737-800F",
                 "assigned_compartment" => $cargo['compartment'] ?? "AFT-LOWER-1",
-                "center_of_gravity_index" => 28.4,
+                "center_of_gravity_mac" => 28.4,
+                "cg_safety_envelope" => "18.0% - 34.0% MAC",
                 "within_safety_envelope" => true,
                 "floor_load_limit_status" => "WITHIN_STRUCTURAL_LIMIT"
             ],
@@ -320,9 +368,12 @@ function generateIntegratedStagesPayload($cargo, $logsByStage, $hardwareFeed) {
         ],
         "response_payload" => [
             "cargo_payload_id" => $payloadId,
-            "status" => "200_OK",
-            "message" => "Kargo berhasil dikonsolidasikan ke dalam kontainer ULD " . ($cargo['uld_code'] ?? "AKE-12345-GA"),
-            "load_position_locked" => true
+            "status" => $isUldOverload ? "422_OVERLOAD_WARNING" : "200_OK",
+            "message" => $isUldOverload
+                ? "Beban kargo (" . $grossUldWeight . " kg) melebihi batas struktural kontainer AKE (1.588 kg). Diperlukan pengalihan ke palet PMC Main Deck!"
+                : "Kargo berhasil dikonsolidasikan ke dalam kontainer ULD " . ($cargo['uld_code'] ?? "AKE-12345-GA") . " (Gross: " . $grossUldWeight . " kg). Posisi kompartemen terkunci.",
+            "load_position_locked" => !$isUldOverload,
+            "allocated_compartment" => $cargo['compartment'] ?? "AFT-LOWER-1"
         ]
     ];
 

@@ -393,34 +393,63 @@ function renderStageGraphic(stage) {
             </div>
         `;
     } else if (stage === 5) {
-        const wt = c.actual_weight_kg ? parseFloat(c.actual_weight_kg).toFixed(1) : parseFloat(c.declared_weight_kg).toFixed(1);
+        const declared = parseFloat(c.declared_weight_kg || 150.0);
+        const actual = c.actual_weight_kg ? parseFloat(c.actual_weight_kg) : declared;
+        const diff = actual - declared;
+        const diffPct = declared > 0 ? ((diff / declared) * 100).toFixed(2) : '0.00';
+        const isWithinTol = declared > 0 ? (Math.abs(diff / declared) <= 0.05) : true;
+        const isHea = (declared >= 150.0 || actual >= 150.0);
+        const sign = diff >= 0 ? '+' : '';
+
         wrap.innerHTML = `
             <div class="flex flex-col items-center justify-center">
                 <div class="p-4 rounded-2xl bg-[#0D1C42] border border-slate-700 flex items-center space-x-6 shadow-xl">
                     <div class="text-center">
-                        <span class="text-[9px] text-teal-300 uppercase tracking-widest block font-bold">Smart Floor Scale</span>
+                        <span class="text-[9px] text-teal-300 uppercase tracking-widest block font-bold">Smart Floor Scale 15T</span>
                         <div class="text-3xl font-black text-amber-400 font-mono tracking-wider mt-0.5">
-                            ${wt} <span class="text-sm text-slate-300">KG</span>
+                            ${actual.toFixed(1)} <span class="text-sm text-slate-300">KG</span>
                         </div>
-                        <span class="text-[9px] text-emerald-400 font-mono">Load Cell IP68 &bull; ±1kg</span>
+                        <span class="text-[9px] text-emerald-400 font-mono">OIML R76 Class III &bull; &plusmn;1kg</span>
                     </div>
                     <div class="border-l border-slate-700 pl-4 text-left text-[10px] space-y-1">
-                        <div class="text-slate-300">Deklarasi AWB: <strong class="text-white">${parseFloat(c.declared_weight_kg).toFixed(1)} kg</strong></div>
-                        <div class="text-slate-300">Toleransi: <span class="text-emerald-400 font-bold">VALID (Within Limit)</span></div>
+                        <div class="text-slate-300">Deklarasi e-AWB: <strong class="text-white">${declared.toFixed(1)} kg</strong></div>
+                        <div class="text-slate-300">Selisih: <span class="font-mono ${isWithinTol ? 'text-emerald-400' : 'text-amber-400'} font-bold">${sign}${diff.toFixed(1)} kg (${sign}${diffPct}%)</span></div>
+                        <div class="flex items-center gap-1.5 pt-0.5">
+                            <span class="text-[9px] font-bold px-2 py-0.5 rounded ${isWithinTol ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-700/80' : 'bg-amber-950/80 text-amber-300 border border-amber-700/80'}">
+                                ${isWithinTol ? 'Toleransi IATA &plusmn;5% : VALID' : 'Melebihi Toleransi &plusmn;5% (CCA Req)'}
+                            </span>
+                            ${isHea ? '<span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-950/80 text-purple-300 border border-purple-700/80"><i class="fa-solid fa-weight-hanging mr-1"></i>HEA</span>' : ''}
+                        </div>
                     </div>
                 </div>
             </div>
         `;
     } else if (stage === 6) {
+        const netCargo = c.actual_weight_kg ? parseFloat(c.actual_weight_kg) : parseFloat(c.declared_weight_kg || 150.0);
+        const tare = 75.0;
+        const gross = +(netCargo + tare).toFixed(1);
+        const maxGross = parseFloat(c.uld_max_weight || 1588.0);
+        const isOverload = gross > maxGross;
+        const utilPct = ((gross / maxGross) * 100).toFixed(1);
+
         wrap.innerHTML = `
             <div class="flex items-center justify-center space-x-6">
-                <div class="w-16 h-16 rounded-xl bg-white border border-teal-200 flex items-center justify-center text-3xl text-[#087F8A] shadow-md">
-                    <i class="fa-solid fa-boxes-packing"></i>
+                <div class="w-16 h-16 rounded-xl bg-white border border-teal-200 flex items-center justify-center text-3xl ${isOverload ? 'text-rose-600' : 'text-[#087F8A]'} shadow-md">
+                    <i class="fa-solid ${isOverload ? 'fa-triangle-exclamation' : 'fa-boxes-packing'}"></i>
                 </div>
-                <div class="text-left text-xs">
-                    <div class="font-black text-[#0D1C42] font-mono text-sm">${c.uld_code || 'AKE-12345-GA'} (Tipe ${c.uld_type || 'AKE'})</div>
-                    <div class="text-[11px] text-[#087F8A] font-bold mt-0.5">Posisi: ${c.compartment || 'AFT-LOWER-1'}</div>
-                    <div class="text-[10px] text-slate-500 mt-1">Weight &amp; Balance: Center of Gravity (CoG) 28.4% (Optimal)</div>
+                <div class="text-left text-xs space-y-0.5">
+                    <div class="flex items-center gap-2">
+                        <span class="font-black text-[#0D1C42] font-mono text-sm">${c.uld_code || 'AKE-12345-GA'}</span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded ${isOverload ? 'bg-rose-100 text-rose-700 border border-rose-300' : 'bg-teal-50 text-[#087F8A] border border-teal-200'}">
+                            ${isOverload ? 'OVERLOAD AKE' : 'AKE / LD3'}
+                        </span>
+                    </div>
+                    <div class="text-[11px] text-slate-700">
+                        Net: <strong class="font-mono">${netCargo.toFixed(1)} kg</strong> + Tare: <span class="font-mono text-slate-500">75.0 kg</span> = Gross: <strong class="font-mono ${isOverload ? 'text-rose-600' : 'text-emerald-700'}">${gross} kg</strong>
+                    </div>
+                    <div class="text-[10px] text-slate-500">
+                        Kapasitas: ${maxGross.toFixed(0)} kg (${utilPct}% Terisi) &bull; CoG: <span class="text-emerald-600 font-bold">28.4% MAC (Safe Envelope)</span>
+                    </div>
                 </div>
             </div>
         `;
@@ -966,8 +995,14 @@ function updatePayloadInspector(stage) {
             "alert_triggered": isSuspect
         };
     } else if (stage === 5) {
-        const declared = parseFloat(c.declared_weight_kg);
-        const actual = c.actual_weight_kg ? parseFloat(c.actual_weight_kg) : (declared + 2.0);
+        const declared = parseFloat(c.declared_weight_kg || 150.0);
+        const actual = c.actual_weight_kg ? parseFloat(c.actual_weight_kg) : declared;
+        const diff = +(actual - declared).toFixed(2);
+        const diffPct = declared > 0 ? ((diff / declared) * 100).toFixed(2) : '0.00';
+        const maxTol = +(declared * 0.05).toFixed(2);
+        const isWithinTol = declared > 0 ? (Math.abs(diff / declared) <= 0.05) : true;
+        const isHea = (declared >= 150.0 || actual >= 150.0);
+
         currentRequestJson = {
             "event_type": "CARGO_WEIGHT_ACQUISITION",
             "device_id": "SCALE-FLOOR-ULD-01",
@@ -975,48 +1010,74 @@ function updatePayloadInspector(stage) {
                 "platform": "3.5m x 2.5m Steel Floor Scale",
                 "max_capacity_ton": 15,
                 "accuracy_kg": 1.0,
-                "sensor_protection": "IP68 Hermetic"
+                "oiml_class": "OIML R76 Class III",
+                "sensor_protection": "IP68 Hermetic Load Cells"
             },
             "weight_data": {
                 "cargo_id": c.id,
+                "awb_number": c.awb_number,
                 "declared_gross_weight_kg": declared,
                 "actual_scale_weight_kg": actual,
-                "discrepancy_kg": actual - declared,
-                "status": "WITHIN_TOLERANCE"
+                "discrepancy_kg": diff,
+                "discrepancy_percent": `${diffPct}%`,
+                "iata_tolerance_limit": `±5.00% (Maks ±${maxTol} kg)`,
+                "tolerance_status": isWithinTol ? "PASSED_WITHIN_TOLERANCE" : "EXCEEDED_TOLERANCE_WARNING",
+                "iata_special_handling": isHea ? "HEA (Heavy Cargo >=150kg)" : "GEN (General Cargo)"
+            },
+            "flight_loading_criteria": {
+                "max_ake_net_payload_kg": 1513.0,
+                "max_uld_gross_weight_kg": 1588.0,
+                "aircraft_type": "Boeing 737-800F (GA-707)",
+                "criteria_status": actual <= 1513.0 ? "APPROVED_FOR_AKE_LOADING" : "REQUIRES_PMC_OR_BREAKBULK"
             },
             "weighed_at": new Date().toISOString()
         };
         currentResponseJson = {
             "status": "200_OK",
-            "message": "Data berat aktual berhasil disinkronkan ke CMS & Modul Weight & Balance",
-            "allow_uld_buildup": true
+            "message": isWithinTol 
+                ? "Data berat aktual terverifikasi dalam batas toleransi IATA (±5%). Siap untuk ULD build-up." 
+                : "Peringatan: Selisih berat aktual melebihi batas toleransi IATA (±5%). Amandemen e-AWB (CCA) diterbitkan, berat fisik disinkronkan ke Weight & Balance.",
+            "allow_uld_buildup": true,
+            "document_amendment_required": !isWithinTol,
+            "criteria_result": isWithinTol ? "PASSED_WITHIN_TOLERANCE" : "DISCREPANCY_FLAGGED_PASSED_PHYSICAL"
         };
     } else if (stage === 6) {
+        const netCargo = c.actual_weight_kg ? parseFloat(c.actual_weight_kg) : parseFloat(c.declared_weight_kg || 150.0);
+        const tareWeight = 75.0;
+        const grossWeight = +(netCargo + tareWeight).toFixed(2);
+        const maxCapacity = parseFloat(c.uld_max_weight || 1588.0);
+        const isOverload = grossWeight > maxCapacity;
+        const utilPct = +((grossWeight / maxCapacity) * 100).toFixed(1);
+
         currentRequestJson = {
             "event_type": "ULD_CONSOLIDATION_AND_LOAD_PLANNING",
             "cargo_id": c.id,
             "target_uld": {
                 "uld_code": c.uld_code || "AKE-12345-GA",
-                "uld_type": "AKE",
-                "tare_weight_kg": 75.0,
-                "cargo_weight_added_kg": parseFloat(c.actual_weight_kg || c.declared_weight_kg),
-                "new_gross_uld_weight_kg": 850.0,
-                "max_capacity_kg": 1588.0,
-                "utilization_percent": 53.5
+                "uld_type": c.uld_type || "AKE",
+                "tare_weight_kg": tareWeight,
+                "net_cargo_weight_kg": netCargo,
+                "gross_uld_weight_kg": grossWeight,
+                "max_certified_capacity_kg": maxCapacity,
+                "utilization_percent": utilPct,
+                "structural_status": isOverload ? "OVERLOAD_EXCEEDS_AKE_LIMIT" : "COMPLIANT_WITHIN_AKE_LIMIT"
             },
             "weight_and_balance_engine": {
                 "aircraft": "Boeing 737-800F",
-                "assigned_compartment": "AFT-LOWER-1",
+                "assigned_compartment": c.compartment || "AFT-LOWER-1",
                 "center_of_gravity_index": 28.4,
+                "cg_safety_envelope": "18.0% - 34.0% MAC",
                 "within_safety_envelope": true,
                 "floor_load_limit_status": "WITHIN_STRUCTURAL_LIMIT"
             },
             "timestamp": new Date().toISOString()
         };
         currentResponseJson = {
-            "status": "200_OK",
-            "message": "Kargo berhasil dikonsolidasikan ke dalam kontainer ULD AKE-12345-GA",
-            "load_position_locked": true
+            "status": isOverload ? "422_OVERLOAD_WARNING" : "200_OK",
+            "message": isOverload 
+                ? `Beban gross ULD (${grossWeight} kg) melebihi batas struktural kontainer AKE (1.588 kg). Diperlukan pengalihan ke palet PMC!` 
+                : `Kargo berhasil dikonsolidasikan ke dalam kontainer ULD ${c.uld_code || 'AKE-12345-GA'} (Gross: ${grossWeight} kg).`,
+            "load_position_locked": !isOverload
         };
     } else if (stage === 7) {
         currentRequestJson = {
@@ -2537,28 +2598,90 @@ function renderAVSECDashboard(c) {
 
 function renderLoadBalanceDashboard(c) {
     if (!c) return;
-    const declaredWt = parseFloat(c.declared_weight_kg || 350.0);
+    const declaredWt = parseFloat(c.declared_weight_kg || 150.0);
     const actualWt = c.actual_weight_kg ? parseFloat(c.actual_weight_kg) : (parseInt(c.current_stage || 1) >= 6 ? declaredWt : 0.0);
     const displayWt = actualWt > 0 ? actualWt : declaredWt;
     const diff = displayWt - declaredWt;
     const diffPercent = declaredWt > 0 ? ((diff / declaredWt) * 100).toFixed(2) : '0.00';
+    const maxTolKg = (declaredWt * 0.05).toFixed(1);
     const isWithinTolerance = declaredWt > 0 ? (Math.abs(diff / declaredWt) <= 0.05) : true;
+    const isHea = (declaredWt >= 150.0 || displayWt >= 150.0);
 
     const scaleWt = document.getElementById('lb-scale-weight');
     if (scaleWt) scaleWt.textContent = `${displayWt.toFixed(1)} KG`;
+    
     const scaleDec = document.getElementById('lb-scale-declared');
     if (scaleDec) {
         const sign = diff >= 0 ? '+' : '';
-        scaleDec.textContent = `${declaredWt.toFixed(1)} kg (${sign}${diff.toFixed(1)} kg / ${diffPercent}%)`;
+        scaleDec.innerHTML = `${declaredWt.toFixed(1)} kg <span class="${isWithinTolerance ? 'text-emerald-600' : 'text-amber-600'} font-semibold">(${sign}${diff.toFixed(1)} kg / ${sign}${diffPercent}%)</span>`;
     }
+
+    const tolBadge = document.getElementById('lb-tolerance-badge');
+    if (tolBadge) {
+        if (isWithinTolerance) {
+            tolBadge.className = 'text-[9px] text-emerald-700 font-bold bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-200 inline-flex items-center gap-1';
+            tolBadge.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-500"></i> Toleransi IATA &plusmn;5% : TERPENUHI (Maks &plusmn;${maxTolKg} kg)`;
+        } else {
+            tolBadge.className = 'text-[9px] text-amber-700 font-bold bg-amber-50 px-2.5 py-0.5 rounded border border-amber-200 inline-flex items-center gap-1';
+            tolBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-amber-500"></i> Melebihi Toleransi IATA &plusmn;5% (Maks &plusmn;${maxTolKg} kg) - CCA Req`;
+        }
+    }
+
+    const heaBadge = document.getElementById('lb-hea-badge');
+    if (heaBadge) {
+        if (isHea) {
+            heaBadge.classList.remove('hidden');
+            heaBadge.innerHTML = `<i class="fa-solid fa-weight-hanging mr-1"></i> HEA (>=150kg)`;
+        } else {
+            heaBadge.classList.add('hidden');
+        }
+    }
+
     const uldCode = document.getElementById('lb-uld-code');
     if (uldCode) uldCode.textContent = c.uld_code || 'AKE-12345-GA';
 
+    const tareWt = 75.0;
+    const grossUldWt = displayWt + tareWt;
     const maxUldKg = parseFloat(c.uld_max_weight || 1588.0);
     const maxAircraftPayloadKg = parseFloat(c.flight_max_weight || 18500.0);
     const flightNum = c.flight_number || "GA-707";
     const aircraftType = c.aircraft_type || "Boeing 737-800F";
-    const isUldFit = displayWt <= maxUldKg;
+    const isUldFit = grossUldWt <= maxUldKg;
+    const uldUtilization = ((grossUldWt / maxUldKg) * 100).toFixed(1);
+
+    const netWtEl = document.getElementById('lb-cargo-net-wt');
+    if (netWtEl) netWtEl.textContent = `${displayWt.toFixed(1)} kg`;
+
+    const tareWtEl = document.getElementById('lb-uld-tare-wt');
+    if (tareWtEl) tareWtEl.textContent = `${tareWt.toFixed(1)} kg`;
+
+    const grossWtEl = document.getElementById('lb-uld-gross-wt');
+    if (grossWtEl) {
+        grossWtEl.textContent = `${grossUldWt.toFixed(1)} kg / ${maxUldKg.toFixed(0)} kg`;
+        grossWtEl.className = isUldFit ? 'font-mono text-emerald-700 font-bold' : 'font-mono text-rose-600 font-bold';
+    }
+
+    const utilEl = document.getElementById('lb-uld-utilization');
+    if (utilEl) utilEl.textContent = `${uldUtilization}% Terisi`;
+
+    const progEl = document.getElementById('lb-uld-progress-bar');
+    if (progEl) {
+        progEl.style.width = `${Math.min(100, parseFloat(uldUtilization))}%`;
+        progEl.className = isUldFit 
+            ? 'h-1.5 rounded-full bg-teal-500 transition-all duration-500' 
+            : 'h-1.5 rounded-full bg-rose-500 transition-all duration-500';
+    }
+
+    const uldStatusBadge = document.getElementById('lb-uld-status-badge');
+    if (uldStatusBadge) {
+        if (isUldFit) {
+            uldStatusBadge.className = 'text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200';
+            uldStatusBadge.textContent = 'Layak Dimuat (Compliant)';
+        } else {
+            uldStatusBadge.className = 'text-[9px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200';
+            uldStatusBadge.textContent = 'Overload (Ditolak AKE)';
+        }
+    }
 
     const lbJson = {
         "event_type": "SMART_SCALE_WEIGHT_ACQUISITION",
@@ -2578,13 +2701,19 @@ function renderLoadBalanceDashboard(c) {
             "discrepancy_kg": parseFloat(diff.toFixed(1)),
             "discrepancy_percent": `${diffPercent}%`,
             "tolerance_limit": "±5.00%",
-            "tolerance_validation": isWithinTolerance ? "PASSED_WITHIN_TOLERANCE" : "EXCEEDED_TOLERANCE"
+            "max_tolerance_allowed_kg": parseFloat(maxTolKg),
+            "tolerance_validation": isWithinTolerance ? "PASSED_WITHIN_TOLERANCE" : "EXCEEDED_TOLERANCE_WARNING",
+            "iata_special_handling": isHea ? "HEA (Heavy Cargo >=150kg - Forklift Only)" : "GEN (General Cargo)",
+            "billing_action": isWithinTolerance ? "STANDARD_INVOICE_CLEARED" : "ISSUE_CCA_CHARGE_CORRECTION"
         },
         "uld_container_criteria": {
             "assigned_container": c.uld_code || "AKE-12345-GA",
             "container_type": "AKE (LD3 Contour)",
+            "container_tare_kg": tareWt,
+            "net_cargo_payload_kg": parseFloat(displayWt.toFixed(1)),
+            "total_gross_weight_kg": parseFloat(grossUldWt.toFixed(1)),
             "max_gross_weight_capacity_kg": maxUldKg,
-            "container_tare_kg": 75.0,
+            "capacity_utilization_percent": parseFloat(uldUtilization),
             "container_payload_status": isUldFit ? "COMPLIANT_WITHIN_ULD_LIMIT" : "OVERLOAD_EXCEEDS_ULD_LIMIT",
             "assigned_compartment": c.compartment || "AFT-LOWER-1"
         },
@@ -2592,7 +2721,7 @@ function renderLoadBalanceDashboard(c) {
             "aircraft_model": aircraftType,
             "flight_number": flightNum,
             "max_aircraft_payload_capacity_kg": maxAircraftPayloadKg,
-            "cumulative_flight_payload_kg": parseFloat((5420.0 + displayWt).toFixed(1)),
+            "cumulative_flight_payload_kg": parseFloat((5420.0 + grossUldWt).toFixed(1)),
             "flight_payload_fit": "SAFE_WITHIN_AIRCRAFT_CAPACITY",
             "center_of_gravity_mac": 28.4,
             "safe_cg_envelope": "18.0% - 34.0% MAC",
@@ -2605,6 +2734,143 @@ function renderLoadBalanceDashboard(c) {
     if (streamDisp) streamDisp.textContent = JSON.stringify(lbJson, null, 2);
     const lbDisp = document.getElementById('lbPayloadDisplay');
     if (lbDisp) lbDisp.textContent = JSON.stringify(lbJson, null, 2);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PENGUJIAN INTERAKTIF TOLERANSI IATA ±5% & PROTEKSI OVERLOAD ULD AKE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function openToleranceTestModal() {
+    if (!currentCargoData) return;
+    const declared = parseFloat(currentCargoData.declared_weight_kg || 150.0);
+    const maxTol = (declared * 0.05).toFixed(1);
+    const exWithin = +(declared * 1.04).toFixed(1); // +4.0% (misal 150 -> 156 kg)
+    const exExceeded = +(declared * 1.075).toFixed(1); // +7.5% (misal 150 -> 161.3 kg)
+
+    Swal.fire({
+        title: 'Uji Toleransi IATA & Batas ULD',
+        html: `
+            <div class="text-xs text-left p-3.5 rounded-xl bg-slate-50 border border-gray-200 space-y-3 mt-2">
+                <div class="pb-2 border-b border-gray-200">
+                    <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Kargo Terpilih</span>
+                    <strong class="text-[#0D1C42]">${escapeHtml(currentCargoData.awb_number)}</strong> &bull; 
+                    Deklarasi Berat: <strong class="text-emerald-700 font-mono">${declared.toFixed(1)} kg</strong>
+                    <div class="text-[11px] text-slate-500 mt-0.5">Batas Toleransi IATA &plusmn;5%: <strong>&plusmn;${maxTol} kg</strong> (${(declared - parseFloat(maxTol)).toFixed(1)} s/d ${(declared + parseFloat(maxTol)).toFixed(1)} kg)</div>
+                </div>
+
+                <p class="font-bold text-[#0D1C42] text-[11px]">Pilih Skenario Pengujian Tahap 5 &amp; 6:</p>
+
+                <div class="space-y-2">
+                    <button type="button" onclick="executeScaleToleranceTest('within', ${declared})" class="w-full text-left p-2.5 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 transition-all cursor-pointer">
+                        <div class="flex items-center justify-between">
+                            <strong class="text-emerald-800 text-xs"><i class="fa-solid fa-circle-check mr-1.5"></i>1. Uji Lolos Toleransi (&plusmn;5% IATA)</strong>
+                            <span class="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-200/60 px-1.5 py-0.5 rounded">+4.0% (${exWithin} kg)</span>
+                        </div>
+                        <p class="text-[10.5px] text-emerald-700 mt-1">Aktual ${exWithin} kg vs Deklarasi ${declared} kg (selisih +${(exWithin - declared).toFixed(1)} kg). Sesuai IATA CSC Res. 600b, kargo lolos langsung ke ULD build-up.</p>
+                    </button>
+
+                    <button type="button" onclick="executeScaleToleranceTest('exceeded', ${declared})" class="w-full text-left p-2.5 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 transition-all cursor-pointer">
+                        <div class="flex items-center justify-between">
+                            <strong class="text-amber-800 text-xs"><i class="fa-solid fa-triangle-exclamation mr-1.5"></i>2. Uji Melebihi Toleransi (&gt;5% Discrepancy)</strong>
+                            <span class="text-[10px] font-mono font-bold text-amber-700 bg-amber-200/60 px-1.5 py-0.5 rounded">+7.5% (${exExceeded} kg)</span>
+                        </div>
+                        <p class="text-[10.5px] text-amber-700 mt-1">Aktual ${exExceeded} kg (selisih +${(exExceeded - declared).toFixed(1)} kg). Men-trigger peringatan CCA (Cargo Charges Correction Advice) &amp; sinkronisasi berat fisik ke Load Planning.</p>
+                    </button>
+
+                    <button type="button" onclick="executeScaleToleranceTest('overload', ${declared})" class="w-full text-left p-2.5 rounded-xl border border-rose-300 bg-rose-50 hover:bg-rose-100 transition-all cursor-pointer">
+                        <div class="flex items-center justify-between">
+                            <strong class="text-rose-800 text-xs"><i class="fa-solid fa-ban mr-1.5"></i>3. Uji Proteksi Overload Kontainer ULD AKE</strong>
+                            <span class="text-[10px] font-mono font-bold text-rose-700 bg-rose-200/60 px-1.5 py-0.5 rounded">&gt; 1.588 kg (Overload)</span>
+                        </div>
+                        <p class="text-[10.5px] text-rose-700 mt-1">Mensimulasikan kargo berat 1.550 kg (Gross ULD 1.625 kg &gt; 1.588 kg batas AKE). Sistem menolak muatan masuk kontainer AKE untuk mencegah kerusakan struktural pesawat.</p>
+                    </button>
+                </div>
+            </div>
+        `,
+        showConfirmButton: false,
+        showCancelButton: true,
+        cancelButtonText: 'Tutup',
+        cancelButtonColor: '#94a3b8',
+        background: '#ffffff',
+        color: '#0D1C42',
+        customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200 max-w-lg' }
+    });
+}
+
+function executeScaleToleranceTest(scenario, declared) {
+    Swal.close();
+    let payloadData = {
+        cargo_id: currentCargoData.id,
+        stage: 5,
+        action: 'advance'
+    };
+
+    if (scenario === 'within') {
+        payloadData.actual_weight = +(declared * 1.04).toFixed(1);
+    } else if (scenario === 'exceeded') {
+        payloadData.simulate_exceeded_tolerance = true;
+    } else if (scenario === 'overload') {
+        payloadData.actual_weight = 1550.0;
+    }
+
+    Swal.fire({
+        title: 'Menimbang di Smart Floor Scale...',
+        text: 'Mengirimkan telemetri sensor load cell ke CMS...',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); },
+        background: '#ffffff',
+        color: '#0D1C42',
+        customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
+    });
+
+    fetch('api/simulate.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payloadData)
+    })
+    .then(r => r.json())
+    .then(res => {
+        if (res.success) {
+            if (res.cargo) {
+                currentCargoData = res.cargo;
+                renderCargoHeader(currentCargoData);
+            }
+            if (res.payload) currentMasterPayload = res.payload;
+
+            const isExceeded = scenario === 'exceeded';
+            Swal.fire({
+                title: isExceeded ? 'Peringatan Toleransi IATA!' : 'Hasil Penimbangan Terverifikasi!',
+                text: res.message,
+                icon: isExceeded ? 'warning' : 'success',
+                confirmButtonColor: isExceeded ? '#d97706' : '#087F8A',
+                background: '#ffffff',
+                color: '#0D1C42',
+                customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
+            }).then(() => {
+                initSimulation(currentCargoData.id, 5, currentSystemDashboard);
+            });
+        } else {
+            Swal.fire({
+                title: 'Peringatan Operasional!',
+                text: res.message,
+                icon: 'error',
+                confirmButtonColor: '#087F8A',
+                background: '#ffffff',
+                color: '#0D1C42',
+                customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
+            });
+        }
+    })
+    .catch(err => {
+        Swal.fire({
+            title: 'Error',
+            text: 'Gagal melakukan uji penimbangan: ' + err,
+            icon: 'error',
+            confirmButtonColor: '#087F8A',
+            background: '#ffffff',
+            color: '#0D1C42'
+        });
+    });
 }
 
 
