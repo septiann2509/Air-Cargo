@@ -9604,11 +9604,18 @@ function updateSimulationPipeline(dt) {
         if (simProgress >= 1.0) {
             simActive = false;
             if (planeCargoDoorHatch) planeCargoDoorHatch.rotation.z = 0; // Pintu palka menutup rapat
+            document.getElementById('hud-stage-name').innerHTML = 'SELESAI: TERKIRIM KE BOEING 777F <span class="text-[8px] px-1.5 py-0.5 rounded bg-emerald-500/30 text-emerald-200 font-extrabold">LOADED &amp; SENT</span>';
             document.getElementById('telemetry-door').textContent = 'LOCKED & DEPARTED';
             document.getElementById('telemetry-door').className = 'font-black text-emerald-400 font-mono';
             updateStepperUI(7);
             const pFin = document.getElementById('sim-progress-pct');
             if (pFin) pFin.textContent = '100%';
+            const scrubStage = document.getElementById('scrub-stage-label');
+            if (scrubStage) scrubStage.textContent = 'Selesai · Terkirim ke Pesawat (100%)';
+            const scrubPct = document.getElementById('scrub-pct-label');
+            if (scrubPct) scrubPct.textContent = '100%';
+            const scrubFill = document.getElementById('timeline-progress-fill');
+            if (scrubFill) scrubFill.style.width = '100%';
             playSound('pass');
 
             addSimLog(`🎉 [SUCCESS] Kargo "${activeCargoData.name}" sukses dimuat ke palka Boeing 777F (PK-ACF). Siap terbang!`);

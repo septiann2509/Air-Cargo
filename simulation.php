@@ -1368,9 +1368,9 @@ include __DIR__ . '/includes/header.php';
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
-                        <span class="text-xs font-mono text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200 font-bold flex items-center gap-1.5">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-                            Flight Ops Synced
+                        <span id="lb-flight-ops-badge" class="text-xs font-mono text-slate-600 bg-slate-100 px-3 py-1.5 rounded-xl border border-gray-200 font-bold flex items-center gap-1.5">
+                            <span id="lb-flight-ops-dot" class="w-2 h-2 rounded-full bg-slate-400"></span>
+                            <span id="lb-flight-ops-text">Menunggu Finalisasi</span>
                         </span>
                     </div>
                 </div>
@@ -1586,6 +1586,10 @@ include __DIR__ . '/includes/header.php';
                                         <span class="text-slate-500">Center of Gravity:</span>
                                         <strong id="lb-cg-mac" class="text-emerald-700 font-mono">28.4% MAC (Safe)</strong>
                                     </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-slate-500">Loadsheet Kokpit:</span>
+                                        <strong id="lb-loadsheet-status" class="text-slate-500 font-mono">Menunggu Finalisasi</strong>
+                                    </div>
                                     <div class="flex justify-between text-[9px] text-slate-400">
                                         <span>Envelope Limit:</span>
                                         <span class="font-mono text-slate-600">18.0% - 34.0% MAC</span>
@@ -1593,6 +1597,18 @@ include __DIR__ . '/includes/header.php';
                                 </div>
                             </div>
 
+                        </div>
+
+                        <!-- Banner Status Selesai & Terkirim (Ditampilkan saat Tahap 7 LOADED) -->
+                        <div id="lb-stage7-completed-banner" class="hidden mb-4 p-3.5 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-900 flex flex-wrap items-center justify-between gap-2 shadow-sm">
+                            <div class="flex items-center gap-2.5 text-xs">
+                                <span class="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-sm shadow-sm flex-shrink-0"><i class="fa-solid fa-paper-plane"></i></span>
+                                <div>
+                                    <strong class="block text-emerald-900">MANIFES TERKIRIM &amp; KARGO DIMUAT KE PESAWAT (SELESAI)</strong>
+                                    <span id="lb-stage7-completed-detail" class="text-[11px] text-emerald-700">Electronic Loadsheet resmi telah terkirim ke Kokpit (EFB) &amp; Flight Operations.</span>
+                                </div>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-mono font-extrabold bg-emerald-600 text-white uppercase tracking-wider">LOADED &bull; DISPATCHED</span>
                         </div>
 
                         <!-- Interactive Action Triggers for Stages 5, 6, 7 -->
@@ -1606,7 +1622,7 @@ include __DIR__ . '/includes/header.php';
                                     <i class="fa-solid fa-boxes-packing mr-1.5"></i>
                                     <span>Konsolidasi ULD &amp; Weight Balance (Tahap 6)</span>
                                 </button>
-                                <button onclick="executeStageAction(7, 'CLEARED')" class="px-4 py-2.5 rounded-xl bg-[#0D1C42] hover:bg-slate-800 text-white font-bold text-xs shadow-md transition-all flex items-center transform hover:-translate-y-0.5 cursor-pointer">
+                                <button id="lb-btn-finalize-stage7" onclick="executeStageAction(7, 'CLEARED')" class="px-4 py-2.5 rounded-xl bg-[#0D1C42] hover:bg-slate-800 text-white font-bold text-xs shadow-md transition-all flex items-center transform hover:-translate-y-0.5 cursor-pointer">
                                     <i class="fa-solid fa-plane-departure mr-1.5"></i>
                                     <span>Finalisasi Manifes (Tahap 7)</span>
                                 </button>
@@ -1639,7 +1655,7 @@ include __DIR__ . '/includes/header.php';
                                         <th class="py-2.5 px-3">Status</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-gray-100 text-slate-700">
+                                <tbody id="lb-uld-table-body" class="divide-y divide-gray-100 text-slate-700">
                                     <?php foreach ($ulds as $u): ?>
                                         <tr class="hover:bg-slate-50/70 transition-colors">
                                             <td class="py-2 px-3 font-mono font-bold text-[#0D1C42]"><?= htmlspecialchars($u['uld_code']) ?></td>
@@ -1652,7 +1668,7 @@ include __DIR__ . '/includes/header.php';
                                             </td>
                                             <td class="py-2 px-3">
                                                 <span class="px-2 py-0.5 rounded-full text-[10px] font-bold <?= ($u['status'] === 'LOADED' || $u['status'] === 'FULL') ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-teal-50 text-[#087F8A] border border-teal-200' ?>">
-                                                    <?= htmlspecialchars($u['status']) ?>
+                                                    <?= $u['status'] === 'LOADED' ? 'LOADED (Terkirim)' : htmlspecialchars($u['status']) ?>
                                                 </span>
                                             </td>
                                         </tr>

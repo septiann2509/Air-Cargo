@@ -170,6 +170,12 @@ try {
         $agentData = $agentJson ? json_decode($agentJson, true) : null;
 
         $loadmasterData = getLatestLoadmasterDecision($db, $id);
+        $uldsList = $db->query("
+            SELECT u.*, f.flight_number
+            FROM uld_containers u
+            LEFT JOIN flight_manifests f ON u.flight_id = f.id
+            ORDER BY u.id ASC
+        ")->fetchAll();
 
         jsonResponse([
             'success' => true,
@@ -178,6 +184,7 @@ try {
                 'tms_data' => $tmsData,
                 'tms_trucks' => $tmsTrucks,
                 'tms_total_trucks' => $tmsTotalTrucks,
+                'ulds' => $uldsList,
                 'logs' => $logs,
                 'payload' => $masterPayload,
                 'payload_id' => 'CMP-' . $cargo['id'],

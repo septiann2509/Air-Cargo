@@ -59,6 +59,12 @@ try {
         $finalCargo = $stmtFetch->fetch();
         $finalPayload = syncCargoPayload($db, $cargoId);
         $latestLoadmaster = getLatestLoadmasterDecision($db, $cargoId);
+        $uldsList = $db->query("
+            SELECT u.*, f.flight_number
+            FROM uld_containers u
+            LEFT JOIN flight_manifests f ON u.flight_id = f.id
+            ORDER BY u.id ASC
+        ")->fetchAll();
 
         if ($failedMessage !== null) {
             jsonResponse([
@@ -67,6 +73,7 @@ try {
                 'cargo'            => $finalCargo,
                 'payload'          => $finalPayload,
                 'loadmaster_agent' => $latestLoadmaster,
+                'ulds'             => $uldsList,
                 'history'          => $results
             ]);
         }
@@ -75,10 +82,11 @@ try {
             'success'          => true,
             'message'          => ($finalCargo['status'] ?? '') === 'SUSPECT'
                 ? 'Auto-run dihentikan di Tahap 4 (AVSEC): AI Agent mendeteksi potensi Dangerous Goods dan mengunci kargo di Ruang Karantina.'
-                : 'Auto-run simulasi selesai hingga tahap akhir (LOADED)',
+                : 'SELESAI & TERKIRIM: Auto-run simulasi selesai hingga Tahap 7 (LOADED). Kargo dimuat & Electronic Loadsheet resmi telah terkirim ke kokpit & Flight Ops!',
             'cargo'            => $finalCargo,
             'payload'          => $finalPayload,
             'loadmaster_agent' => $latestLoadmaster,
+            'ulds'             => $uldsList,
             'history'          => $results
         ]);
     } else {
@@ -820,11 +828,14 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $option
 
                 $responsePayload = [
                     "status" => "200_OK",
-                    "message" => "Manifes penerbangan final telah diterbitkan. Loadsheet resmi terkirim ke kokpit & flight ops.",
-                    "aircraft_ramp_status" => "READY_FOR_PUSHBACK"
+                    "message" => "SELESAI & TERKIRIM: Manifes penerbangan final telah diterbitkan. Kargo sudah dimuat ke pesawat & Loadsheet resmi terkirim ke kokpit & flight ops.",
+                    "delivery_status" => "SENT_TO_COCKPIT_AND_LOADED",
+                    "electronic_loadsheet_status" => "SENT_TO_COCKPIT_EFB",
+                    "aircraft_ramp_status" => "LOADED_AND_READY_FOR_PUSHBACK",
+                    "workflow_completed" => true
                 ];
 
-                logTransaction($db, $cargoId, 7, "Update Manifes & Loading ke Pesawat", "Airport Ramp Dolly & Cargo High-Loader", "Cargo Management Software (CMS) & Flight Ops", "Penerbitan Loadsheet Final & Pemuatan ULD ke Kompartemen Pesawat", $jsonPayload, $responsePayload);
+                logTransaction($db, $cargoId, 7, "Update Manifes & Loading ke Pesawat", "Airport Ramp Dolly & Cargo High-Loader", "Cargo Management Software (CMS) & Flight Ops", "Penerbitan Loadsheet Final & Pemuatan ULD ke Kompartemen Pesawat (Selesai & Terkirim)", $jsonPayload, $responsePayload);
                 break;
 
             default:
@@ -872,6 +883,12 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $option
 
         // Sinkronkan Master JSON Payload terbaru ke database
         $masterPayload = syncCargoPayload($db, $cargoId);
+        $uldsList = $db->query("
+            SELECT u.*, f.flight_number
+            FROM uld_containers u
+            LEFT JOIN flight_manifests f ON u.flight_id = f.id
+            ORDER BY u.id ASC
+        ")->fetchAll();
 
         $db->commit();
         $msg = 'Tahap ' . $stage . ' berhasil diproses';
@@ -879,6 +896,8 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $option
             $msg = 'Tahap 4 (AI Agent AVSEC): ' . ($agentResult['headline'] ?? 'Diproses');
         } elseif (isset($loadmasterResult)) {
             $msg = 'Tahap ' . $stage . ' (AI Agent Loadmaster): ' . ($loadmasterResult['headline'] ?? 'Diproses');
+        } elseif ((int)$stage === 7) {
+            $msg = 'SELESAI & TERKIRIM (Tahap 7): Kargo sudah dimuat ke pesawat ' . ($updatedCargo['flight_number'] ?? 'GA-707') . ' & Electronic Loadsheet resmi telah terkirim ke kokpit EFB!';
         }
         $res = [
             'success' => true,
@@ -889,6 +908,7 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $option
             'tms_data' => $tmsData,
             'tms_trucks' => $tmsTrucks,
             'tms_total_trucks' => $tmsTotalTrucks,
+            'ulds' => $uldsList,
             'payload' => $masterPayload
         ];
         if (isset($agentResult)) {

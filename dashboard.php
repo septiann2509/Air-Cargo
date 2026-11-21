@@ -374,13 +374,17 @@ include __DIR__ . '/includes/header.php';
                                         </span>
                                         <?php
                                             $badgeClass = 'bg-slate-100 text-slate-700 border-slate-300';
+                                            $statusLabel = $c['status'];
                                             if ($c['status'] === 'CLEARED') $badgeClass = 'bg-emerald-100 text-emerald-800 border-emerald-300';
                                             elseif ($c['status'] === 'SUSPECT') $badgeClass = 'bg-rose-100 text-rose-800 border-rose-300';
-                                            elseif ($c['status'] === 'LOADED') $badgeClass = 'bg-teal-100 text-[#014D54] border-teal-300';
+                                            elseif ($c['status'] === 'LOADED') {
+                                                $badgeClass = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+                                                $statusLabel = 'LOADED · Terkirim';
+                                            }
                                             elseif ($c['status'] === 'ALLOCATED') $badgeClass = 'bg-blue-100 text-blue-800 border-blue-300';
                                         ?>
                                         <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border <?= $badgeClass ?>">
-                                            <?= htmlspecialchars($c['status']) ?>
+                                            <?= htmlspecialchars($statusLabel) ?>
                                         </span>
                                     </div>
                                 </td>

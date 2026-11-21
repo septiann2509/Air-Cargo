@@ -8,6 +8,7 @@ let totalTrucksCount = 0;
 let currentMasterPayload = null;
 let currentAgentDecision = null;
 let currentLoadmasterDecision = null;
+let currentUldsList = [];
 let currentStageView = 1;
 let currentSystemDashboard = 'all';
 let activePayloadTab = 'request';
@@ -95,6 +96,7 @@ function initSimulation(cargoId, targetStageView = null, targetSystem = null) {
                 currentMasterPayload = res.data.payload || null;
                 currentAgentDecision = res.data.agent || null;
                 currentLoadmasterDecision = res.data.loadmaster_agent || null;
+                if (Array.isArray(res.data.ulds)) currentUldsList = res.data.ulds;
                 renderCargoHeader(currentCargoData);
                 renderAuditTimeline(res.data.logs);
                 updateStepperState(currentCargoData.current_stage, currentCargoData.status);
@@ -131,13 +133,18 @@ function renderCargoHeader(c) {
 
     // Badge status (InJourney Clean Theme)
     const badge = document.getElementById('card-status-badge');
-    badge.textContent = c.status;
     badge.className = 'inline-block px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide ';
-    if (c.status === 'CLEARED' || c.status === 'LOADED') {
+    if (c.status === 'LOADED') {
+        badge.textContent = '✓ LOADED · TERKIRIM & SELESAI';
+        badge.className += 'bg-emerald-50 text-emerald-700 border border-emerald-300';
+    } else if (c.status === 'CLEARED') {
+        badge.textContent = c.status;
         badge.className += 'bg-emerald-50 text-emerald-700 border border-emerald-200';
     } else if (c.status === 'SUSPECT') {
+        badge.textContent = c.status;
         badge.className += 'bg-rose-50 text-rose-700 border border-rose-300 animate-pulse';
     } else {
+        badge.textContent = c.status;
         badge.className += 'bg-teal-50 text-[#087F8A] border border-teal-200';
     }
 
@@ -162,7 +169,7 @@ function updateStepperState(completedStage, status) {
     const badge = document.getElementById('currentStageBadge');
     if (badge) {
         if (isFullyLoaded) {
-            badge.textContent = `Seluruh 7 Tahap Selesai: LOADED (Siap Terbang)`;
+            badge.textContent = `✓ Selesai & Terkirim ke Pesawat (LOADED · EFB Sent)`;
             badge.className = 'text-[11px] font-mono px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-300 font-bold';
         } else if (status === 'SUSPECT') {
             badge.textContent = `Tahap Kargo Saat Ini: 4 (SUSPECT - Dikarantina)`;
@@ -255,7 +262,10 @@ function selectStageView(stage) {
     const isLoaded = (currentCargoData && currentCargoData.status === 'LOADED' && currentCargoStage === 7);
 
     if (badge) {
-        if (isLoaded || stage < currentCargoStage) {
+        if (isLoaded && stage === 7) {
+            badge.textContent = 'Status: Selesai & Terkirim (LOADED)';
+            badge.className = 'text-xs px-3 py-1 rounded-full font-bold bg-emerald-100 text-emerald-800 border border-emerald-300';
+        } else if (isLoaded || stage < currentCargoStage) {
             badge.textContent = 'Status: Selesai Dilalui';
             badge.className = 'text-xs px-3 py-1 rounded-full font-bold bg-emerald-50 text-emerald-700 border border-emerald-200';
         } else if (stage === currentCargoStage && !isLoaded) {
@@ -456,13 +466,25 @@ function renderStageGraphic(stage) {
             </div>
         `;
     } else if (stage === 7) {
+        const isFlightLoaded = (c.status === 'LOADED');
+        const flightNum = c.flight_number || 'GA-707';
+        const uldName = c.uld_code || 'AKE-12345-GA';
         wrap.innerHTML = `
             <div class="flex flex-col items-center justify-center text-center">
-                <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#04AFBF] to-[#087F8A] flex items-center justify-center text-3xl text-white mb-2 shadow-lg shadow-teal-500/25">
-                    <i class="fa-solid fa-plane-departure"></i>
+                <div class="w-16 h-16 rounded-2xl ${isFlightLoaded ? 'bg-gradient-to-tr from-emerald-500 to-teal-600 shadow-emerald-500/30' : 'bg-gradient-to-tr from-[#04AFBF] to-[#087F8A] shadow-teal-500/25'} flex items-center justify-center text-3xl text-white mb-2 shadow-lg">
+                    <i class="fa-solid ${isFlightLoaded ? 'fa-plane-circle-check' : 'fa-plane-departure'}"></i>
                 </div>
-                <span class="text-sm font-extrabold text-[#0D1C42]">${c.flight_number || 'GA-707'} (Garuda Indonesia Cargo)</span>
-                <span class="text-xs text-[#087F8A] font-mono mt-0.5 font-bold">Loadsheet Diterbitkan &amp; Ramp Pushback Ready</span>
+                <span class="text-sm font-extrabold text-[#0D1C42]">${escapeHtml(flightNum)} (Garuda Indonesia Cargo) &bull; ${escapeHtml(uldName)}</span>
+                ${isFlightLoaded
+                    ? `<span class="mt-1 inline-flex items-center gap-1.5 text-[11px] text-emerald-800 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-300 font-bold">
+                           <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                           SUDAH TERKIRIM KE KOKPIT (EFB) &amp; DIMUAT KE PESAWAT (SELESAI)
+                       </span>`
+                    : `<span class="mt-1 inline-flex items-center gap-1.5 text-[11px] text-amber-800 bg-amber-50 px-3 py-1 rounded-full border border-amber-200 font-bold">
+                           <i class="fa-solid fa-clock text-amber-600"></i>
+                           MENUNGGU FINALISASI MANIFES &amp; PEMUATAN RAMP
+                       </span>`
+                }
             </div>
         `;
     }
@@ -574,10 +596,14 @@ function renderStageActionButtons(stage) {
 
     if (isStageDone) {
         // TAHAP SUDAH SELESAI DILALUI
+        const isStage7Final = (stage === 7 && isLoaded);
         container.innerHTML = `
-            <div class="w-full mb-1 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center justify-between">
-                <span class="font-bold"><i class="fa-solid fa-circle-check text-emerald-600 mr-1.5"></i> Tahap ${stage} Telah Selesai Dilalui</span>
-                <span class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-mono font-bold">COMPLETED</span>
+            <div class="w-full mb-1 p-3 rounded-xl bg-emerald-50 border ${isStage7Final ? 'border-emerald-300 shadow-sm' : 'border-emerald-200'} text-emerald-900 text-xs flex items-center justify-between gap-2">
+                <div>
+                    <span class="font-bold block"><i class="fa-solid ${isStage7Final ? 'fa-paper-plane text-emerald-600' : 'fa-circle-check text-emerald-600'} mr-1.5"></i> ${isStage7Final ? 'SELURUH ALUR SELESAI — Kargo Sudah Terkirim &amp; Dimuat ke Pesawat!' : `Tahap ${stage} Telah Selesai Dilalui`}</span>
+                    ${isStage7Final ? `<span class="text-[11px] text-emerald-700 block mt-0.5 pl-5">Electronic Loadsheet resmi terkirim ke Kokpit EFB (${escapeHtml(c.flight_number || 'GA-707')}) &bull; ULD ${escapeHtml(c.uld_code || 'AKE-12345-GA')} berada di kompartemen ${escapeHtml(c.compartment || 'AFT-LOWER-1')}.</span>` : ''}
+                </div>
+                <span class="text-[10px] ${isStage7Final ? 'bg-emerald-600 text-white' : 'bg-emerald-100 text-emerald-800'} px-2.5 py-0.5 rounded font-mono font-bold flex-shrink-0">${isStage7Final ? 'TERKIRIM &amp; SELESAI' : 'COMPLETED'}</span>
             </div>
             ${stage < 7 ? `
                 <button onclick="selectStageView(${stage + 1})" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#04AFBF] to-[#087F8A] hover:from-[#0CA1AF] hover:to-[#04AFBF] text-white font-bold text-xs shadow-md shadow-teal-500/25 transition-all flex items-center transform hover:-translate-y-0.5 cursor-pointer">
@@ -587,7 +613,7 @@ function renderStageActionButtons(stage) {
             ` : ''}
             <button onclick="executeStageAction(${stage}, 'CLEARED')" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 hover:text-[#087F8A] text-xs font-bold border border-gray-300 shadow-sm transition-all flex items-center cursor-pointer">
                 <i class="fa-solid fa-rotate mr-1.5 text-xs text-slate-400"></i>
-                <span>Jalankan Ulang Tahap ${stage}</span>
+                <span>${isStage7Final ? 'Kirim Ulang Sync Loadsheet' : `Jalankan Ulang Tahap ${stage}`}</span>
             </button>
             ${stage > 1 ? `
                 <button onclick="selectStageView(${stage - 1})" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-600 hover:text-[#087F8A] text-xs font-bold border border-gray-300 shadow-sm transition-colors flex items-center cursor-pointer">
@@ -767,9 +793,13 @@ function doExecuteStageAction(stage, avsecDecision) {
             if (res.loadmaster_agent) {
                 currentLoadmasterDecision = res.loadmaster_agent;
             }
+            if (Array.isArray(res.ulds)) {
+                currentUldsList = res.ulds;
+            }
 
             const resultIsSuspect = (avsecDecision === 'SUSPECT') || (stage === 4 && res.cargo && res.cargo.status === 'SUSPECT');
             const resultIsCca = (stage === 5 && res.loadmaster_agent && res.loadmaster_agent.decision === 'CCA_AMENDMENT');
+            const resultIsStage7 = (stage === 7 && res.cargo && res.cargo.status === 'LOADED');
             let iconType = 'success';
             let btnColor = '#087F8A';
             let alertTitle = 'Tahap Berhasil Diproses!';
@@ -781,6 +811,10 @@ function doExecuteStageAction(stage, avsecDecision) {
                 iconType = 'warning';
                 btnColor = '#d97706';
                 alertTitle = 'AI Loadmaster: Terbitkan e-CCA!';
+            } else if (resultIsStage7) {
+                iconType = 'success';
+                btnColor = '#059669';
+                alertTitle = 'Selesai & Terkirim ke Pesawat!';
             } else if (avsecDecision === 'RETURN_TO_TRUCK') {
                 iconType = 'info';
                 btnColor = '#0f172a';
@@ -874,16 +908,19 @@ function triggerAutoRun() {
                     if (res.loadmaster_agent) {
                         currentLoadmasterDecision = res.loadmaster_agent;
                     }
+                    if (Array.isArray(res.ulds)) {
+                        currentUldsList = res.ulds;
+                    }
                     Swal.fire({
-                        title: 'Simulasi Lengkap Berhasil!',
-                        text: 'Semua 7 tahapan kargo telah disimulasikan hingga status LOADED dan manifes penerbangan GA-707 ditutup.',
+                        title: 'Selesai & Terkirim ke Pesawat!',
+                        text: res.message || 'Semua 7 tahapan kargo telah selesai hingga status LOADED, kargo dimuat ke pesawat, dan Electronic Loadsheet resmi terkirim ke kokpit GA-707.',
                         icon: 'success',
                         background: '#ffffff',
                         color: '#0D1C42',
-                        confirmButtonColor: '#087F8A',
+                        confirmButtonColor: '#059669',
                         customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
                     }).then(() => {
-                        initSimulation(currentCargoData.id, null, currentSystemDashboard);
+                        initSimulation(currentCargoData.id, 7, currentSystemDashboard);
                     });
                 } else {
                     Swal.fire({
@@ -1099,29 +1136,39 @@ function updatePayloadInspector(stage) {
             "load_position_locked": !isOverload
         };
     } else if (stage === 7) {
+        const isLoaded = (c.status === 'LOADED');
+        const cargoWt = parseFloat(c.actual_weight_kg || c.declared_weight_kg || 150.0);
+        const grossUld = +(cargoWt + 75.0).toFixed(1);
+        const flightNum = c.flight_number || "GA-707";
+        const dest = c.flight_destination || "DPS";
         currentRequestJson = {
             "event_type": "FLIGHT_MANIFEST_FINALIZATION",
             "flight_manifest_id": "FL-GA707-2026",
-            "flight_number": "GA-707",
-            "loadsheet_number": "LS-GA707-20260926",
-            "aircraft_type": "Boeing 737-800F",
-            "route": "CGK -> DPS",
+            "flight_number": flightNum,
+            "loadsheet_number": `LS-${flightNum.replace(/[^A-Z0-9]/g, '')}-${(new Date()).toISOString().slice(0, 10).replace(/-/g, '')}`,
+            "aircraft_type": c.aircraft_type || "Boeing 737-800F",
+            "route": `CGK -> ${dest}`,
             "loaded_uld_list": [
                 {
-                    "uld_code": "AKE-12345-GA",
-                    "final_weight_kg": 850.0,
+                    "uld_code": c.uld_code || "AKE-12345-GA",
+                    "final_weight_kg": grossUld,
                     "contains_cargo_awb": c.awb_number,
-                    "ramp_loading_status": "TRANSFERRED_TO_AIRCRAFT_BELLY"
+                    "ramp_loading_status": isLoaded ? "TRANSFERRED_TO_AIRCRAFT_BELLY" : "PENDING_RAMP_LOADING"
                 }
             ],
-            "total_cargo_payload_kg": 1250.0,
-            "departure_clearance": "APPROVED",
+            "total_cargo_payload_kg": grossUld,
+            "departure_clearance": isLoaded ? "APPROVED" : "PENDING",
             "timestamp": new Date().toISOString()
         };
         currentResponseJson = {
-            "status": "200_OK",
-            "message": "Manifes penerbangan final telah diterbitkan. Loadsheet resmi terkirim ke kokpit & flight ops.",
-            "aircraft_ramp_status": "READY_FOR_PUSHBACK"
+            "status": isLoaded ? "200_OK_DISPATCHED" : "PENDING_EXECUTION",
+            "message": isLoaded
+                ? "SELESAI & TERKIRIM: Manifes penerbangan final telah diterbitkan. Kargo sudah dimuat ke pesawat & Loadsheet resmi terkirim ke kokpit & flight ops."
+                : "Menunggu eksekusi Tahap 7 untuk penerbitan manifes final & pemuatan ke pesawat.",
+            "delivery_status": isLoaded ? "SENT_TO_COCKPIT_AND_LOADED" : "PENDING_DISPATCH",
+            "electronic_loadsheet_status": isLoaded ? "SENT_TO_COCKPIT_EFB" : "DRAFT_AWAITING_DISPATCH",
+            "aircraft_ramp_status": isLoaded ? "LOADED_AND_READY_FOR_PUSHBACK" : "AWAITING_FINAL_DISPATCH",
+            "workflow_completed": isLoaded
         };
     }
 
@@ -2770,12 +2817,113 @@ function renderLoadBalanceDashboard(c) {
         cgEl.textContent = `${cgMac}% MAC (Safe)`;
     }
 
+    const isLoaded = (c.status === 'LOADED');
+    const stageNum = parseInt(c.current_stage || 1);
+
+    const fOpsBadge = document.getElementById('lb-flight-ops-badge');
+    const fOpsDot = document.getElementById('lb-flight-ops-dot');
+    const fOpsText = document.getElementById('lb-flight-ops-text');
+    if (fOpsBadge && fOpsDot && fOpsText) {
+        if (isLoaded) {
+            fOpsBadge.className = 'text-xs font-mono text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-300 font-bold flex items-center gap-1.5';
+            fOpsDot.className = 'w-2 h-2 rounded-full bg-emerald-500';
+            fOpsText.textContent = '✓ Terkirim ke Kokpit & Flight Ops (Selesai)';
+        } else if (stageNum >= 5) {
+            fOpsBadge.className = 'text-xs font-mono text-[#087F8A] bg-teal-50 px-3 py-1.5 rounded-xl border border-teal-200 font-bold flex items-center gap-1.5';
+            fOpsDot.className = 'w-2 h-2 rounded-full bg-teal-500 animate-ping';
+            fOpsText.textContent = stageNum === 7 ? 'Siap Kirim Manifes (Tahap 7)' : 'Proses Load & Balance Aktif';
+        } else {
+            fOpsBadge.className = 'text-xs font-mono text-slate-600 bg-slate-100 px-3 py-1.5 rounded-xl border border-gray-200 font-bold flex items-center gap-1.5';
+            fOpsDot.className = 'w-2 h-2 rounded-full bg-slate-400';
+            fOpsText.textContent = 'Menunggu Penimbangan & ULD';
+        }
+    }
+
+    const lbStatusTag = document.getElementById('lb-json-status-tag');
+    if (lbStatusTag) {
+        if (isLoaded) {
+            lbStatusTag.className = 'text-[10px] font-mono text-emerald-300 bg-emerald-950/70 px-2 py-0.5 rounded border border-emerald-700/80 font-bold';
+            lbStatusTag.textContent = 'DISPATCHED · SENT TO COCKPIT (LOADED)';
+        } else {
+            lbStatusTag.className = 'text-[10px] font-mono text-teal-300 bg-teal-950/60 px-2 py-0.5 rounded border border-teal-800/80';
+            lbStatusTag.textContent = 'SCALE SYNC ACTIVE';
+        }
+    }
+
+    const lsEl = document.getElementById('lb-loadsheet-status');
+    if (lsEl) {
+        if (isLoaded) {
+            lsEl.textContent = 'Terkirim ke Kokpit (SENT)';
+            lsEl.className = 'text-emerald-700 font-mono font-bold';
+        } else {
+            lsEl.textContent = stageNum >= 7 ? 'Siap Dikirim' : 'Menunggu Finalisasi';
+            lsEl.className = 'text-amber-600 font-mono';
+        }
+    }
+
+    const s7Banner = document.getElementById('lb-stage7-completed-banner');
+    const s7Detail = document.getElementById('lb-stage7-completed-detail');
+    if (s7Banner) {
+        if (isLoaded) {
+            s7Banner.classList.remove('hidden');
+            if (s7Detail) {
+                s7Detail.textContent = `Electronic Loadsheet resmi telah terkirim ke Kokpit (EFB) ${flightNum} & ULD ${c.uld_code || 'AKE-12345-GA'} (${grossUldWt.toFixed(1)} kg) sudah dimuat ke pesawat.`;
+            }
+        } else {
+            s7Banner.classList.add('hidden');
+        }
+    }
+
+    const btnStage7 = document.getElementById('lb-btn-finalize-stage7');
+    if (btnStage7) {
+        if (isLoaded) {
+            btnStage7.className = 'px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition-all flex items-center transform hover:-translate-y-0.5 cursor-pointer';
+            btnStage7.innerHTML = '<i class="fa-solid fa-circle-check mr-1.5"></i><span>Sudah Terkirim &amp; Dimuat (Selesai)</span>';
+        } else {
+            btnStage7.className = 'px-4 py-2.5 rounded-xl bg-[#0D1C42] hover:bg-slate-800 text-white font-bold text-xs shadow-md transition-all flex items-center transform hover:-translate-y-0.5 cursor-pointer';
+            btnStage7.innerHTML = '<i class="fa-solid fa-plane-departure mr-1.5"></i><span>Finalisasi Manifes (Tahap 7)</span>';
+        }
+    }
+
+    if (Array.isArray(currentUldsList) && currentUldsList.length) {
+        renderUldContainersTable(currentUldsList);
+    }
+
     renderLoadmasterAgentPanelBox(currentLoadmasterDecision);
 
     const streamDisp = document.getElementById('lb-json-stream-display');
     if (streamDisp) streamDisp.textContent = JSON.stringify(lbJson, null, 2);
     const lbDisp = document.getElementById('lbPayloadDisplay');
     if (lbDisp) lbDisp.textContent = JSON.stringify(lbJson, null, 2);
+}
+
+function renderUldContainersTable(ulds) {
+    const tbody = document.getElementById('lb-uld-table-body');
+    if (!tbody || !Array.isArray(ulds)) return;
+    tbody.innerHTML = ulds.map(u => {
+        const isDone = (u.status === 'LOADED' || u.status === 'FULL');
+        const badgeCls = isDone
+            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+            : 'bg-teal-50 text-[#087F8A] border border-teal-200';
+        const statusText = u.status === 'LOADED' ? 'LOADED (Terkirim)' : u.status;
+        return `
+            <tr class="hover:bg-slate-50/70 transition-colors">
+                <td class="py-2 px-3 font-mono font-bold text-[#0D1C42]">${escapeHtml(u.uld_code)}</td>
+                <td class="py-2 px-3 font-semibold">${escapeHtml(u.uld_type)}</td>
+                <td class="py-2 px-3 font-mono text-emerald-700 font-bold">${parseFloat(u.current_weight_kg || 0).toFixed(1)} kg</td>
+                <td class="py-2 px-3 font-mono text-slate-500">${parseFloat(u.max_weight_kg || 1588).toFixed(1)} kg</td>
+                <td class="py-2 px-3">
+                    <span class="font-bold text-[#087F8A]">${escapeHtml(u.flight_number || 'GA-707')}</span> &bull;
+                    <span class="text-slate-500 font-mono">${escapeHtml(u.compartment)}</span>
+                </td>
+                <td class="py-2 px-3">
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${badgeCls}">
+                        ${escapeHtml(statusText)}
+                    </span>
+                </td>
+            </tr>
+        `;
+    }).join('');
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════

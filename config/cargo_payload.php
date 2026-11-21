@@ -127,7 +127,9 @@ function generateVirtualHardwareLayer1($cargo) {
             "aircraft_type" => $cargo['aircraft_type'] ?? "Boeing 737-800F",
             "destination" => $cargo['flight_destination'] ?? "DPS (Denpasar/Bali)",
             "loadsheet_number" => "LS-" . ($cargo['flight_number'] ?? "GA707") . "-" . date('Ymd'),
-            "ramp_transfer_status" => ($cargo['status'] === 'LOADED') ? "LOADED_INTO_AIRCRAFT_BELLY" : "PENDING_RAMP_DISPATCH"
+            "ramp_transfer_status" => ($cargo['status'] === 'LOADED') ? "LOADED_INTO_AIRCRAFT_BELLY_COMPLETED" : "PENDING_RAMP_DISPATCH",
+            "electronic_loadsheet_sent" => ($cargo['status'] === 'LOADED'),
+            "flight_dispatch_status" => ($cargo['status'] === 'LOADED') ? "DISPATCHED_AND_SENT" : "AWAITING_FINALIZATION"
         ]
     ];
 }
@@ -405,9 +407,13 @@ function generateIntegratedStagesPayload($cargo, $logsByStage, $hardwareFeed) {
         ],
         "response_payload" => [
             "cargo_payload_id" => $payloadId,
-            "status" => "200_OK",
-            "message" => "Manifes penerbangan final telah diterbitkan. Loadsheet resmi terkirim ke kokpit & flight ops.",
-            "aircraft_ramp_status" => ($status === 'LOADED') ? "READY_FOR_PUSHBACK" : "AWAITING_FINAL_DISPATCH"
+            "status" => $s7Done ? "200_OK_DISPATCHED" : "PENDING_EXECUTION",
+            "message" => $s7Done
+                ? "SELESAI & TERKIRIM: Manifes penerbangan final telah diterbitkan, kargo sudah dimuat ke pesawat, dan Electronic Loadsheet resmi terkirim ke kokpit & flight ops."
+                : "Menunggu eksekusi Tahap 7 untuk penerbitan manifes final & pemuatan ke pesawat.",
+            "delivery_status" => $s7Done ? "SENT_TO_COCKPIT_AND_LOADED" : "PENDING_DISPATCH",
+            "aircraft_ramp_status" => $s7Done ? "LOADED_ONBOARD_READY_FOR_DEPARTURE" : "AWAITING_FINAL_DISPATCH",
+            "workflow_completed" => $s7Done
         ]
     ];
 
@@ -511,6 +517,8 @@ function generateMasterCargoPayload($db, $cargoId, $preAlertXray = null) {
             "is_suspect" => ($cargo['status'] === 'SUSPECT'),
             "is_cleared" => in_array($cargo['status'], ['CLEARED', 'WEIGHED', 'ALLOCATED', 'LOADED']),
             "is_loaded" => ($cargo['status'] === 'LOADED'),
+            "workflow_completed" => ($cargo['status'] === 'LOADED'),
+            "delivery_status" => ($cargo['status'] === 'LOADED') ? "SENT_TO_COCKPIT_AND_LOADED" : "IN_PROGRESS",
             "active_dock" => $cargo['dock_slot'] ?? 'DOCK-04',
             "assigned_uld" => $cargo['uld_code'] ?? 'AKE-12345-GA',
             "assigned_flight" => $cargo['flight_number'] ?? 'GA-707'
