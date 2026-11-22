@@ -225,7 +225,7 @@ try {
 
         $truckId = 'TRK-' . date('Ymd') . '-' . $timeTag . '-' . random_int(10, 99);
         $plate = !empty($input['truck_plate']) ? strtoupper(trim($input['truck_plate'])) : ('B ' . random_int(1000, 9999) . ' ' . chr(random_int(65, 90)) . chr(random_int(65, 90)));
-        $validDocks = ['DOCK-01', 'DOCK-02', 'DOCK-03', 'DOCK-04'];
+        $validDocks = ['DOCK-01', 'DOCK-02', 'DOCK-03'];
         $dock = in_array($input['dock_slot'] ?? '', $validDocks) ? $input['dock_slot'] : 'DOCK-02';
         $transporter = !empty($input['transporter_company']) ? trim($input['transporter_company']) : 'PT Intermodal Logistik Sejahtera';
         $bookingCode = 'TAS-SLOT-' . random_int(1000, 9999);

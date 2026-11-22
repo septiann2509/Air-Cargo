@@ -496,7 +496,7 @@ include __DIR__ . '/includes/header.php';
                 <div class="bg-white p-4 rounded-2xl border border-gray-200/90 shadow-sm flex items-center justify-between">
                     <div>
                         <span class="text-slate-400 text-[10px] font-bold uppercase tracking-wider block">Alokasi Dock Slot</span>
-                        <span id="tms-dock-summary-stat" class="text-2xl font-black text-emerald-600 font-mono mt-1 block">0/4 Terisi <span class="text-xs text-slate-500 font-sans font-normal">4 Kosong</span></span>
+                        <span id="tms-dock-summary-stat" class="text-2xl font-black text-emerald-600 font-mono mt-1 block">0/3 Terisi <span class="text-xs text-slate-500 font-sans font-normal">3 Kosong</span></span>
                     </div>
                     <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg">
                         <i class="fa-solid fa-warehouse"></i>
@@ -539,13 +539,13 @@ include __DIR__ . '/includes/header.php';
                             </div>
                             <div class="flex items-center space-x-2">
                                 <span id="tms-dock-occupied-badge" class="text-[10px] font-mono text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200 font-bold">0 Terisi</span>
-                                <span id="tms-dock-available-badge" class="text-[10px] font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 font-bold">4 Kosong</span>
+                                <span id="tms-dock-available-badge" class="text-[10px] font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 font-bold">3 Kosong</span>
                             </div>
                         </div>
 
-                        <!-- 4 Interactive Inspection Dock Cards (Read-Only Sync dari Database) -->
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="tmsDockCardsContainer">
-                            <?php foreach (['DOCK-01', 'DOCK-02', 'DOCK-03', 'DOCK-04'] as $dockName): ?>
+                        <!-- 3 Interactive Inspection Dock Cards (Read-Only Sync dari Database) -->
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="tmsDockCardsContainer">
+                            <?php foreach (['DOCK-01', 'DOCK-02', 'DOCK-03'] as $dockName): ?>
                                 <div id="dock-card-<?= $dockName ?>" onclick="handleDockCardClick('<?= $dockName ?>')" class="p-3.5 rounded-xl border-2 border-dashed border-emerald-300 bg-emerald-50/20 text-center transition-all cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 hover:shadow-md relative overflow-hidden group select-none" title="Klik untuk lihat rincian dock">
                                     <div class="flex items-center justify-between">
                                         <span class="text-[10px] font-bold text-emerald-700 uppercase font-mono"><?= str_replace('-', ' ', $dockName) ?></span>
@@ -1625,6 +1625,10 @@ include __DIR__ . '/includes/header.php';
                                 <button id="lb-btn-finalize-stage7" onclick="executeStageAction(7, 'CLEARED')" class="px-4 py-2.5 rounded-xl bg-[#0D1C42] hover:bg-slate-800 text-white font-bold text-xs shadow-md transition-all flex items-center transform hover:-translate-y-0.5 cursor-pointer">
                                     <i class="fa-solid fa-plane-departure mr-1.5"></i>
                                     <span>Finalisasi Manifes (Tahap 7)</span>
+                                </button>
+                                <button id="lb-btn-open-live" type="button" onclick="sendAndOpenLiveSimulation()" class="px-5 py-2.5 rounded-xl font-extrabold text-white shadow-xl shadow-teal-900/25 hover:opacity-95 transition-all text-xs flex items-center gap-2 cursor-pointer ring-2 ring-teal-400/40 transform hover:-translate-y-0.5 disabled:opacity-45 disabled:cursor-not-allowed disabled:transform-none" style="background: linear-gradient(135deg, #0CA1AF 0%, #087F8A 50%, #014D54 100%);" title="Selesaikan Tahap 1-6 terlebih dahulu untuk mengirim & membuka Simulasi Live 3D">
+                                    <i class="fa-solid fa-gamepad text-amber-300 text-sm"></i>
+                                    <span id="lb-btn-open-live-label">Kirim &amp; Buka Simulasi Live (All-in-One)</span>
                                 </button>
                             </div>
                             <button onclick="openToleranceTestModal()" class="px-3 py-2 rounded-xl bg-slate-50 hover:bg-amber-50 text-slate-600 hover:text-amber-800 text-[11px] font-bold border border-gray-200 hover:border-amber-300 transition-all flex items-center cursor-pointer" title="Opsional: Mode penguji untuk mensimulasikan kasus deviasi >5% atau overload ULD">

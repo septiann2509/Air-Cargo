@@ -40,7 +40,7 @@ try {
     // Re-seed truck_arrivals
     $db->exec("
         INSERT INTO truck_arrivals (id, truck_plate, driver_name, transporter_company, dock_slot, booking_code, arrival_time, status, notes) VALUES
-        ('TRK-20260926-01', 'B 9482 KXT', 'Bambang Supriyanto', 'PT Indotruck Multimoda Logistik', 'DOCK-04', 'TAS-SLOT-9482', NOW(), 'ARRIVED', 'Truk membawa muatan kargo farmasi & ekspor garmen'),
+        ('TRK-20260926-01', 'B 9482 KXT', 'Bambang Supriyanto', 'PT Indotruck Multimoda Logistik', 'DOCK-03', 'TAS-SLOT-9482', NOW(), 'ARRIVED', 'Truk membawa muatan kargo farmasi & ekspor garmen'),
         ('TRK-20260926-02', 'B 9112 PXZ', 'Agus Setiawan', 'PT Lintas Samudera Darat', 'DOCK-02', 'TAS-SLOT-9112', DATE_SUB(NOW(), INTERVAL 1 HOUR), 'COMPLETED', 'Bongkar muat selesai');
     ");
 
@@ -59,7 +59,7 @@ try {
         'truck_id' => 'TRK-20260926-01',
         'plate_number' => 'B 9482 KXT',
         'driver' => 'Bambang Supriyanto',
-        'assigned_dock' => 'DOCK-04',
+        'assigned_dock' => 'DOCK-03',
         'awb_reference' => '126-98741022',
         'eta_status' => 'ON_TIME',
         'arrival_timestamp' => date('c')
@@ -67,7 +67,7 @@ try {
     $logResponse = [
         'cargo_payload_id' => 'CMP-CGO-20260926-001',
         'status' => 'SUCCESS',
-        'message' => 'Truk berhasil dialokasikan ke dock DOCK-04',
+        'message' => 'Truk berhasil dialokasikan ke dock DOCK-03',
         'gate_clearance_code' => 'GATE-OK-9482'
     ];
     $stmtLog = $db->prepare("

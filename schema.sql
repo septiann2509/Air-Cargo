@@ -152,7 +152,7 @@ INSERT INTO `uld_containers` (`id`, `uld_code`, `uld_type`, `tare_weight_kg`, `m
 ('ULD-PMC-99120', 'PMC-99120-SQ', 'PMC', 110.00, 6800.00, 110.00, 'FL-SQ801-2026', 'MAIN-DECK-01', 'EMPTY');
 
 INSERT INTO `truck_arrivals` (`id`, `truck_plate`, `driver_name`, `transporter_company`, `dock_slot`, `booking_code`, `arrival_time`, `status`, `notes`) VALUES
-('TRK-20260926-01', 'B 9482 KXT', 'Bambang Supriyanto', 'PT Indotruck Multimoda Logistik', 'DOCK-04', 'TAS-SLOT-9482', NOW(), 'ARRIVED', 'Truk membawa muatan kargo farmasi & ekspor garmen'),
+('TRK-20260926-01', 'B 9482 KXT', 'Bambang Supriyanto', 'PT Indotruck Multimoda Logistik', 'DOCK-03', 'TAS-SLOT-9482', NOW(), 'ARRIVED', 'Truk membawa muatan kargo farmasi & ekspor garmen'),
 ('TRK-20260926-02', 'B 9112 PXZ', 'Agus Setiawan', 'PT Lintas Samudera Darat', 'DOCK-02', 'TAS-SLOT-9112', DATE_SUB(NOW(), INTERVAL 1 HOUR), 'COMPLETED', 'Bongkar muat selesai');
 
 INSERT INTO `cargo_shipments` (`id`, `awb_number`, `sscc`, `gtin`, `batch_no`, `expiry_date`, `shipper`, `consignee`, `description`, `commodity_type`, `quantity`, `declared_weight_kg`, `actual_weight_kg`, `truck_arrival_id`, `uld_id`, `scan_time`, `current_stage`, `status`) VALUES

@@ -47,7 +47,7 @@ function generateVirtualHardwareLayer1($cargo) {
             "truck_plate" => $cargo['truck_plate'] ?? "B 9482 KXT",
             "driver_name" => $cargo['driver_name'] ?? "Bambang Supriyanto",
             "transporter_company" => $cargo['transporter_company'] ?? "PT Indotruck Multimoda Logistik",
-            "assigned_dock" => $cargo['dock_slot'] ?? "DOCK-04",
+            "assigned_dock" => $cargo['dock_slot'] ?? "DOCK-02",
             "barrier_status" => $isGateVerified ? "BARRIER_OPENED" : "STANDBY_AWAITING_TRUCK",
             "booking_code" => $cargo['booking_code'] ?? "TAS-SLOT-9482",
             "truck_status" => $cargo['truck_status'] ?? "SCHEDULED",
@@ -162,7 +162,7 @@ function generateIntegratedStagesPayload($cargo, $logsByStage, $hardwareFeed) {
             "truck_plate" => $cargo['truck_plate'] ?? "B 9482 KXT",
             "driver_name" => $cargo['driver_name'] ?? "Bambang Supriyanto",
             "transporter_company" => $cargo['transporter_company'] ?? "PT Indotruck Multimoda Logistik",
-            "dock_slot" => $cargo['dock_slot'] ?? "DOCK-04",
+            "dock_slot" => $cargo['dock_slot'] ?? "DOCK-02",
             "booking_code" => $cargo['booking_code'] ?? "TAS-SLOT-9482",
             "arrival_time" => $cargo['arrival_time'] ?? ($cargo['created_at'] ?? date('c')),
             "truck_status" => $cargo['truck_status'] ?? "SCHEDULED",
@@ -173,8 +173,8 @@ function generateIntegratedStagesPayload($cargo, $logsByStage, $hardwareFeed) {
             "cargo_payload_id" => $payloadId,
             "status" => "200_OK",
             "message" => $s1Done
-                ? ("Truk " . ($cargo['truck_plate'] ?? "B 9482 KXT") . " diverifikasi di gerbang TAS & dialokasikan ke " . ($cargo['dock_slot'] ?? "DOCK-04"))
-                : ("Booking TAS " . ($cargo['booking_code'] ?? "TAS-SLOT-9482") . " otomatis diterima dari Input Kargo untuk " . ($cargo['dock_slot'] ?? "DOCK-04")),
+                ? ("Truk " . ($cargo['truck_plate'] ?? "B 9482 KXT") . " diverifikasi di gerbang TAS & dialokasikan ke " . ($cargo['dock_slot'] ?? "DOCK-02"))
+                : ("Booking TAS " . ($cargo['booking_code'] ?? "TAS-SLOT-9482") . " otomatis diterima dari Input Kargo untuk " . ($cargo['dock_slot'] ?? "DOCK-02")),
             "tms_pass_token" => "TAS-TOKEN-" . strtoupper(substr(md5($cargoId . '1'), 0, 8)),
             "next_stage" => "CMS_AIDC_JSON_INGEST"
         ]
@@ -519,7 +519,7 @@ function generateMasterCargoPayload($db, $cargoId, $preAlertXray = null) {
             "is_loaded" => ($cargo['status'] === 'LOADED'),
             "workflow_completed" => ($cargo['status'] === 'LOADED'),
             "delivery_status" => ($cargo['status'] === 'LOADED') ? "SENT_TO_COCKPIT_AND_LOADED" : "IN_PROGRESS",
-            "active_dock" => $cargo['dock_slot'] ?? 'DOCK-04',
+            "active_dock" => $cargo['dock_slot'] ?? 'DOCK-02',
             "assigned_uld" => $cargo['uld_code'] ?? 'AKE-12345-GA',
             "assigned_flight" => $cargo['flight_number'] ?? 'GA-707'
         ]

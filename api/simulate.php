@@ -166,7 +166,7 @@ function executeStage($db, $cargoId, $stage, $avsecDecision = 'CLEARED', $option
                     $truckPlate = $cargo['truck_plate'] ?: 'B 9482 KXT';
                     $driverName = $cargo['driver_name'] ?: 'Bambang Supriyanto';
                     $transporter = $cargo['transporter_company'] ?: 'PT Intermodal Logistik Sejahtera';
-                    $dockSlot = $cargo['dock_slot'] ?: 'DOCK-04';
+                    $dockSlot = $cargo['dock_slot'] ?: 'DOCK-02';
                     $bookingCode = $cargo['booking_code'] ?: ('TAS-SLOT-' . rand(1000, 9999));
 
                     $stmtUpdateTruck = $db->prepare("

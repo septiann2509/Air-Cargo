@@ -111,7 +111,7 @@ if (!function_exists('getStatusBadgeClass')) {
 
         <!-- Section 2: Input Form Card (2-column grid on large screens) -->
         <div class="bg-white p-6 lg:p-8 rounded-2xl border border-gray-200/90 shadow-sm">
-            <form id="cargoForm" action="api/cargo_input.php" method="POST" onsubmit="event.preventDefault(); submitCargoForm('live');">
+            <form id="cargoForm" action="api/cargo_input.php" method="POST" onsubmit="event.preventDefault(); submitCargoForm('sim');">
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
                     
                     <!-- Left column (lg:col-span-7) -->
@@ -241,7 +241,6 @@ if (!function_exists('getStatusBadgeClass')) {
                                         <option value="DOCK-01">Dermaga 01 (DOCK-01)</option>
                                         <option value="DOCK-02">Dermaga 02 (DOCK-02)</option>
                                         <option value="DOCK-03" selected>Dermaga 03 (DOCK-03)</option>
-                                        <option value="DOCK-04">Dermaga 04 (DOCK-04)</option>
                                     </select>
                                 </div>
                             </div>
@@ -364,13 +363,9 @@ if (!function_exists('getStatusBadgeClass')) {
                         <i class="fa-solid fa-truck text-[#087F8A]"></i>
                         <span>Simpan &amp; Buka Dashboard TMS</span>
                     </button>
-                    <button type="button" onclick="submitCargoForm('sim')" class="px-4 py-3 rounded-xl font-bold text-[#087F8A] border-2 border-[#087F8A] bg-white hover:bg-[#087F8A]/5 transition-all text-xs lg:text-sm flex items-center justify-center gap-2 cursor-pointer shadow-sm">
-                        <i class="fa-solid fa-chart-simple"></i>
-                        <span>Simulasi 7-Tahap</span>
-                    </button>
-                    <button type="button" onclick="submitCargoForm('live')" class="px-6 py-3 rounded-xl font-extrabold text-white shadow-xl shadow-teal-900/30 hover:opacity-95 transition-all text-xs lg:text-sm flex items-center justify-center gap-2 cursor-pointer ring-2 ring-teal-400/40" style="background: linear-gradient(135deg, #0CA1AF 0%, #087F8A 50%, #014D54 100%);">
-                        <i class="fa-solid fa-gamepad text-amber-300 text-sm"></i>
-                        <span>Kirim &amp; Buka Simulasi Live (All-in-One)</span>
+                    <button type="button" onclick="submitCargoForm('sim')" class="px-6 py-3 rounded-xl font-extrabold text-white shadow-xl shadow-teal-900/25 hover:opacity-95 transition-all text-xs lg:text-sm flex items-center justify-center gap-2 cursor-pointer ring-2 ring-teal-400/40" style="background: linear-gradient(135deg, #0CA1AF 0%, #087F8A 50%, #014D54 100%);">
+                        <i class="fa-solid fa-paper-plane text-amber-300 text-sm"></i>
+                        <span>Kirim &amp; Buka Simulasi 7-Tahap</span>
                     </button>
                 </div>
             </form>
@@ -554,7 +549,7 @@ function updateFlowDiagram(injectAnomaly) {
     `;
 }
 
-function submitCargoForm(redirectTo = 'tms') {
+function submitCargoForm(redirectTo = 'sim') {
     const form = document.getElementById('cargoForm');
     if (!form.checkValidity()) {
         form.reportValidity();

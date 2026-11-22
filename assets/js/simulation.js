@@ -340,7 +340,7 @@ function renderStageGraphic(stage) {
                     <div class="w-16 h-16 rounded-2xl bg-white border border-teal-200 flex items-center justify-center text-3xl text-[#087F8A] mb-2 shadow-md">
                         <i class="fa-solid fa-warehouse"></i>
                     </div>
-                    <span class="text-xs font-mono font-bold text-emerald-700">${c.dock_slot || 'DOCK-04'}</span>
+                    <span class="text-xs font-mono font-bold text-emerald-700">${c.dock_slot || 'DOCK-02'}</span>
                     <span class="text-[10px] text-slate-500 block font-medium">Dock Alokasi Truk</span>
                 </div>
             </div>
@@ -611,6 +611,12 @@ function renderStageActionButtons(stage) {
                     <i class="fa-solid fa-arrow-right ml-2 text-xs"></i>
                 </button>
             ` : ''}
+            ${isStage7Final ? `
+                <button type="button" onclick="openLiveSimulationForCargo()" class="px-5 py-2.5 rounded-xl font-extrabold text-white shadow-xl shadow-teal-900/25 hover:opacity-95 transition-all text-xs flex items-center gap-2 cursor-pointer ring-2 ring-teal-400/40 transform hover:-translate-y-0.5" style="background: linear-gradient(135deg, #0CA1AF 0%, #087F8A 50%, #014D54 100%);">
+                    <i class="fa-solid fa-gamepad text-amber-300 text-sm"></i>
+                    <span>Buka Simulasi Live (All-in-One)</span>
+                </button>
+            ` : ''}
             <button onclick="executeStageAction(${stage}, 'CLEARED')" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 hover:text-[#087F8A] text-xs font-bold border border-gray-300 shadow-sm transition-all flex items-center cursor-pointer">
                 <i class="fa-solid fa-rotate mr-1.5 text-xs text-slate-400"></i>
                 <span>${isStage7Final ? 'Kirim Ulang Sync Loadsheet' : `Jalankan Ulang Tahap ${stage}`}</span>
@@ -661,6 +667,12 @@ function renderStageActionButtons(stage) {
             <i class="fa-solid ${btnIcon} mr-2"></i>
             <span>${btnText}</span>
         </button>
+        ${stage === 7 ? `
+            <button type="button" onclick="sendAndOpenLiveSimulation()" class="px-5 py-2.5 rounded-xl font-extrabold text-white shadow-xl shadow-teal-900/25 hover:opacity-95 transition-all text-xs flex items-center gap-2 cursor-pointer ring-2 ring-teal-400/40 transform hover:-translate-y-0.5" style="background: linear-gradient(135deg, #0CA1AF 0%, #087F8A 50%, #014D54 100%);">
+                <i class="fa-solid fa-gamepad text-amber-300 text-sm"></i>
+                <span>Kirim &amp; Buka Simulasi Live (All-in-One)</span>
+            </button>
+        ` : ''}
         ${stage < 7 ? `
             <button onclick="selectStageView(${stage + 1})" class="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-[#0D1C42] hover:text-[#087F8A] text-xs font-bold border border-gray-300 shadow-sm transition-colors flex items-center cursor-pointer">
                 <span>Lihat Tahap ${stage + 1}</span>
@@ -746,7 +758,7 @@ function executeStageAction(stage, avsecDecision) {
     doExecuteStageAction(stage, avsecDecision);
 }
 
-function doExecuteStageAction(stage, avsecDecision) {
+function doExecuteStageAction(stage, avsecDecision, openLiveOnFinish = false) {
     let actionParam = 'advance';
     if (avsecDecision === 'SUSPECT') actionParam = 'force_suspect';
 
@@ -799,6 +811,7 @@ function doExecuteStageAction(stage, avsecDecision) {
 
             const resultIsSuspect = (avsecDecision === 'SUSPECT') || (stage === 4 && res.cargo && res.cargo.status === 'SUSPECT');
             const resultIsCca = (stage === 5 && res.loadmaster_agent && res.loadmaster_agent.decision === 'CCA_AMENDMENT');
+            const wasAlreadyLoaded = (currentCargoData && currentCargoData.status === 'LOADED');
             const resultIsStage7 = (stage === 7 && res.cargo && res.cargo.status === 'LOADED');
             let iconType = 'success';
             let btnColor = '#087F8A';
@@ -820,15 +833,45 @@ function doExecuteStageAction(stage, avsecDecision) {
                 btnColor = '#0f172a';
             }
 
+            if (resultIsStage7 && openLiveOnFinish) {
+                Swal.fire({
+                    title: 'Selesai & Terkirim ke Pesawat!',
+                    text: 'Electronic Loadsheet terkirim. Membuka Simulasi Live 3D...',
+                    icon: 'success',
+                    timer: 1300,
+                    timerProgressBar: true,
+                    showConfirmButton: false,
+                    background: '#ffffff',
+                    color: '#0D1C42',
+                    customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
+                }).then(() => {
+                    openLiveSimulationForCargo();
+                });
+                return;
+            }
+
+            const shouldAutoOpenLive = resultIsStage7 && !wasAlreadyLoaded;
             Swal.fire({
                 title: alertTitle,
-                text: res.message,
+                text: shouldAutoOpenLive
+                    ? (res.message + ' Membuka Simulasi Live 3D dalam 3 detik...')
+                    : res.message,
                 icon: iconType,
                 background: '#ffffff',
                 color: '#0D1C42',
-                confirmButtonColor: btnColor,
+                confirmButtonColor: shouldAutoOpenLive ? '#087F8A' : btnColor,
+                confirmButtonText: shouldAutoOpenLive ? '🎮 Buka Simulasi Live (All-in-One)' : 'OK',
+                showCancelButton: shouldAutoOpenLive,
+                cancelButtonText: 'Tetap di Simulasi 7-Tahap',
+                cancelButtonColor: '#64748b',
+                timer: shouldAutoOpenLive ? 3000 : undefined,
+                timerProgressBar: shouldAutoOpenLive,
                 customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
-            }).then(() => {
+            }).then((swRes) => {
+                if (shouldAutoOpenLive && (swRes.isConfirmed || swRes.dismiss === Swal.DismissReason.timer)) {
+                    openLiveSimulationForCargo();
+                    return;
+                }
                 let nextView = stage;
                 if (!resultIsSuspect && (avsecDecision === 'CLEARED' || avsecDecision === 'RELEASE') && stage < 7) {
                     nextView = stage + 1;
@@ -902,6 +945,9 @@ function triggerAutoRun() {
             .then(r => r.json())
             .then(res => {
                 if (res.success) {
+                    if (res.cargo) {
+                        currentCargoData = res.cargo;
+                    }
                     if (res.payload) {
                         currentMasterPayload = res.payload;
                     }
@@ -911,16 +957,29 @@ function triggerAutoRun() {
                     if (Array.isArray(res.ulds)) {
                         currentUldsList = res.ulds;
                     }
+                    const autoLoaded = (res.cargo && res.cargo.status === 'LOADED');
                     Swal.fire({
-                        title: 'Selesai & Terkirim ke Pesawat!',
-                        text: res.message || 'Semua 7 tahapan kargo telah selesai hingga status LOADED, kargo dimuat ke pesawat, dan Electronic Loadsheet resmi terkirim ke kokpit GA-707.',
-                        icon: 'success',
+                        title: autoLoaded ? 'Selesai & Terkirim ke Pesawat!' : 'Simulasi Terhenti di Pemeriksaan Keamanan',
+                        text: autoLoaded
+                            ? ((res.message || 'Semua 7 tahapan selesai hingga status LOADED.') + ' Membuka Simulasi Live 3D dalam 3 detik...')
+                            : (res.message || 'Kargo ditahan di tahap keamanan/timbangan.'),
+                        icon: autoLoaded ? 'success' : 'warning',
                         background: '#ffffff',
                         color: '#0D1C42',
-                        confirmButtonColor: '#059669',
+                        confirmButtonColor: autoLoaded ? '#087F8A' : '#e11d48',
+                        confirmButtonText: autoLoaded ? '🎮 Buka Simulasi Live (All-in-One)' : 'Lihat Detail Tahap',
+                        showCancelButton: autoLoaded,
+                        cancelButtonText: 'Tetap di Ringkasan 7-Tahap',
+                        cancelButtonColor: '#64748b',
+                        timer: autoLoaded ? 3000 : undefined,
+                        timerProgressBar: autoLoaded,
                         customClass: { popup: 'rounded-2xl shadow-2xl border border-gray-200' }
-                    }).then(() => {
-                        initSimulation(currentCargoData.id, 7, currentSystemDashboard);
+                    }).then((swRes) => {
+                        if (autoLoaded && (swRes.isConfirmed || swRes.dismiss === Swal.DismissReason.timer)) {
+                            openLiveSimulationForCargo();
+                            return;
+                        }
+                        initSimulation(currentCargoData.id, res.cargo ? parseInt(res.cargo.current_stage || 7) : 7, currentSystemDashboard);
                     });
                 } else {
                     Swal.fire({
@@ -972,7 +1031,7 @@ function updatePayloadInspector(stage) {
                 "driver": c.driver_name || "Bambang Supriyanto",
                 "transporter": c.transporter_company || "PT Indotruck Multimoda Logistik"
             },
-            "allocated_dock": c.dock_slot || "DOCK-04",
+            "allocated_dock": c.dock_slot || "DOCK-02",
             "truck_status": c.truck_status || "SCHEDULED",
             "eta_timestamp": c.arrival_time || new Date().toISOString()
         };
@@ -1343,8 +1402,7 @@ function escapeHtml(text) {
 let dockLiveState = {
     'DOCK-01': { occupied: false, isActiveCargoDock: false, plate: null, driver: null, transporter: null, bookingCode: null, truckId: null, status: 'Standby Leveler', arrivalTime: null },
     'DOCK-02': { occupied: false, isActiveCargoDock: false, plate: null, driver: null, transporter: null, bookingCode: null, truckId: null, status: 'Standby Leveler', arrivalTime: null },
-    'DOCK-03': { occupied: false, isActiveCargoDock: false, plate: null, driver: null, transporter: null, bookingCode: null, truckId: null, status: 'Standby Leveler', arrivalTime: null },
-    'DOCK-04': { occupied: false, isActiveCargoDock: false, plate: null, driver: null, transporter: null, bookingCode: null, truckId: null, status: 'Standby Leveler', arrivalTime: null }
+    'DOCK-03': { occupied: false, isActiveCargoDock: false, plate: null, driver: null, transporter: null, bookingCode: null, truckId: null, status: 'Standby Leveler', arrivalTime: null }
 };
 
 function getTmsStatusBadgeClass(status) {
@@ -1399,7 +1457,7 @@ function getResolvedTmsData(c = currentCargoData, tmsData = currentTmsData) {
 }
 
 function buildDockLiveState(trucksList = recentTrucksList, activeTms = null) {
-    const docks = ['DOCK-01', 'DOCK-02', 'DOCK-03', 'DOCK-04'];
+    const docks = ['DOCK-01', 'DOCK-02', 'DOCK-03'];
     const state = {};
     docks.forEach(d => {
         state[d] = {
@@ -1462,7 +1520,7 @@ function buildDockLiveState(trucksList = recentTrucksList, activeTms = null) {
 function renderDockCards(activeTms = null) {
     const tms = activeTms || getResolvedTmsData();
     const state = buildDockLiveState(recentTrucksList, tms);
-    const docks = ['DOCK-01', 'DOCK-02', 'DOCK-03', 'DOCK-04'];
+    const docks = ['DOCK-01', 'DOCK-02', 'DOCK-03'];
     const selectedSlot = tms.dock_slot || 'DOCK-02';
 
     let occupiedCount = 0;
@@ -1568,7 +1626,7 @@ function renderDockCards(activeTms = null) {
     const availBadge = document.getElementById('tms-dock-available-badge');
     if (availBadge) availBadge.textContent = `${availableCount} Kosong`;
     const sumStat = document.getElementById('tms-dock-summary-stat');
-    if (sumStat) sumStat.innerHTML = `${occupiedCount}/4 Terisi <span class="text-xs text-slate-500 font-sans font-normal">${availableCount} Kosong</span>`;
+    if (sumStat) sumStat.innerHTML = `${occupiedCount}/3 Terisi <span class="text-xs text-slate-500 font-sans font-normal">${availableCount} Kosong</span>`;
 }
 
 function handleDockCardClick(dockSlot) {
@@ -1632,7 +1690,7 @@ function updateTMSJsonPayload(tmsInput = null) {
     const tms = tmsInput || getResolvedTmsData();
     const occupiedDocks = [];
     const vacantDocks = [];
-    ['DOCK-01', 'DOCK-02', 'DOCK-03', 'DOCK-04'].forEach(d => {
+    ['DOCK-01', 'DOCK-02', 'DOCK-03'].forEach(d => {
         if (dockLiveState[d] && dockLiveState[d].occupied) {
             occupiedDocks.push(d);
         } else {
@@ -2885,6 +2943,25 @@ function renderLoadBalanceDashboard(c) {
         }
     }
 
+    const btnOpenLive = document.getElementById('lb-btn-open-live');
+    const lblOpenLive = document.getElementById('lb-btn-open-live-label');
+    if (btnOpenLive) {
+        const canSendOrOpen = isLoaded || (stageNum >= 7 && c.status !== 'SUSPECT' && c.status !== 'RETURNED_TO_TRUCK');
+        btnOpenLive.disabled = !canSendOrOpen;
+        if (lblOpenLive) {
+            if (isLoaded) {
+                lblOpenLive.textContent = 'Buka Simulasi Live (All-in-One)';
+                btnOpenLive.title = 'Semua 7 tahap selesai — buka visualisasi Simulasi Live 3D untuk kargo ini';
+            } else if (canSendOrOpen) {
+                lblOpenLive.textContent = 'Kirim & Buka Simulasi Live (All-in-One)';
+                btnOpenLive.title = 'Kirim Electronic Loadsheet (Tahap 7) & otomatis buka Simulasi Live 3D';
+            } else {
+                lblOpenLive.textContent = 'Kirim & Buka Simulasi Live (Tersedia di Tahap 7)';
+                btnOpenLive.title = 'Selesaikan Tahap 1 s/d 6 terlebih dahulu sebelum membuka Simulasi Live';
+            }
+        }
+    }
+
     if (Array.isArray(currentUldsList) && currentUldsList.length) {
         renderUldContainersTable(currentUldsList);
     }
@@ -3265,4 +3342,39 @@ function renderLoadmasterAgentPanelBox(agent) {
             </div>
         `).join('');
     }
+}
+
+function buildLiveSimulationUrl(c) {
+    if (!c || !c.id) return 'simulation_live.php';
+    const xray = c.xray_result
+        || (currentMasterPayload && currentMasterPayload.system_metadata && currentMasterPayload.system_metadata.pre_alert_xray_scenario)
+        || (c.status === 'SUSPECT' ? 'SUSPECT' : 'CLEARED');
+    const dock = c.dock_slot || 'DOCK-02';
+    return `simulation_live.php?cargo_id=${encodeURIComponent(c.id)}&xray=${encodeURIComponent(xray)}&dock=${encodeURIComponent(dock)}&autostart=1`;
+}
+
+function openLiveSimulationForCargo() {
+    if (!currentCargoData) return;
+    window.location.href = buildLiveSimulationUrl(currentCargoData);
+}
+
+function sendAndOpenLiveSimulation() {
+    if (!currentCargoData) return;
+    if (currentCargoData.status === 'LOADED') {
+        openLiveSimulationForCargo();
+        return;
+    }
+    const stageNum = parseInt(currentCargoData.current_stage || 1);
+    if (stageNum < 7 || currentCargoData.status === 'SUSPECT' || currentCargoData.status === 'RETURNED_TO_TRUCK') {
+        Swal.fire({
+            title: 'Tahap 1-6 Belum Selesai',
+            text: 'Selesaikan terlebih dahulu tahapan sebelumnya (hingga Tahap 6 Build-Up ULD) sebelum mengirim & membuka Simulasi Live.',
+            icon: 'info',
+            confirmButtonColor: '#087F8A',
+            background: '#ffffff',
+            color: '#0D1C42'
+        });
+        return;
+    }
+    doExecuteStageAction(7, 'CLEARED', true);
 }

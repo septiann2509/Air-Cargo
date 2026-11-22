@@ -12,7 +12,7 @@ $selectedCargoId = $_GET['cargo_id'] ?? '';
 $initialCargo = null;
 if ($selectedCargoId) {
     $cStmt = $db->prepare("
-        SELECT c.*, t.truck_plate, t.driver_name, s.xray_result, w.actual_weight_kg
+        SELECT c.*, t.truck_plate, t.driver_name, t.dock_slot, s.xray_result, w.actual_weight_kg
         FROM cargo_shipments c
         LEFT JOIN truck_arrivals t ON c.truck_arrival_id = t.id
         LEFT JOIN security_checks s ON s.cargo_id = c.id
@@ -26,7 +26,7 @@ if ($selectedCargoId) {
 // Jika belum ada cargo_id spesifik, ambil data kargo paling terkini dari database
 if (!$initialCargo) {
     $cStmt = $db->query("
-        SELECT c.*, t.truck_plate, t.driver_name, s.xray_result, w.actual_weight_kg
+        SELECT c.*, t.truck_plate, t.driver_name, t.dock_slot, s.xray_result, w.actual_weight_kg
         FROM cargo_shipments c
         LEFT JOIN truck_arrivals t ON c.truck_arrival_id = t.id
         LEFT JOIN security_checks s ON s.cargo_id = c.id
@@ -48,7 +48,8 @@ if (!$initialCargo) {
         'declared_weight_kg' => 350.0,
         'xray_result' => 'CLEARED',
         'truck_plate' => 'B 9482 KXA',
-        'driver_name' => 'Suryadi Pratama'
+        'driver_name' => 'Suryadi Pratama',
+        'dock_slot' => 'DOCK-02'
     ];
 }
 
@@ -624,32 +625,6 @@ include __DIR__ . '/includes/header.php';
             </button>
         </div>
 
-        <!-- FLOATING PAN & ZOOM D-PAD CONTROLLER (NAVIGASI PRESISI) -->
-        <div class="absolute top-16 right-4 z-20 flex flex-col items-center gap-1 p-1.5 rounded-xl bg-slate-900/90 backdrop-blur-md border border-teal-500/30 shadow-2xl text-white">
-            <div class="text-[8px] font-black text-teal-300 uppercase tracking-wider mb-0.5 flex items-center gap-1">
-                <i class="fa-solid fa-compass text-teal-400 text-[8.5px]"></i>
-                <span>Geser &amp; Zoom</span>
-            </div>
-            <!-- D-pad Pan 2D -->
-            <div class="grid grid-cols-3 gap-1">
-                <div></div>
-                <button onclick="panCamera(0, 8)" class="w-7 h-7 rounded bg-white/10 hover:bg-[#0CA1AF] text-slate-200 hover:text-white flex items-center justify-center text-xs transition-all active:scale-95 cursor-pointer" title="Geser Maju (Arrow Up)"><i class="fa-solid fa-chevron-up"></i></button>
-                <div></div>
-                <button onclick="panCamera(8, 0)" class="w-7 h-7 rounded bg-white/10 hover:bg-[#0CA1AF] text-slate-200 hover:text-white flex items-center justify-center text-xs transition-all active:scale-95 cursor-pointer" title="Geser Kiri (Arrow Left)"><i class="fa-solid fa-chevron-left"></i></button>
-                <button onclick="resetCameraAngle()" class="w-7 h-7 rounded bg-teal-500/25 hover:bg-[#0CA1AF] text-teal-300 hover:text-white flex items-center justify-center text-[10px] transition-all active:scale-95 cursor-pointer" title="Reset Posisi Awal"><i class="fa-solid fa-arrows-to-dot"></i></button>
-                <button onclick="panCamera(-8, 0)" class="w-7 h-7 rounded bg-white/10 hover:bg-[#0CA1AF] text-slate-200 hover:text-white flex items-center justify-center text-xs transition-all active:scale-95 cursor-pointer" title="Geser Kanan (Arrow Right)"><i class="fa-solid fa-chevron-right"></i></button>
-                <div></div>
-                <button onclick="panCamera(0, -8)" class="w-7 h-7 rounded bg-white/10 hover:bg-[#0CA1AF] text-slate-200 hover:text-white flex items-center justify-center text-xs transition-all active:scale-95 cursor-pointer" title="Geser Mundur (Arrow Down)"><i class="fa-solid fa-chevron-down"></i></button>
-                <div></div>
-            </div>
-            <div class="w-full h-px bg-white/15 my-0.5"></div>
-            <!-- Zoom In & Out -->
-            <div class="flex items-center gap-1 w-full justify-between">
-                <button onclick="zoomCamera(6)" class="flex-1 py-1 rounded bg-white/10 hover:bg-[#0CA1AF] text-slate-200 hover:text-white flex items-center justify-center text-xs font-bold transition-all active:scale-95 cursor-pointer" title="Zoom Dekat (+)"><i class="fa-solid fa-plus text-[10px]"></i></button>
-                <button onclick="zoomCamera(-6)" class="flex-1 py-1 rounded bg-white/10 hover:bg-[#0CA1AF] text-slate-200 hover:text-white flex items-center justify-center text-xs font-bold transition-all active:scale-95 cursor-pointer" title="Zoom Jauh (-)"><i class="fa-solid fa-minus text-[10px]"></i></button>
-            </div>
-        </div>
-
         <!-- FLOATING MOUSE CONTROLS HINT -->
         <div id="mouse-hint-pill" class="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 hidden md:flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-slate-900/85 backdrop-blur-md border border-teal-500/35 text-[10.5px] text-slate-200 shadow-2xl pointer-events-auto transition-opacity">
             <i class="fa-solid fa-computer-mouse text-teal-400"></i>
@@ -661,8 +636,8 @@ include __DIR__ . '/includes/header.php';
             <button onclick="document.getElementById('mouse-hint-pill').remove()" class="text-slate-400 hover:text-white ml-1 text-xs cursor-pointer" title="Tutup panduan">&times;</button>
         </div>
 
-        <!-- FIDS FLIGHT & CARGO GLASS BILLBOARD (DI BAWAH NAV BAR ATAS) -->
-        <div class="absolute top-14 left-4 z-20 flex flex-col gap-1 pointer-events-none">
+        <!-- FIDS FLIGHT & CARGO GLASS BILLBOARD + PILIHAN TRUK AKTIF -->
+        <div class="absolute top-14 left-4 z-20 flex flex-wrap items-center gap-2 pointer-events-none max-w-[calc(100vw-220px)]">
             <div class="hud-chip flex items-center gap-3 bg-slate-900/90 border border-teal-500/40">
                 <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" id="hud-pulse-dot"></span>
                 <div>
@@ -676,6 +651,12 @@ include __DIR__ . '/includes/header.php';
                     <div class="text-[9px] text-slate-400">FLIGHT / AWB</div>
                     <div class="text-[11px] font-mono text-amber-300 font-extrabold" id="hud-awb-code">GA-777F &bull; 126-88492019</div>
                 </div>
+            </div>
+            <div class="hud-chip pointer-events-auto flex items-center gap-1 bg-slate-900/90 border border-teal-500/40 !py-1.5 !px-2.5" title="Pilih truk &amp; bay dermaga mana yang akan bergerak dalam simulasi">
+                <span class="text-[9px] text-teal-300 font-black uppercase tracking-wider mr-1 flex items-center"><i class="fa-solid fa-truck mr-1"></i>Truk:</span>
+                <button type="button" onclick="selectSimDock(1)" id="bay-btn-1" class="px-2 py-0.5 rounded-lg text-[10px] font-extrabold border border-white/15 bg-white/10 text-white/80 hover:bg-white/20 transition-all cursor-pointer">Truk 1</button>
+                <button type="button" onclick="selectSimDock(2)" id="bay-btn-2" class="px-2 py-0.5 rounded-lg text-[10px] font-extrabold border border-teal-300/60 bg-[#0CA1AF] text-white shadow transition-all cursor-pointer">Truk 2</button>
+                <button type="button" onclick="selectSimDock(3)" id="bay-btn-3" class="px-2 py-0.5 rounded-lg text-[10px] font-extrabold border border-white/15 bg-white/10 text-white/80 hover:bg-white/20 transition-all cursor-pointer">Truk 3</button>
             </div>
         </div>
 
@@ -954,6 +935,7 @@ const activeCargoData = {
     xrayResult: <?= json_encode($initialCargo['xray_result'] ?? 'CLEARED') ?>,
     truckPlate: <?= json_encode($initialCargo['truck_plate'] ?? 'B 9482 KXA') ?>,
     driver: <?= json_encode($initialCargo['driver_name'] ?? 'Suryadi Pratama') ?>,
+    dockSlot: <?= json_encode($initialCargo['dock_slot'] ?? 'DOCK-02') ?>,
     awb: <?= json_encode($initialCargo['awb_number'] ?? '126-88492019') ?>
 };
 
@@ -1215,16 +1197,17 @@ function agentTickXray() {
 
 function applyAgentDecisionVisuals(decision) {
     activeCargoData.xrayResult = decision;
+    const beaconMat = getActiveXrBeaconMat();
     if (decision === 'SUSPECT') {
         cBox1.material = MAT.cardboardBoxSuspect;
         cTag.material.color.setHex(0xEF4444);
-        xrBeaconMat.color.setHex(0xEF4444);
+        if (beaconMat) beaconMat.color.setHex(0xEF4444);
         redAlarmStrobe.intensity = 6.0; // sirine merah dinyalakan oleh agen
         playSound('alert');
     } else {
         cBox1.material = MAT.cardboardBox;
         cTag.material.color.setHex(0x0CA1AF);
-        xrBeaconMat.color.setHex(0x10B981);
+        if (beaconMat) beaconMat.color.setHex(0x10B981);
     }
 }
 
@@ -1653,11 +1636,11 @@ scene.add(hallLight);
 
 // Strobe Lights
 const redAlarmStrobe = new THREE.PointLight(0xEF4444, 0, 40);
-redAlarmStrobe.position.set(22, 5.5, -16.5);
+redAlarmStrobe.position.set(22, 5.5, -12.0);
 scene.add(redAlarmStrobe);
 
 const xrayScanLight = new THREE.PointLight(0x06B6D4, 0, 20);
-xrayScanLight.position.set(-5, 2.5, -18.5);
+xrayScanLight.position.set(-5, 2.5, -19.0);
 scene.add(xrayScanLight);
 
 // Lampu Sorot Floodlight Menara Apron
@@ -2394,8 +2377,11 @@ function bindInteractive(mesh, stationKey) {
     if (mesh) mesh.userData = { stationKey, isInteractive: true };
 }
 
-// Global animation array for warehouse HVLS ceiling fans
+// Global animation arrays for warehouse fans, workers, forklifts, reach trucks & tugs
 const hvlsFans = [];
+const ambientWorkers = [];
+const ambientVehicles = [];
+const ambientMarshalWands = [];
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 1. LANTAI INDUSTRI & TARMAC APRON (INDUSTRIAL FLOORS & MARKINGS)
@@ -3067,11 +3053,21 @@ cctvPost.position.set(-0.5, 3.65, -2.4);
 const cctvDome = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 12), MAT.hazardBlack);
 cctvDome.position.set(-0.5, 3.35, -2.4);
 
-// 3. Palang Pintu Otomatis Masuk Truk (Inbound Boom Barrier di X = -1.8)
-const boomPostIn = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.2, 0.4), MAT.safetyOrange);
-boomPostIn.position.set(-1.8, 0.7, -1.5);
-const boomArmIn = new THREE.Mesh(new THREE.BoxGeometry(7.2, 0.12, 0.12), new THREE.MeshBasicMaterial({ color: 0xEF4444 }));
-boomArmIn.position.set(-5.4, 1.15, -1.5);
+// 3. Palang Pintu Otomatis Masuk Truk dengan Engsel Pivot Naik-Turun (Inbound Boom Barrier di X = -1.8, Z = -1.5)
+const boomPostIn = new THREE.Mesh(new THREE.BoxGeometry(0.42, 1.25, 0.42), MAT.safetyOrange);
+boomPostIn.position.set(-1.8, 0.72, -1.5);
+const boomInPivot = new THREE.Group();
+boomInPivot.position.set(-1.8, 1.18, -1.5);
+for (let bi = 0; bi < 6; bi++) {
+    const seg = new THREE.Mesh(
+        new THREE.BoxGeometry(1.18, 0.13, 0.13),
+        (bi % 2 === 0)
+            ? new THREE.MeshBasicMaterial({ color: 0xEF4444 })
+            : new THREE.MeshBasicMaterial({ color: 0xFFFFFF })
+    );
+    seg.position.set(-0.65 - bi * 1.18, 0, 0);
+    boomInPivot.add(seg);
+}
 
 // Palang Pintu Otomatis Keluar (Outbound Boom Barrier di X = +0.8)
 const boomPostOut = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.2, 0.4), MAT.safetyOrange);
@@ -3084,14 +3080,14 @@ const gantryGroup = new THREE.Group();
 gantryGroup.position.set(0, 0, -2.0);
 
 [-14.8, 6.8].forEach(gx => {
-    const pylon = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.22, 6.4, 12), MAT.roofTruss);
-    pylon.position.set(gx, 3.2, 0);
+    const pylon = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.22, 6.8, 12), MAT.roofTruss);
+    pylon.position.set(gx, 3.4, 0);
     pylon.castShadow = true;
     gantryGroup.add(pylon);
 });
 
 const crossBeam = new THREE.Mesh(new THREE.BoxGeometry(22.0, 0.35, 0.35), MAT.roofTruss);
-crossBeam.position.set(-4.0, 6.2, 0);
+crossBeam.position.set(-4.0, 6.65, 0);
 crossBeam.castShadow = true;
 gantryGroup.add(crossBeam);
 
@@ -3115,14 +3111,15 @@ sctx.fillText('▼ LANE 1: INBOUND TRUCK [RFID SCAN]     |     ▲ LANE 2: OUTBO
 const signTex = new THREE.CanvasTexture(signCanvas);
 const signMat = new THREE.MeshBasicMaterial({ map: signTex });
 const signBoard = new THREE.Mesh(new THREE.PlaneGeometry(16.0, 2.0), signMat);
-signBoard.position.set(-4.0, 5.0, 0.2);
+signBoard.position.set(-4.0, 5.45, 0.2);
 gantryGroup.add(signBoard);
 
 // Lampu Sinyal Hijau/Merah Overhead di Atas Tiap Lajur
-const laneSignalIn = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.6, 0.2), MAT.safetyGreen);
-laneSignalIn.position.set(-5.0, 5.8, 0.3);
+const laneSignalInMat = new THREE.MeshBasicMaterial({ color: 0xEF4444 });
+const laneSignalIn = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.62, 0.22), laneSignalInMat);
+laneSignalIn.position.set(-5.0, 6.2, 0.3);
 const laneSignalOut = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.6, 0.2), MAT.safetyGreen);
-laneSignalOut.position.set(3.0, 5.8, 0.3);
+laneSignalOut.position.set(3.0, 6.2, 0.3);
 gantryGroup.add(laneSignalIn, laneSignalOut);
 
 // Tiang Sensor Pemindai Kartu RFID (RFID Reader Gantry Post)
@@ -3132,7 +3129,7 @@ const rfidHead = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.45, 0.2), MAT.injo
 rfidHead.position.set(-9.2, 2.2, 0);
 gantryGroup.add(rfidPost, rfidHead);
 
-gateHouse.add(ghBuilding, ghRoof, ghFrontWin, ghSideWinL, ghSideWinR, acUnit, cctvPost, cctvDome, boomPostIn, boomArmIn, boomPostOut, boomArmOut, gantryGroup);
+gateHouse.add(ghBuilding, ghRoof, ghFrontWin, ghSideWinL, ghSideWinR, acUnit, cctvPost, cctvDome, boomPostIn, boomInPivot, boomPostOut, boomArmOut, gantryGroup);
 layoutGroup.add(gateHouse);
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -3284,23 +3281,27 @@ northDockGroup.add(headerWall, topFascia, topCornice);
     topDrape.position.set(dx, 4.15, -0.22);
     northDockGroup.add(topDrape);
 
-    // Pintu Sectional Industri Roll-Up:
-    if (isBay2Active) {
-        // Bay 2 (Truk Aktif Simulasi): Pintu tergulung penuh ke atas sehingga terbuka bebas untuk konveyor kargo
-        const rollDrum = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 4.3, 16), MAT.metalSilver);
-        rollDrum.rotateZ(Math.PI / 2);
-        rollDrum.position.set(dx, 4.4, 0);
-        northDockGroup.add(rollDrum);
-    } else {
-        // Bay 1 & Bay 3 (Truk Terparkir): Pintu sectional semi-tertutup dengan panel jendela
-        const doorLeaf = new THREE.Mesh(new THREE.BoxGeometry(4.3, 3.8, 0.08), MAT.metalSilver);
-        doorLeaf.position.set(dx, 2.0, 0);
-        const botStripe = new THREE.Mesh(new THREE.BoxGeometry(4.3, 0.3, 0.09), MAT.yellowSafety);
-        botStripe.position.set(dx, 0.25, 0);
-        const viewSlat = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.35, 0.1), MAT.wallGlass);
-        viewSlat.position.set(dx, 2.6, 0);
-        northDockGroup.add(doorLeaf, botStripe, viewSlat);
-    }
+    // Pintu Sectional Industri Roll-Up (Dinamis per Bay 1-3: buka otomatis pada truk aktif):
+    const bayNum = idx + 1;
+    const rollDrum = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 4.3, 16), MAT.metalSilver);
+    rollDrum.rotateZ(Math.PI / 2);
+    rollDrum.position.set(dx, 4.4, 0);
+    rollDrum.visible = isBay2Active;
+    northDockGroup.add(rollDrum);
+
+    const closedDoorGroup = new THREE.Group();
+    const doorLeaf = new THREE.Mesh(new THREE.BoxGeometry(4.3, 3.8, 0.08), MAT.metalSilver);
+    doorLeaf.position.set(dx, 2.0, 0);
+    const botStripe = new THREE.Mesh(new THREE.BoxGeometry(4.3, 0.3, 0.09), MAT.yellowSafety);
+    botStripe.position.set(dx, 0.25, 0);
+    const viewSlat = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.35, 0.1), MAT.wallGlass);
+    viewSlat.position.set(dx, 2.6, 0);
+    closedDoorGroup.add(doorLeaf, botStripe, viewSlat);
+    closedDoorGroup.visible = !isBay2Active;
+    northDockGroup.add(closedDoorGroup);
+
+    window._simBayDoors = window._simBayDoors || {};
+    window._simBayDoors[bayNum] = { openDrum: rollDrum, closedDoorGroup };
 
     // Signboard Papan Nama Dermaga di Atas Tiap Pintu
     const bayLabels = [
@@ -3317,8 +3318,8 @@ northDockGroup.add(headerWall, topFascia, topCornice);
 layoutGroup.add(northDockGroup);
 
 // Kolom Baja Struktural Bangunan Terminal dengan Bumper Kuning & APAR Fire Safety
-[-38, -20, 5, 25].forEach((cx, cIdx) => {
-    [-20, 0, 18].forEach((cz, rIdx) => {
+[-38, -22, 8, 31].forEach((cx, cIdx) => {
+    [-22, 0, 18].forEach((cz, rIdx) => {
         const col = new THREE.Mesh(new THREE.BoxGeometry(0.5, 7.5, 0.5), MAT.metalDark);
         col.position.set(cx, 3.75, cz);
         const colBase = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.65, 0.95), MAT.yellowSafety);
@@ -4223,32 +4224,63 @@ function createModernTerminalArchitecture() {
         person.position.set(px, py, pz);
         person.rotation.y = rotY;
 
-        // Celana Formal Navy
-        const legs = new THREE.Mesh(new THREE.BoxGeometry(0.42, isStanding ? 0.95 : 0.65, 0.32), new THREE.MeshStandardMaterial({ color: 0x0D1C42 }));
-        legs.position.y = isStanding ? 0.5 : 0.35;
+        const legMat = new THREE.MeshStandardMaterial({ color: 0x0D1C42 });
+        let legLPivot = null, legRPivot = null;
+        if (isStanding) {
+            [-0.12, 0.12].forEach((lx, idx) => {
+                const piv = new THREE.Group();
+                piv.position.set(lx, 0.95, 0);
+                const lMesh = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.95, 0.24), legMat);
+                lMesh.position.y = -0.45;
+                piv.add(lMesh);
+                person.add(piv);
+                if (idx === 0) legLPivot = piv; else legRPivot = piv;
+            });
+        } else {
+            const legs = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.65, 0.32), legMat);
+            legs.position.y = 0.35;
+            person.add(legs);
+        }
+
         // Kemeja Putih Seragam Dinas AVSEC / Airport Ops
+        const upperGroup = new THREE.Group();
+        upperGroup.position.y = isStanding ? 1.35 : 0.95;
         const torso = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.75, 0.36), new THREE.MeshStandardMaterial({ color: 0xF8FAFC }));
-        torso.position.y = isStanding ? 1.35 : 0.95;
         // Dasi Biru / Epaulet Pundak
         const tie = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.45, 0.04), new THREE.MeshStandardMaterial({ color: 0x0284C7 }));
-        tie.position.set(0, isStanding ? 1.4 : 1.0, 0.19);
-        // Kepala & Rambut
+        tie.position.set(0, 0.05, 0.19);
+        const headGroup = new THREE.Group();
+        headGroup.position.y = 0.5;
         const head = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.3, 0.28), new THREE.MeshStandardMaterial({ color: 0xFDE047, roughness: 0.8 }));
-        head.position.y = isStanding ? 1.85 : 1.45;
         const hair = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.12, 0.3), new THREE.MeshStandardMaterial({ color: 0x1E293B }));
-        hair.position.y = isStanding ? 2.0 : 1.6;
-        // Headset Radio Komunikasi
+        hair.position.y = 0.15;
         const headset = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.08, 0.18), MAT.metalDark);
-        headset.position.y = isStanding ? 1.88 : 1.48;
+        headset.position.y = 0.03;
+        headGroup.add(head, hair, headset);
+        upperGroup.add(torso, tie, headGroup);
 
-        person.add(legs, torso, tie, head, hair, headset);
+        person.add(upperGroup);
+        person.userData.anim = {
+            baseY: py,
+            legL: legLPivot,
+            legR: legRPivot,
+            head: headGroup,
+            upper: upperGroup,
+            baseRotY: rotY
+        };
         return person;
     }
 
-    // 2 Petugas: 1 Operator Sedang Memantau di Meja, 1 Supervisor Berdiri
-    tocGroup.add(createTocPerson(-1.5, -1.8, 3.65, Math.PI, false)); // Operator meja
-    tocGroup.add(createTocPerson(1.5, -1.8, 3.65, Math.PI, false));  // Operator meja
-    tocGroup.add(createTocPerson(2.2, 0.8, 3.65, -0.4, true));       // Supervisor berdiri
+    // 2 Petugas: 1 Operator Sedang Memantau di Meja, 1 Supervisor Berjalan Memantau TOC
+    const tocOp1 = createTocPerson(-1.5, -1.8, 3.65, Math.PI, false);
+    const tocOp2 = createTocPerson(1.5, -1.8, 3.65, Math.PI, false);
+    const tocSup = createTocPerson(2.2, 0.8, 3.65, -0.4, true);
+    tocGroup.add(tocOp1, tocOp2, tocSup);
+    ambientWorkers.push(
+        { group: tocOp1, mode: 'desk', phase: 0.3 },
+        { group: tocOp2, mode: 'desk', phase: 2.1 },
+        { group: tocSup, mode: 'patrol', waypoints: [[-2.4, 0.9, Math.PI], [3.6, 0.9, Math.PI]], speed: 0.95, dwellSec: 2.4, idx: 0, progress: 0, wait: 0.5, stridePhase: 0 }
+    );
 
     // 9. PLAFON DROP CEILING DENGAN 8 PANEL LAMPU LED TERANG
     const tocCeilMat = new THREE.MeshStandardMaterial({ color: 0x0F172A, roughness: 0.8 });
@@ -4733,14 +4765,14 @@ function createCompleteDenahFloorMarkings() {
         const angle = Math.atan2(dx, dz);
 
         const wGrp = new THREE.Group();
-        wGrp.position.set((x1 + x2) / 2, 0.028, (z1 + z2) / 2);
+        wGrp.position.set((x1 + x2) / 2, 0.038, (z1 + z2) / 2);
         wGrp.rotation.y = angle;
 
         const surface = new THREE.Mesh(new THREE.PlaneGeometry(width, len), walkMat);
         surface.rotation.x = -Math.PI / 2;
 
         [-width / 2, width / 2].forEach(bx => {
-            const border = new THREE.Mesh(new THREE.PlaneGeometry(0.08, len), walkBorderMat);
+            const border = new THREE.Mesh(new THREE.PlaneGeometry(0.09, len), walkBorderMat);
             border.rotation.x = -Math.PI / 2;
             border.position.set(bx, 0.002, 0);
             wGrp.add(border);
@@ -4750,45 +4782,77 @@ function createCompleteDenahFloorMarkings() {
         return wGrp;
     }
 
-    // Koridor Pejalan Kaki Lengkap Terkoneksi
-    markGroup.add(createWalkwayCorridor(-47.0, -32.0, -47.0, 22.0, 1.4)); // Barat
-    markGroup.add(createWalkwayCorridor(-47.0, -12.0, -26.0, -12.0, 1.3)); // Sambungan ke Pintu Egress
-    markGroup.add(createWalkwayCorridor(-47.0, 14.0, 16.0, 14.0, 1.3));  // Lintas Tengah ke Timur
-    markGroup.add(createWalkwayCorridor(16.0, 14.0, 37.5, 14.0, 1.3));   // Akses ke Pintu Airside
+    // Koridor Pejalan Kaki Terhubung Penuh Antar Pintu, Tangga TOC, & Zona Kerja (di atas pad gudang)
+    markGroup.add(createWalkwayCorridor(-47.0, -32.0, -47.0, 24.5, 1.4));   // Koridor Utama Barat
+    markGroup.add(createWalkwayCorridor(-47.0, -12.0, -21.0, -12.0, 1.3));  // Pintu Darurat Barat -> Staging
+    markGroup.add(createWalkwayCorridor(-47.0, 15.8, 37.2, 15.8, 1.3));     // Koridor Lintas Tengah Utara-Selatan Gudang
+    markGroup.add(createWalkwayCorridor(-20.15, 15.8, -20.15, 18.2, 1.4));  // Cabang Langsung ke Kaki Tangga TOC
+    markGroup.add(createWalkwayCorridor(-47.0, 24.0, -26.5, 24.0, 1.2));    // Jalur Teknisi Area Maintenance Selatan
 
-    // Zebra Crosswalk pada persilangan jalan
-    for (let zx = -4.5; zx <= -0.5; zx += 0.8) {
-        const zebra = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 1.4), new THREE.MeshBasicMaterial({ color: 0xFFFFFF }));
-        zebra.rotation.x = -Math.PI / 2;
-        zebra.position.set(zx, 0.035, 14.0);
-        markGroup.add(zebra);
-    }
+    // Zebra Crosswalk Putih pada Titik Perlintasan Jalur Kendaraan Material Handling
+    const zebraMatW = new THREE.MeshBasicMaterial({ color: 0xFFFFFF });
+    [-33.5, -32.5, -31.5, -30.5, -29.5, -28.5, -27.5, -26.5, -25.5].forEach(zx => {
+        const zCrossWest = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 1.35), zebraMatW);
+        zCrossWest.rotation.x = -Math.PI / 2;
+        zCrossWest.position.set(zx, 0.041, 15.8);
+        markGroup.add(zCrossWest);
+    });
+    [24.3, 25.1, 25.9, 26.7].forEach(zx => {
+        const zCrossEast = new THREE.Mesh(new THREE.PlaneGeometry(0.45, 1.35), zebraMatW);
+        zCrossEast.rotation.x = -Math.PI / 2;
+        zCrossEast.position.set(zx, 0.041, 15.8);
+        markGroup.add(zCrossEast);
+    });
 
-    // 3. JALUR FORKLIFT INDUSTRI (YELLOW FORKLIFT HIGHWAYS)
+    // 3. JALUR FORKLIFT & TUGGER TERSTRUKTUR (TANPA GARIS TERPUTUS / MEMOTONG KORIDOR)
     const forkYellowMat = new THREE.MeshBasicMaterial({ color: 0xF59E0B });
-    [
-        { x: -3.0, zStart: -32.0, zEnd: 24.0 },
-        { x: 4.5,  zStart: -32.0, zEnd: 24.0 },
-        { x: -25.0, zStart: -32.0, zEnd: 12.0 }
-    ].forEach(lane => {
-        const len = lane.zEnd - lane.zStart;
-        const lMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.12, len), forkYellowMat);
+    const addLaneLine = (x1, z1, x2, z2, thickness = 0.12) => {
+        const dx = x2 - x1, dz = z2 - z1;
+        const len = Math.hypot(dx, dz);
+        const lMesh = new THREE.Mesh(new THREE.PlaneGeometry(thickness, len), forkYellowMat);
         lMesh.rotation.x = -Math.PI / 2;
-        lMesh.position.set(lane.x, 0.026, (lane.zStart + lane.zEnd) / 2);
+        lMesh.rotation.z = Math.atan2(dx, dz);
+        lMesh.position.set((x1 + x2) / 2, 0.034, (z1 + z2) / 2);
         markGroup.add(lMesh);
+    };
+
+    // A. Koridor Logistik Utama Barat (Jalur Tow Tractor Train & Forklift Staging Bay 1)
+    addLaneLine(-35.8, -28.5, -35.8, 14.4, 0.14);
+    addLaneLine(-24.2, -28.5, -24.2, 14.4, 0.14);
+    for (let dz = -27.0; dz <= 12.8; dz += 3.2) {
+        addLaneLine(-30.0, dz, -30.0, Math.min(13.8, dz + 1.5), 0.12);
+    }
+    [-22.0, -7.0, 6.0].forEach(pz => {
+        const upArr = makeTarmacText("▲", 1.6, 1.6, '#F59E0B');
+        upArr.position.set(-27.1, 0.036, pz);
+        const dnArr = makeTarmacText("▼", 1.6, 1.6, '#F59E0B');
+        dnArr.position.set(-32.9, 0.036, pz);
+        markGroup.add(upArr, dnArr);
     });
 
-    // Stensil Panah Forklift di Lantai
-    [-22.0, -8.0, 4.0, 18.0].forEach(pz => {
-        const arrowMesh = makeTarmacText("▲", 1.8, 1.8, '#F59E0B');
-        arrowMesh.position.set(0.75, 0.028, pz);
-        markGroup.add(arrowMesh);
+    // B. Koridor Transfer Rak Selatan & East Rack (Bersih di Selatan Kolom Z=18, Terkoneksi ke Rak Timur)
+    addLaneLine(-16.5, 19.3, 23.8, 19.3, 0.14);
+    addLaneLine(-16.5, 23.1, 23.8, 23.1, 0.14);
+    for (let dx = -15.0; dx <= 22.0; dx += 3.2) {
+        addLaneLine(dx, 21.2, Math.min(23.2, dx + 1.5), 21.2, 0.12);
+    }
+    [-11.0, -3.0, 5.0, 14.0].forEach(px => {
+        const arrFwd = makeTarmacText("▶", 1.4, 1.4, '#F59E0B');
+        arrFwd.position.set(px, 0.036, 20.25);
+        const arrRev = makeTarmacText("◀", 1.4, 1.4, '#F59E0B');
+        arrRev.position.set(px, 0.036, 22.15);
+        markGroup.add(arrFwd, arrRev);
     });
+
+    // C. Lajur Kerja Reach Truck Timur & Staging Bay 3 Utara
+    addLaneLine(23.8, 17.0, 23.8, 24.6, 0.12);
+    addLaneLine(18.5, -26.8, 30.8, -26.8, 0.12);
+    addLaneLine(18.5, -23.2, 30.8, -23.2, 0.12);
 
     // 4. KOTAK KESELAMATAN ARSIR KUNING-HITAM (SAFETY HATCHING)
     function createHatchedZone(cx, cz, w, h, label = "") {
         const hz = new THREE.Group();
-        hz.position.set(cx, 0.028, cz);
+        hz.position.set(cx, 0.034, cz);
 
         const borderMat = new THREE.MeshBasicMaterial({ color: 0xFACC15 });
         const bTop = new THREE.Mesh(new THREE.PlaneGeometry(w, 0.16), borderMat);
@@ -4822,15 +4886,15 @@ function createCompleteDenahFloorMarkings() {
         return hz;
     }
 
-    markGroup.add(createHatchedZone(-5.0, -18.5, 14.0, 7.5, "SECURITY X-RAY ZONE"));
-    markGroup.add(createHatchedZone(5.0, -16.5, 12.0, 3.4, "PNEUMATIC DIVERTER"));
+    markGroup.add(createHatchedZone(-5.0, -19.0, 20.6, 6.8));
+    markGroup.add(createHatchedZone(3.2, -12.0, 20.8, 3.4));
     markGroup.add(createHatchedZone(35.0, 8.0, 8.5, 5.5, "15T SCALE ZONE"));
     markGroup.add(createHatchedZone(45.0, 8.0, 8.0, 4.5, "AIRSIDE LOADING GATE"));
 
     // 5. STAGING BAYS OUTLINES PADA LANTAI GUDANG
     function createStagingBayOutline(bx, bz, bw, bd, bayName, accentColor = 0x38BDF8) {
         const bg = new THREE.Group();
-        bg.position.set(bx, 0.026, bz);
+        bg.position.set(bx, 0.034, bz);
         const bMat = new THREE.MeshBasicMaterial({ color: accentColor });
         const bTop = new THREE.Mesh(new THREE.PlaneGeometry(bw, 0.12), bMat);
         bTop.rotation.x = -Math.PI / 2;
@@ -4854,11 +4918,13 @@ function createCompleteDenahFloorMarkings() {
     markGroup.add(createStagingBayOutline(-18.0, -18.0, 6.0, 4.2, "BAY 01 : PHARMA", 0x06B6D4));
     markGroup.add(createStagingBayOutline(-18.0, -11.5, 6.0, 4.2, "BAY 02 : DANGEROUS GOODS", 0xF59E0B));
     markGroup.add(createStagingBayOutline(-18.0, 4.0, 6.0, 4.2, "BAY 03 : GENERAL EXPORT", 0x3B82F6));
-    markGroup.add(createStagingBayOutline(0.0, 14.0, 7.5, 5.0, "BAY 04 : ULD BUILD-UP", 0x10B981));
+    markGroup.add(createStagingBayOutline(0.0, 12.2, 7.2, 3.2, "BAY 04 : ULD BUILD-UP", 0x10B981));
+    markGroup.add(createStagingBayOutline(-8.0, 26.0, 11.2, 2.8, "BAY 05 : SOUTH BULK RACK", 0x3B82F6));
+    markGroup.add(createStagingBayOutline(28.0, 20.0, 3.2, 8.2, "BAY 06 : EAST RACK", 0xF59E0B));
 
     // 6. TIANG PENGAMAN CRASH BOLLARDS
     [
-        [-11.5, -22.5], [-11.5, -14.5], [1.5, -22.5], [1.5, -14.5],
+        [-15.6, -22.6], [-15.6, -15.6], [5.6, -22.6], [5.6, -15.6],
         [31.0, 5.0], [31.0, 11.0], [39.0, 5.0], [39.0, 11.0],
         [-25.5, 16.0], [44.5, 5.5], [44.5, 10.5]
     ].forEach(([bx, bz]) => {
@@ -4866,8 +4932,8 @@ function createCompleteDenahFloorMarkings() {
     });
 
     // 7. TABUNG PEMADAM KEBAKARAN (APAR) PADA KOLOM
-    [-38, -20, 5, 25].forEach(cx => {
-        [-20, 0, 18].forEach(cz => {
+    [-38, -22, 8, 31].forEach(cx => {
+        [-22, 0, 18].forEach(cz => {
             markGroup.add(createColumnFireStation(cx, cz));
         });
     });
@@ -4950,9 +5016,14 @@ function createParkedRealisticTruck(xPos, dockNum) {
     return truck;
 }
 
-// Truk Terparkir di Dermaga 1 (X = -26) dan Dermaga 3 (X = 22)
-dockGroup.add(createParkedRealisticTruck(-26.0, 1));
-dockGroup.add(createParkedRealisticTruck(22.0, 3));
+// Truk Terparkir di semua Bay (1, 2, 3); bay yang aktif simulasi akan menyembunyikan versi parkirnya
+const parkedTrucksByBay = {
+    1: createParkedRealisticTruck(-26.0, 1),
+    2: createParkedRealisticTruck(-5.0, 2),
+    3: createParkedRealisticTruck(22.0, 3)
+};
+parkedTrucksByBay[2].visible = false; // default awal Bay 2 aktif
+dockGroup.add(parkedTrucksByBay[1], parkedTrucksByBay[2], parkedTrucksByBay[3]);
 
 // Dermaga 2 (X = -5.0) adalah Jalur Aktif Simulasi untuk Truk Inbound
 [-26, -5, 22].forEach((dx, idx) => {
@@ -5023,11 +5094,13 @@ function createDetailedForklift(x, z, rotY, withCargo = false, bodyColorHex = 0x
     opTorso.position.set(0, 0.55, 0);
     const opVestStripe = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.06, 0.27), new THREE.MeshBasicMaterial({ color: 0xFFFFFF }));
     opVestStripe.position.set(0, 0.55, 0);
+    const opHeadGroup = new THREE.Group();
+    opHeadGroup.position.set(0, 0.9, 0);
     const opHead = new THREE.Mesh(new THREE.SphereGeometry(0.12, 10, 10), new THREE.MeshStandardMaterial({ color: 0xD4A373, roughness: 0.6 }));
-    opHead.position.set(0, 0.9, 0);
     const opHelmet = new THREE.Mesh(new THREE.SphereGeometry(0.14, 10, 10), new THREE.MeshStandardMaterial({ color: 0xFFFFFF }));
-    opHelmet.position.set(0, 0.95, 0);
-    opGroup.add(opPants, opTorso, opVestStripe, opHead, opHelmet);
+    opHelmet.position.set(0, 0.05, 0);
+    opHeadGroup.add(opHead, opHelmet);
+    opGroup.add(opPants, opTorso, opVestStripe, opHeadGroup);
     fl.add(opGroup);
 
     // Roll Cage Pelindung Atas (Safety Cage)
@@ -5037,7 +5110,8 @@ function createDetailedForklift(x, z, rotY, withCargo = false, bodyColorHex = 0x
     cageRoof.position.set(0, 2.55, -0.15);
 
     // Lampu Rotari Oranye di Atap Cage
-    const beacon = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.12, 10), new THREE.MeshBasicMaterial({ color: 0xF59E0B }));
+    const beaconMat = new THREE.MeshBasicMaterial({ color: 0xF59E0B });
+    const beacon = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.12, 10), beaconMat);
     beacon.position.set(0, 2.65, -0.5);
 
     // Lampu Sorot Depan LED di Rangka Atas
@@ -5059,52 +5133,62 @@ function createDetailedForklift(x, z, rotY, withCargo = false, bodyColorHex = 0x
     hydroCyl.position.set(0, 1.35, 0.85);
     fl.add(hydroCyl);
 
-    // Garpu Angkat Baja (Forks Carriage)
+    // Carriage Garpu Angkat Baja + Muatan Opsional (bisa naik-turun realistis saat mengangkut)
+    const forkCarriage = new THREE.Group();
     [-0.3, 0.3].forEach(fx => {
         const forkV = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.6, 0.04), MAT.metalSilver);
         forkV.position.set(fx, 0.48, 0.95);
         const forkH = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.04, 1.15), MAT.metalSilver);
         forkH.position.set(fx, 0.14, 1.5);
-        fl.add(forkV, forkH);
+        forkCarriage.add(forkV, forkH);
     });
 
-    // 4 Roda Karet Industri
+    // 4 Roda Karet Industri (dapat berputar proporsional kecepatan)
+    const wheels = [];
     const wGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.2, 16);
     wGeo.rotateZ(Math.PI / 2);
     [[-0.65, 0.5], [0.65, 0.5], [-0.6, -0.8], [0.6, -0.8]].forEach(([wx, wz]) => {
         const w = new THREE.Mesh(wGeo, MAT.truckTire);
         w.position.set(wx, 0.3, wz);
         fl.add(w);
+        wheels.push(w);
     });
 
     // Muatan Kargo Opsional (Pallet, Drums, Crate, Boxes)
     if (withCargo) {
         const pal = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.12, 1.0), MAT.palletWood);
         pal.position.set(0, 0.22, 1.5);
-        fl.add(pal);
+        forkCarriage.add(pal);
 
         if (cargoType === 'drums') {
             [-0.3, 0.3].forEach(dx => {
                 const drum = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.85, 12), MAT.truckCabBlue);
                 drum.position.set(dx, 0.72, 1.5);
-                fl.add(drum);
+                forkCarriage.add(drum);
             });
         } else if (cargoType === 'crate') {
             const crate = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.75, 0.85), new THREE.MeshStandardMaterial({ color: 0xD97706, roughness: 0.8 }));
             crate.position.set(0, 0.66, 1.5);
             const band1 = new THREE.Mesh(new THREE.BoxGeometry(1.07, 0.04, 0.87), MAT.metalDark);
             band1.position.set(0, 0.5, 1.5);
-            fl.add(crate, band1);
+            forkCarriage.add(crate, band1);
         } else {
             const b1 = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.55, 0.85), MAT.cardboardBox);
             b1.position.set(0, 0.56, 1.5);
             const b2 = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.45, 0.65), MAT.cardboardBox);
             b2.position.set(0.1, 1.05, 1.5);
-            fl.add(b1, b2);
+            forkCarriage.add(b1, b2);
         }
     }
 
-    fl.add(chassis, cw, seat, steerCol, steerWheel, cage, cageRoof, beacon);
+    fl.add(forkCarriage, chassis, cw, seat, steerCol, steerWheel, cage, cageRoof, beacon);
+    fl.userData.anim = {
+        wheels,
+        wheelRadius: 0.3,
+        beaconMat,
+        forkCarriage,
+        head: opHeadGroup
+    };
     return fl;
 }
 
@@ -5118,6 +5202,7 @@ function createReachTruck(x, z, rotY, liftHeight = 2.8, cargoType = 'boxes') {
     const chassis = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.55, 1.8), new THREE.MeshStandardMaterial({ color: 0x0284C7, roughness: 0.35 }));
     chassis.position.set(0, 0.4, -0.1);
 
+    const wheels = [];
     // Kaki Penopang Roda Depan (Outrigger Legs)
     [-0.45, 0.45].forEach(ox => {
         const leg = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.28, 1.4), MAT.metalDark);
@@ -5126,6 +5211,7 @@ function createReachTruck(x, z, rotY, liftHeight = 2.8, cargoType = 'boxes') {
         loadWheel.rotateZ(Math.PI / 2);
         loadWheel.position.set(ox, 0.14, 1.2);
         rt.add(leg, loadWheel);
+        wheels.push(loadWheel);
     });
 
     // Roda Penggerak Belakang
@@ -5133,6 +5219,7 @@ function createReachTruck(x, z, rotY, liftHeight = 2.8, cargoType = 'boxes') {
     driveWheel.rotateZ(Math.PI / 2);
     driveWheel.position.set(0, 0.22, -0.75);
     rt.add(driveWheel);
+    wheels.push(driveWheel);
 
     // Kompartemen Operator Berdiri & Panel Kontrol Joystick
     const cabWall = new THREE.Mesh(new THREE.BoxGeometry(0.95, 1.2, 0.08), MAT.metalDark);
@@ -5144,11 +5231,13 @@ function createReachTruck(x, z, rotY, liftHeight = 2.8, cargoType = 'boxes') {
     // Operator Reach Truck
     const opTorso = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.48, 0.24), new THREE.MeshStandardMaterial({ color: 0xFACC15 }));
     opTorso.position.set(0, 1.15, -0.4);
+    const opHeadGroup = new THREE.Group();
+    opHeadGroup.position.set(0, 1.55, -0.4);
     const opHead = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), new THREE.MeshStandardMaterial({ color: 0xD4A373 }));
-    opHead.position.set(0, 1.55, -0.4);
     const opHelm = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 8), new THREE.MeshStandardMaterial({ color: 0xFFFFFF }));
-    opHelm.position.set(0, 1.6, -0.4);
-    rt.add(opTorso, opHead, opHelm);
+    opHelm.position.set(0, 0.05, 0);
+    opHeadGroup.add(opHead, opHelm);
+    rt.add(opTorso, opHeadGroup);
 
     // Mast Teleskopik Tinggi Triplex (Mencapai 4.8m)
     const mastH = 4.8;
@@ -5183,11 +5272,20 @@ function createReachTruck(x, z, rotY, liftHeight = 2.8, cargoType = 'boxes') {
     rt.add(carriage);
 
     // Blue Pedestrian Safety Spotlight (Sorot Lampu Keselamatan Biru di Lantai)
-    const blueSpot = new THREE.Mesh(new THREE.CircleGeometry(0.45, 16), new THREE.MeshBasicMaterial({ color: 0x38BDF8, transparent: true, opacity: 0.65 }));
+    const blueSpotMat = new THREE.MeshBasicMaterial({ color: 0x38BDF8, transparent: true, opacity: 0.65 });
+    const blueSpot = new THREE.Mesh(new THREE.CircleGeometry(0.45, 16), blueSpotMat);
     blueSpot.rotation.x = -Math.PI / 2;
     blueSpot.position.set(0, 0.03, 2.8);
     rt.add(chassis, blueSpot);
 
+    rt.userData.anim = {
+        wheels,
+        wheelRadius: 0.22,
+        carriage,
+        baseLift: liftHeight,
+        blueSpotMat,
+        head: opHeadGroup
+    };
     return rt;
 }
 
@@ -5197,6 +5295,7 @@ function createWarehouseTowTractor(x, z, rotY) {
     train.position.set(x, 0, z);
     train.rotation.y = rotY;
 
+    const allWheels = [];
     // Tugger Tractor
     const tug = new THREE.Group();
     const tugBody = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.55, 1.6), MAT.yellowSafety);
@@ -5209,11 +5308,13 @@ function createWarehouseTowTractor(x, z, rotY) {
     // Operator Pengemudi Tow Tractor
     const drvTorso = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.45, 0.24), new THREE.MeshStandardMaterial({ color: 0xFACC15 }));
     drvTorso.position.set(0, 1.15, -0.2);
+    const drvHeadGroup = new THREE.Group();
+    drvHeadGroup.position.set(0, 1.52, -0.2);
     const drvHead = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), new THREE.MeshStandardMaterial({ color: 0xD4A373 }));
-    drvHead.position.set(0, 1.52, -0.2);
     const drvHelm = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 8), new THREE.MeshStandardMaterial({ color: 0xFFFFFF }));
-    drvHelm.position.set(0, 1.56, -0.2);
-    tug.add(tugBody, bumper, tSeat, drvTorso, drvHead, drvHelm);
+    drvHelm.position.set(0, 0.04, 0);
+    drvHeadGroup.add(drvHead, drvHelm);
+    tug.add(tugBody, bumper, tSeat, drvTorso, drvHeadGroup);
 
     // Roda Tug
     const twGeo = new THREE.CylinderGeometry(0.22, 0.22, 0.15, 12);
@@ -5222,10 +5323,12 @@ function createWarehouseTowTractor(x, z, rotY) {
         const tw = new THREE.Mesh(twGeo, MAT.truckTire);
         tw.position.set(wx, 0.22, wz);
         tug.add(tw);
+        allWheels.push({ mesh: tw, radius: 0.22 });
     });
     train.add(tug);
 
     // Gandengan Gerobak Flatbed Cart 1 & Cart 2
+    const carts = [];
     [-2.2, -4.6].forEach((cz, cIdx) => {
         const cart = new THREE.Group();
         cart.position.set(0, 0, cz);
@@ -5245,6 +5348,7 @@ function createWarehouseTowTractor(x, z, rotY) {
             const cw = new THREE.Mesh(cwGeo, MAT.truckTire);
             cw.position.set(wx, 0.12, wz);
             cart.add(cw);
+            allWheels.push({ mesh: cw, radius: 0.12 });
         });
 
         // Muatan Cart
@@ -5262,12 +5366,14 @@ function createWarehouseTowTractor(x, z, rotY) {
             cart.add(b1, b2);
         }
         train.add(cart);
+        carts.push({ mesh: cart, trailDist: Math.abs(cz) + 0.15 });
     });
 
+    train.userData.anim = { tug, carts, wheels: allWheels, head: drvHeadGroup };
     return train;
 }
 
-// 4. Stylized 3D Logistics Worker (Petugas Gudang dengan Rompi & Helm Keselamatan)
+// 4. Stylized 3D Logistics Worker (Petugas Gudang Terartikulasi dengan Rompi & Helm)
 function createWarehouseWorker(x, z, rotY, activity = 'checker') {
     const worker = new THREE.Group();
     worker.position.set(x, 0, z);
@@ -5278,13 +5384,18 @@ function createWarehouseWorker(x, z, rotY, activity = 'checker') {
     const skinMat = new THREE.MeshStandardMaterial({ color: 0xD4A373, roughness: 0.6 });
     const helmetMat = new THREE.MeshStandardMaterial({ color: (activity === 'supervisor') ? 0xFFFFFF : 0xFACC15 });
 
-    // Kaki & Sepatu Safety
-    [-0.13, 0.13].forEach(lx => {
-        const leg = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.8, 0.17), pantsMat);
-        leg.position.set(lx, 0.4, 0);
+    // Kaki & Sepatu Safety Berengsel Pinggul (Hip Pivot Y = 0.82 untuk Animasi Jalan)
+    let legLPivot = null, legRPivot = null;
+    [-0.13, 0.13].forEach((lx, idx) => {
+        const legPivot = new THREE.Group();
+        legPivot.position.set(lx, 0.82, 0);
+        const leg = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.78, 0.17), pantsMat);
+        leg.position.set(0, -0.39, 0);
         const boot = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.14, 0.24), MAT.metalDark);
-        boot.position.set(lx, 0.07, 0.03);
-        worker.add(leg, boot);
+        boot.position.set(0, -0.75, 0.03);
+        legPivot.add(leg, boot);
+        worker.add(legPivot);
+        if (idx === 0) legLPivot = legPivot; else legRPivot = legPivot;
     });
 
     // Tubuh & Rompi Keselamatan Fluorescent
@@ -5296,57 +5407,77 @@ function createWarehouseWorker(x, z, rotY, activity = 'checker') {
     stripe2.position.set(0, 0.95, 0);
     worker.add(torso, stripe1, stripe2);
 
-    // Kepala & Helm Keselamatan (Hard Hat)
+    // Kepala & Helm Keselamatan dalam Head Pivot
+    const headGroup = new THREE.Group();
+    headGroup.position.set(0, 1.5, 0);
     const head = new THREE.Mesh(new THREE.SphereGeometry(0.12, 10, 10), skinMat);
-    head.position.set(0, 1.5, 0);
     const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.14, 10, 10), helmetMat);
-    helmet.position.set(0, 1.55, 0);
-    worker.add(head, helmet);
+    helmet.position.set(0, 0.05, 0);
+    headGroup.add(head, helmet);
+    worker.add(headGroup);
 
-    // Lengan & Aksesoris Sesuai Peran
+    // Lengan Berengsel Bahu & Aksesoris Sesuai Peran
+    const armLPivot = new THREE.Group();
+    armLPivot.position.set(-0.28, 1.30, 0);
+    const armRPivot = new THREE.Group();
+    armRPivot.position.set(0.28, 1.30, 0);
+    let laserMesh = null;
+
     if (activity === 'checker') {
         const rArm = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.38, 0.11), vestMat);
-        rArm.position.set(0.28, 1.18, 0.18);
+        rArm.position.set(0, -0.12, 0.16);
         rArm.rotation.x = -0.7;
         const scanner = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.14, 0.16), MAT.metalDark);
-        scanner.position.set(0.28, 1.25, 0.38);
-        const laser = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 1.2, 6), new THREE.MeshBasicMaterial({ color: 0xEF4444 }));
-        laser.rotateX(Math.PI / 2);
-        laser.position.set(0.28, 1.25, 1.0);
+        scanner.position.set(0, -0.05, 0.36);
+        laserMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 1.2, 6), new THREE.MeshBasicMaterial({ color: 0xEF4444, transparent: true, opacity: 0.9 }));
+        laserMesh.rotateX(Math.PI / 2);
+        laserMesh.position.set(0, -0.05, 0.98);
+        armRPivot.add(rArm, scanner, laserMesh);
 
         const lArm = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.38, 0.11), vestMat);
-        lArm.position.set(-0.28, 1.12, 0.15);
+        lArm.position.set(0, -0.16, 0.14);
         lArm.rotation.x = -0.5;
         const tablet = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.16, 0.02), MAT.metalDark);
-        tablet.position.set(-0.28, 1.15, 0.28);
+        tablet.position.set(0, -0.14, 0.28);
         tablet.rotation.x = 0.5;
         const screen = new THREE.Mesh(new THREE.PlaneGeometry(0.19, 0.13), new THREE.MeshBasicMaterial({ color: 0x38BDF8 }));
-        screen.position.set(-0.28, 1.15, 0.29);
+        screen.position.set(0, -0.14, 0.29);
         screen.rotation.x = 0.5;
-
-        worker.add(rArm, scanner, laser, lArm, tablet, screen);
+        armLPivot.add(lArm, tablet, screen);
     } else if (activity === 'clipboard') {
-        [-0.26, 0.26].forEach((ax, idx) => {
-            const arm = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.38, 0.11), vestMat);
-            arm.position.set(ax, 1.12, 0.14);
-            arm.rotation.x = -0.6;
-            worker.add(arm);
-        });
+        const lArm = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.38, 0.11), vestMat);
+        lArm.position.set(0, -0.16, 0.14);
+        lArm.rotation.x = -0.6;
+        const rArm = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.38, 0.11), vestMat);
+        rArm.position.set(0, -0.16, 0.14);
+        rArm.rotation.x = -0.6;
         const board = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.34, 0.02), new THREE.MeshStandardMaterial({ color: 0x92400E }));
-        board.position.set(0, 1.16, 0.3);
+        board.position.set(-0.26, -0.14, 0.28);
         board.rotation.x = 0.6;
         const paper = new THREE.Mesh(new THREE.PlaneGeometry(0.22, 0.28), new THREE.MeshBasicMaterial({ color: 0xF8FAFC }));
-        paper.position.set(0, 1.16, 0.31);
+        paper.position.set(-0.26, -0.14, 0.29);
         paper.rotation.x = 0.6;
-        worker.add(board, paper);
+        armLPivot.add(lArm);
+        armRPivot.add(rArm, board, paper);
     } else {
-        [-0.28, 0.28].forEach(ax => {
-            const arm = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.44, 0.11), vestMat);
-            arm.position.set(ax, 1.05, 0);
-            worker.add(arm);
-        });
+        const lArm = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.44, 0.11), vestMat);
+        lArm.position.set(0, -0.22, 0);
+        const rArm = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.44, 0.11), vestMat);
+        rArm.position.set(0, -0.22, 0);
+        armLPivot.add(lArm);
+        armRPivot.add(rArm);
     }
+    worker.add(armLPivot, armRPivot);
 
+    worker.userData.anim = {
+        legL: legLPivot,
+        legR: legRPivot,
+        armL: armLPivot,
+        armR: armRPivot,
+        head: headGroup,
+        laser: laserMesh,
+        activity
+    };
     return worker;
 }
 
@@ -5480,17 +5611,29 @@ function createConvexSafetyMirror(x, z, rotY) {
     return cm;
 }
 
-// FORKLIFT & PETUGAS DERMAGA INBOUND (BAY 1, 2, 3)
+// FORKLIFT & PETUGAS DERMAGA INBOUND (BAY 1, 2, 3) - BERGERAK AKTIF
 // Forklift 1 di Bay 1 Staging (Warna Oranye Linde - Mengangkut Palet Drum Farmasi)
-dockGroup.add(createDetailedForklift(-22.0, -26.0, 0, true, 0xEA580C, 'drums'));
-dockGroup.add(createWarehouseWorker(-19.5, -26.0, -Math.PI / 2, 'checker'));
+const flBay1 = createDetailedForklift(-26.5, -27.5, 0, true, 0xEA580C, 'drums');
+dockGroup.add(flBay1);
+ambientVehicles.push({ type: 'shuttle', group: flBay1, p0: [-26.5, -27.5], p1: [-26.5, -16.5], speed: 2.1, dwellSec: 1.8, turnSec: 0.85, t: 0.1, forkAmp: 0.18 });
+
+const wkDock1 = createWarehouseWorker(-22.0, -24.5, Math.PI / 2, 'checker');
+dockGroup.add(wkDock1);
+ambientWorkers.push({ group: wkDock1, mode: 'patrol', waypoints: [[-22.0, -24.5, Math.PI], [-17.5, -24.5, Math.PI]], speed: 1.25, dwellSec: 2.0, idx: 0, progress: 0, wait: 0.2, stridePhase: 0 });
 
 // Forklift 2 di Jalur Penghubung Dermaga Inbound (Warna Kuning - Mengangkut Paket Ekspor)
-dockGroup.add(createDetailedForklift(-15.0, -26.0, Math.PI / 2, true, 0xF59E0B, 'boxes'));
+const flInbound = createDetailedForklift(-22.5, -27.4, Math.PI / 2, true, 0xF59E0B, 'boxes');
+dockGroup.add(flInbound);
+ambientVehicles.push({ type: 'shuttle', group: flInbound, p0: [-22.5, -27.4], p1: [-13.5, -27.4], speed: 2.3, dwellSec: 1.6, turnSec: 0.85, t: 0.45, forkAmp: 0.16 });
 
 // Forklift 3 di Bay 3 Staging (Warna Biru Still - Mengangkut Peti Kayu Ekspor)
-dockGroup.add(createDetailedForklift(22.0, -26.0, Math.PI, true, 0x0284C7, 'crate'));
-dockGroup.add(createWarehouseWorker(18.5, -26.0, Math.PI / 2, 'clipboard'));
+const flBay3 = createDetailedForklift(19.8, -25.0, Math.PI / 2, true, 0x0284C7, 'crate');
+dockGroup.add(flBay3);
+ambientVehicles.push({ type: 'shuttle', group: flBay3, p0: [19.8, -25.0], p1: [29.2, -25.0], speed: 2.2, dwellSec: 1.9, turnSec: 0.85, t: 0.3, forkAmp: 0.2 });
+
+const wkDock3 = createWarehouseWorker(18.2, -27.5, 0, 'clipboard');
+dockGroup.add(wkDock3);
+ambientWorkers.push({ group: wkDock3, mode: 'patrol', waypoints: [[18.2, -27.5, Math.PI / 2], [18.2, -20.5, -Math.PI / 2]], speed: 1.15, dwellSec: 2.2, idx: 0, progress: 0, wait: 0.7, stridePhase: 0 });
 
 // Tumpukan Palet Kosong untuk Staging Cepat
 dockGroup.add(createEmptyPalletStack(-30.0, -28.0, 7));
@@ -5515,14 +5658,14 @@ dockDecal.position.set(-5.0, 0.03, -40.0);
 signsGroup.add(dockDecal);
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 5. GERBANG SCAN RFID AIDC (Z = -27.0)
+// 5. GERBANG SCAN RFID AIDC (Z = -27.5)
 // ─────────────────────────────────────────────────────────────────────────────
 let rfidScanCurtain = null;
 let rfidPointLight = null;
 let rfidBeaconMat = new THREE.MeshBasicMaterial({ color: 0x0CA1AF });
 
 const rfidPortalGroup = new THREE.Group();
-rfidPortalGroup.position.set(-5.0, 0, -27.0);
+rfidPortalGroup.position.set(-5.0, 0, -27.5);
 
 // Tiang Penyangga Kiri & Kanan (InJourney Teal & Baja Industri)
 const pPostL = new THREE.Mesh(new THREE.BoxGeometry(0.4, 5.6, 0.4), MAT.injourneyTeal);
@@ -5601,7 +5744,7 @@ rfidPlaqueNorth.position.set(0, 5.5, -0.25);
 rfidPlaqueNorth.rotation.y = Math.PI;
 
 const rfidFloorDecal = makeFloorDecal("AIDC RFID PORTAL", "AUTOMATED SCANNER", 5.2, 2.2, "#0CA1AF");
-rfidFloorDecal.position.set(-5.0, 0.035, -27.0);
+rfidFloorDecal.position.set(-5.0, 0.035, -27.5);
 signsGroup.add(rfidFloorDecal);
 
 rfidPortalGroup.add(pPostL, pPostR, pArch, scanBarL, scanBarR, rfidScanCurtain, beaconPole, beaconBulb, rfidPointLight, rfidWaveMesh, rfidPlaqueSouth, rfidPlaqueNorth);
@@ -5626,7 +5769,7 @@ function createConveyorSegment(x, z, lenX, lenZ, options = {}) {
     bed.receiveShadow = true;
     cg.add(bed);
 
-    const isZAxis = (lenZ >= lenX);
+    const isZAxis = options.axis ? (options.axis === 'z') : (lenZ >= lenX);
 
     // Rel Pengaman Samping Baja & Aksen Teal InJourney
     if (isZAxis) {
@@ -5753,78 +5896,189 @@ function createCornerTransferBed(x, z, size = 2.8) {
     return cbg;
 }
 
-// 1. Jalur Infeed Dermaga Muat Bay 2 (-5.0, Z = -35.5 s.d. -21.0)
-// Kargo dibongkar dari truk dan langsung mengalir lurus melintasi gerbang scan AIDC RFID (-27.0)
-conveyorGroup.add(createConveyorSegment(-5.0, -28.25, 2.4, 14.5));
+// Meja Transfer Bola Multi-Arah (Simetris Tanpa Dinding Penghalang Samping)
+function createJunctionTransferBed(x, z, size = 2.6) {
+    const jg = new THREE.Group();
+    jg.position.set(x, 0.4, z);
+    const bed = new THREE.Mesh(new THREE.BoxGeometry(size, 0.25, size), MAT.metalDark);
+    bed.position.y = -0.12;
+    bed.receiveShadow = true;
+    const plate = new THREE.Mesh(new THREE.BoxGeometry(size - 0.1, 0.02, size - 0.1), MAT.metalSilver);
+    plate.position.y = 0.01;
+    jg.add(bed, plate);
+    const ballGeo = new THREE.SphereGeometry(0.048, 10, 8);
+    for (let bx = -size / 2 + 0.35; bx <= size / 2 - 0.35; bx += 0.42) {
+        for (let bz = -size / 2 + 0.35; bz <= size / 2 - 0.35; bz += 0.42) {
+            const ball = new THREE.Mesh(ballGeo, MAT.metalSilver);
+            ball.position.set(bx, 0.05, bz);
+            jg.add(ball);
+        }
+    }
+    [-size / 2 + 0.28, size / 2 - 0.28].forEach(lx => {
+        [-size / 2 + 0.28, size / 2 - 0.28].forEach(lz => {
+            const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.4, 8), MAT.metalDark);
+            leg.position.set(lx, -0.2, lz);
+            jg.add(leg);
+        });
+    });
+    return jg;
+}
 
-// 2. Jalur Feeder Dermaga 1 (-26.0) & Dermaga 3 (+22.0) — Rapi & Mandiri tanpa sambungan kusut
-conveyorGroup.add(createConveyorSegment(-26.0, -31.5, 2.4, 8.0));
-conveyorGroup.add(createConveyorSegment(22.0, -31.5, 2.4, 8.0));
+// 1. Jalur Infeed Utama Dermaga Bay 2 (-5.0, Z = -35.5 s.d. -32.4) sebelum penggabungan Feeder
+conveyorGroup.add(createConveyorSegment(-5.0, -33.95, 2.4, 3.1, { axis: 'z' }));
 
-// 3. Jalur Internal Terowongan Mesin X-Ray Screening (Z = -21.0 s.d. -16.0)
-conveyorGroup.add(createConveyorSegment(-5.0, -18.5, 2.4, 5.0, { rails: false }));
+// 2. Jalur Feeder Terpadu dari Dermaga 1 (-26.0) & Dermaga 3 (+22.0) bergabung ke (-5.0, -31.0) sebelum RFID
+conveyorGroup.add(createConveyorSegment(-26.0, -33.9, 2.4, 3.2, { axis: 'z' }));
+conveyorGroup.add(createJunctionTransferBed(-26.0, -31.0, 2.6));
+conveyorGroup.add(createConveyorSegment(-15.55, -31.0, 18.3, 2.2, { axis: 'x' }));
 
-// 4. Diverter Arm Pneumatik di X = -5.0, Z = -16.5
+conveyorGroup.add(createConveyorSegment(22.0, -33.9, 2.4, 3.2, { axis: 'z' }));
+conveyorGroup.add(createJunctionTransferBed(22.0, -31.0, 2.6));
+conveyorGroup.add(createConveyorSegment(8.55, -31.0, 24.3, 2.2, { axis: 'x' }));
+
+conveyorGroup.add(createJunctionTransferBed(-5.0, -31.0, 2.8));
+
+// 3. Jalur Utama Menuju & Melewati Gerbang Portal RFID AIDC (Z = -29.6 s.d. -25.7, Portal di Z = -27.5)
+conveyorGroup.add(createConveyorSegment(-5.0, -27.65, 2.4, 3.9, { axis: 'z' }));
+
+// 4. Manifold Distribusi Masuk X-Ray (Infeed Splitter di Z = -24.5 untuk Line 1, 2, 3)
+const XRAY_LINE_X = { 1: -12.5, 2: -5.0, 3: 2.5 };
+const XRAY_Z_RFID = -27.5;
+const XRAY_Z_INFEED = -24.5;
+const XRAY_Z_CENTER = -19.0;
+const XRAY_Z_EXIT_READY = -14.8;
+const XRAY_Z_OUTFEED = -12.0;
+
+function getActiveXrayX(bayNum = activeBayNum) {
+    return XRAY_LINE_X[bayNum] ?? -5.0;
+}
+
+[-12.5, -5.0, 2.5].forEach(lx => {
+    conveyorGroup.add(createJunctionTransferBed(lx, -24.5, 2.4));
+});
+conveyorGroup.add(createConveyorSegment(-8.75, -24.5, 5.1, 2.2, { axis: 'x' }));
+conveyorGroup.add(createConveyorSegment(-1.25, -24.5, 5.1, 2.2, { axis: 'x' }));
+
+// 5. Tiga Jalur Screening X-Ray Lengkap: Lead-In (-23.3..-21.5), Tunnel (-21.5..-16.5), & Lead-Out (-16.5..-13.3)
+[-12.5, -5.0, 2.5].forEach(lx => {
+    conveyorGroup.add(createConveyorSegment(lx, -22.4, 2.2, 1.8, { axis: 'z' }));
+    conveyorGroup.add(createConveyorSegment(lx, -19.0, 2.2, 5.0, { rails: false, axis: 'z' }));
+    conveyorGroup.add(createConveyorSegment(lx, -14.9, 2.2, 3.2, { axis: 'z' }));
+});
+
+// 6. Manifold Keluar X-Ray & Jalur Diverter di Z = -12.0 (Sepenuhnya Bersih di Selatan Terowongan X-Ray)
+[-12.5, -5.0, 2.5].forEach(lx => {
+    conveyorGroup.add(createJunctionTransferBed(lx, -12.0, 2.6));
+});
+conveyorGroup.add(createConveyorSegment(-8.75, -12.0, 4.9, 2.2, { axis: 'x' }));
+conveyorGroup.add(createConveyorSegment(-1.25, -12.0, 4.9, 2.2, { axis: 'x' }));
+
+// 7. Dua Unit Pneumatic Swing Diverter Arm di Sisi Selatan Manifold (Tanpa Menghalangi Jalur Lain)
 const diverterGroup = new THREE.Group();
-diverterGroup.position.set(-5.0, 0.5, -16.5);
-const divBase = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.45, 0.8), MAT.yellowSafety);
-divBase.position.set(-1.35, 0, 0);
-const divPiston = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.065, 1.8, 12), MAT.metalSilver);
-divPiston.rotateZ(Math.PI / 2);
-divPiston.position.set(-0.45, 0, 0);
-const divArm = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.45, 1.8), MAT.redHazard);
-divArm.position.set(0.6, 0, 0);
-diverterGroup.add(divBase, divPiston, divArm);
+
+// Diverter Utama Line 1/2 di pojok SW junction (-6.2, -10.75)
+const divPed2 = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.24, 0.78, 12), MAT.yellowSafety);
+divPed2.position.set(-6.2, 0.39, -10.75);
+const divHead2 = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.22, 0.42), MAT.metalDark);
+divHead2.position.set(-6.2, 0.88, -10.75);
+const divArmPivot2 = new THREE.Group();
+divArmPivot2.position.set(-6.2, 0.72, -10.75);
+const divBlade2 = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.42, 2.7), MAT.redHazard);
+divBlade2.position.set(0, 0, 1.35);
+const divBladeCap2 = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.06, 2.7), MAT.yellowSafety);
+divBladeCap2.position.set(0, 0.24, 1.35);
+divArmPivot2.add(divBlade2, divBladeCap2);
+
+// Diverter Line 3 di pojok SE junction (+3.6, -10.75)
+const divPed3 = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.24, 0.78, 12), MAT.yellowSafety);
+divPed3.position.set(3.6, 0.39, -10.75);
+const divHead3 = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.22, 0.42), MAT.metalDark);
+divHead3.position.set(3.6, 0.88, -10.75);
+const divArmPivot3 = new THREE.Group();
+divArmPivot3.position.set(3.6, 0.72, -10.75);
+const divBlade3 = new THREE.Mesh(new THREE.BoxGeometry(2.7, 0.42, 0.14), MAT.redHazard);
+divBlade3.position.set(-1.35, 0, 0);
+const divBladeCap3 = new THREE.Mesh(new THREE.BoxGeometry(2.7, 0.06, 0.16), MAT.yellowSafety);
+divBladeCap3.position.set(-1.35, 0.24, 0);
+divArmPivot3.add(divBlade3, divBladeCap3);
+
+diverterGroup.add(divPed2, divHead2, divArmPivot2, divPed3, divHead3, divArmPivot3);
 scene.add(diverterGroup);
 
-// 5. Jalur Konveyor Isolasi Masuk ke Ruang Karantina (Location 3B di X = 22, Z = -16.5)
-// Membentang lurus & presisi ke timur (+X) dari X = -3.8 sampai pintu Ruang Karantina di X = 24.5
-conveyorGroup.add(createConveyorSegment(10.35, -16.5, 28.3, 2.4));
+function resetDiverters() {
+    divArmPivot2.rotation.y = 0;
+    divArmPivot3.rotation.y = 0;
+}
 
-// 6. Jalur Utama Kargo Aman (CLEARED) Keluar X-Ray LURUS Menuju Central Storage (Z = -16.0 s.d. Z = 6.6)
-// 100% Lurus tanpa zig-zag atau sambungan miring! (Panjang 22.6m, center Z = -4.7)
-conveyorGroup.add(createConveyorSegment(-5.0, -4.7, 2.4, 22.6));
+function setDiverterPush(bayNum, pushFactor) {
+    if (bayNum === 1) {
+        divArmPivot2.rotation.y = Math.PI * 0.50 * pushFactor;
+        divArmPivot3.rotation.y = 0;
+    } else if (bayNum === 2) {
+        divArmPivot2.rotation.y = Math.PI * 0.74 * pushFactor;
+        divArmPivot3.rotation.y = 0;
+    } else if (bayNum === 3) {
+        divArmPivot2.rotation.y = 0;
+        divArmPivot3.rotation.y = -Math.PI * 0.25 * pushFactor;
+    }
+}
 
-// 7. Meja Belokan Caster Bed 90 Derajat di Titik Pertemuan X = -5.0, Z = 8.0
+// 8. Jalur Konveyor Isolasi Masuk ke Ruang Karantina (Location 3B di X = 22, Z = -12.0)
+// Membentang lurus & bersih ke timur (+X) dari X = 3.8 sampai tepi meja ETD Ruang Karantina di X = 22.2
+conveyorGroup.add(createConveyorSegment(13.0, -12.0, 18.4, 2.2, { axis: 'x' }));
+
+// 9. Jalur Utama Kargo Aman (CLEARED) Keluar Manifold LURUS Menuju Central Storage (Z = -10.7 s.d. Z = 6.6)
+conveyorGroup.add(createConveyorSegment(-5.0, -2.05, 2.4, 17.3, { axis: 'z' }));
+
+// 10. Meja Belokan Caster Bed 90 Derajat di Titik Pertemuan X = -5.0, Z = 8.0
 conveyorGroup.add(createCornerTransferBed(-5.0, 8.0, 2.8));
 
-// 8. Segmen Penghubung Masuk ke Meja Perakitan ULD (Dari X = -3.6 ke X = -2.2 pada Z = 8.0)
+// 11. Segmen Penghubung Masuk ke Meja Perakitan ULD (Dari X = -3.6 ke X = -2.2 pada Z = 8.0)
 conveyorGroup.add(createConveyorSegment(-2.9, 8.0, 1.4, 2.4));
 
-// 9. Konveyor Transfer Central Storage ke Smart Floor Scale 15T (Dari X = 2.2 ke X = 32.5 pada Z = 8.0)
+// 12. Konveyor Transfer Central Storage ke Smart Floor Scale 15T (Dari X = 2.2 ke X = 32.5 pada Z = 8.0)
 // Panjang 30.3m, center X = 17.35, bertemu presisi di bibir timbangan tanpa tumpang tindih
 conveyorGroup.add(createConveyorSegment(17.35, 8.0, 30.3, 2.4));
 
-// 10. Rel Transfer Timbangan ke Gerbang Airside & High-Loader (Dari X = 37.5 ke X = 60.0 pada Z = 8.0)
+// 13. Rel Transfer Timbangan ke Gerbang Airside & High-Loader (Dari X = 37.5 ke X = 60.0 pada Z = 8.0)
 // Panjang 22.5m, center X = 48.75, mulai tepat dari bibir keluar timbangan hingga platform High-Loader
 conveyorGroup.add(createConveyorSegment(48.75, 8.0, 22.5, 2.4));
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 7. TEROWONGAN X-RAY SCREENING (LINES 1, 2, 3) & STASIUN OPERATOR AVSEC
 // ─────────────────────────────────────────────────────────────────────────────
-const xrBeaconMat = new THREE.MeshBasicMaterial({ color: 0x10B981 });
+const xrBeaconMats = {
+    1: new THREE.MeshBasicMaterial({ color: 0x10B981 }),
+    2: new THREE.MeshBasicMaterial({ color: 0x10B981 }),
+    3: new THREE.MeshBasicMaterial({ color: 0x10B981 })
+};
+const xrBeaconMat = xrBeaconMats[2];
+
+function getActiveXrBeaconMat() {
+    return xrBeaconMats[activeBayNum] || xrBeaconMats[2];
+}
 
 function createDetailedXrayTunnel(xPos, lineNum) {
     const xr = new THREE.Group();
-    xr.position.set(xPos, 0, -18.5);
+    xr.position.set(xPos, 0, -19.0);
 
-    const tunnel = new THREE.Mesh(new THREE.BoxGeometry(3.4, 3.2, 5.0), MAT.metalDark);
+    const tunnel = new THREE.Mesh(new THREE.BoxGeometry(3.6, 3.2, 5.0), MAT.metalDark);
     tunnel.position.y = 1.6;
     tunnel.castShadow = true;
 
     // Aksen Stripe Teal
-    [-1.71, 1.71].forEach(px => {
+    [-1.81, 1.81].forEach(px => {
         const sidePanel = new THREE.Mesh(new THREE.BoxGeometry(0.04, 2.2, 4.5), MAT.injourneyTeal);
         sidePanel.position.set(px, 1.6, 0);
         xr.add(sidePanel);
     });
 
-    const core = new THREE.Mesh(new THREE.BoxGeometry(2.3, 2.4, 5.05), new THREE.MeshBasicMaterial({ color: 0x090D16 }));
+    const core = new THREE.Mesh(new THREE.BoxGeometry(2.65, 2.4, 5.05), new THREE.MeshBasicMaterial({ color: 0x090D16 }));
     core.position.y = 1.5;
 
     // Tirai Timbal
     [-2.52, 2.52].forEach(cz => {
-        const curtain = new THREE.Mesh(new THREE.BoxGeometry(2.15, 2.2, 0.08), new THREE.MeshStandardMaterial({ color: 0x1E293B, roughness: 0.9 }));
+        const curtain = new THREE.Mesh(new THREE.BoxGeometry(2.42, 2.2, 0.08), new THREE.MeshStandardMaterial({ color: 0x1E293B, roughness: 0.9 }));
         curtain.position.set(0, 1.5, cz);
         xr.add(curtain);
     });
@@ -5833,18 +6087,29 @@ function createDetailedXrayTunnel(xPos, lineNum) {
     const dome = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.65, 0.5, 16), new THREE.MeshStandardMaterial({ color: 0xF59E0B, metalness: 0.6 }));
     dome.position.set(0, 3.45, 0);
 
-    // Beacon Status LED
-    const beaconMat = (lineNum === 2) ? xrBeaconMat : new THREE.MeshBasicMaterial({ color: 0x10B981 });
-    const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.18, 12, 12), beaconMat);
-    beacon.position.set(1.5, 3.1, 2.52);
+    // Papan Label Line 1 / 2 / 3 pada Lintel Depan & Belakang
+    const badgeSouth = makeMountedSignboard('X-RAY LINE ' + lineNum, 'DUAL-VIEW AVSEC', 2.25, 0.44, '#F59E0B');
+    badgeSouth.position.set(0, 2.9, 2.55);
+    const badgeNorth = makeMountedSignboard('X-RAY LINE ' + lineNum, 'DUAL-VIEW AVSEC', 2.25, 0.44, '#F59E0B');
+    badgeNorth.position.set(0, 2.9, -2.55);
+    badgeNorth.rotation.y = Math.PI;
 
-    xr.add(tunnel, core, dome, beacon);
+    // Beacon Status LED per Line
+    const beaconMat = xrBeaconMats[lineNum] || xrBeaconMats[2];
+    const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.18, 12, 12), beaconMat);
+    beacon.position.set(1.55, 3.1, 2.54);
+
+    xr.add(tunnel, core, dome, badgeSouth, badgeNorth, beacon);
     return xr;
 }
 
-// 3 Unit Mesin Dual-View X-Ray Screening
-[-13.0, -5.0, 3.0].forEach((x, idx) => {
-    xrayGroup.add(createDetailedXrayTunnel(x, idx + 1));
+// 3 Unit Mesin Dual-View X-Ray Screening (Line 1, 2, 3 Terhubung Penuh ke Manifold)
+[
+    { x: -12.5, line: 1 },
+    { x: -5.0,  line: 2 },
+    { x: 2.5,   line: 3 }
+].forEach(item => {
+    xrayGroup.add(createDetailedXrayTunnel(item.x, item.line));
 });
 
 // Stasiun Meja Operator AVSEC Lengkap dengan Monitor Dual-Screen
@@ -5877,52 +6142,69 @@ function createAvsecOperatorStation(x, z) {
     return st;
 }
 
-xrayGroup.add(createAvsecOperatorStation(-9.0, -12.0));
-xrayGroup.add(createAvsecOperatorStation(-1.0, -12.0));
+xrayGroup.add(createAvsecOperatorStation(-9.0, -9.2));
+xrayGroup.add(createAvsecOperatorStation(-1.0, -9.2));
 
-// Gantry Arch "AVSEC CLEARANCE GANTRY" di Z = -10.0
+// Gantry Arch "AVSEC CLEARANCE GANTRY" di Z = -7.2 (Di Selatan Area Operator & Jalur Karantina)
 const gantryArch = new THREE.Group();
-gantryArch.position.set(-5.0, 0, -10.0);
+gantryArch.position.set(-5.0, 0, -7.2);
 const gP1 = new THREE.Mesh(new THREE.BoxGeometry(0.35, 4.4, 0.35), MAT.metalDark);
-gP1.position.set(-9.8, 2.2, 0);
+gP1.position.set(-10.0, 2.2, 0);
 const gP2 = new THREE.Mesh(new THREE.BoxGeometry(0.35, 4.4, 0.35), MAT.metalDark);
-gP2.position.set(9.8, 2.2, 0);
-const gBeam = new THREE.Mesh(new THREE.BoxGeometry(20.0, 0.45, 0.4), MAT.metalDark);
+gP2.position.set(10.0, 2.2, 0);
+const gBeam = new THREE.Mesh(new THREE.BoxGeometry(20.4, 0.45, 0.4), MAT.metalDark);
 gBeam.position.set(0, 4.4, 0);
 
 const gantryCanvas = document.createElement('canvas');
 gantryCanvas.width = 512;
 gantryCanvas.height = 90;
 const gCtx = gantryCanvas.getContext('2d');
-gCtx.fillStyle = '#081428';
-gCtx.fillRect(0, 0, 512, 90);
-gCtx.strokeStyle = '#0CA1AF';
-gCtx.lineWidth = 4;
-gCtx.strokeRect(4, 4, 504, 82);
-gCtx.fillStyle = '#0CA1AF';
-gCtx.font = '900 24px Barlow, sans-serif';
-gCtx.textAlign = 'center';
-gCtx.fillText('AVSEC CLEARANCE GANTRY', 256, 38);
-gCtx.fillStyle = '#10B981';
-gCtx.font = 'bold 15px monospace';
-gCtx.fillText('● LINE 1: READY  ● LINE 2: ACTIVE  ● LINE 3: READY', 256, 66);
-const gantrySign = new THREE.Mesh(new THREE.PlaneGeometry(12.0, 0.85), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(gantryCanvas) }));
+const gantryTex = new THREE.CanvasTexture(gantryCanvas);
+
+function updateAvsecGantryStatus(activeLineNum = 2) {
+    gCtx.fillStyle = '#081428';
+    gCtx.fillRect(0, 0, 512, 90);
+    gCtx.strokeStyle = '#0CA1AF';
+    gCtx.lineWidth = 4;
+    gCtx.strokeRect(4, 4, 504, 82);
+    gCtx.fillStyle = '#0CA1AF';
+    gCtx.font = '900 24px Barlow, sans-serif';
+    gCtx.textAlign = 'center';
+    gCtx.fillText('AVSEC CLEARANCE GANTRY', 256, 38);
+    gCtx.fillStyle = '#10B981';
+    gCtx.font = 'bold 15px monospace';
+    const l1 = activeLineNum === 1 ? 'ACTIVE' : 'READY';
+    const l2 = activeLineNum === 2 ? 'ACTIVE' : 'READY';
+    const l3 = activeLineNum === 3 ? 'ACTIVE' : 'READY';
+    gCtx.fillText(`● LINE 1: ${l1}  ● LINE 2: ${l2}  ● LINE 3: ${l3}`, 256, 66);
+    gantryTex.needsUpdate = true;
+}
+updateAvsecGantryStatus(2);
+
+const gantrySign = new THREE.Mesh(new THREE.PlaneGeometry(12.0, 0.85), new THREE.MeshBasicMaterial({ map: gantryTex }));
 gantrySign.position.set(0, 4.4, 0.22);
-gantryArch.add(gP1, gP2, gBeam, gantrySign);
+const gantrySignNorth = new THREE.Mesh(new THREE.PlaneGeometry(12.0, 0.85), new THREE.MeshBasicMaterial({ map: gantryTex }));
+gantrySignNorth.position.set(0, 4.4, -0.22);
+gantrySignNorth.rotation.y = Math.PI;
+gantryArch.add(gP1, gP2, gBeam, gantrySign, gantrySignNorth);
 xrayGroup.add(gantryArch);
 
-const xrFloorDecal = makeFloorDecal("SECURITY SCREENING", "DUAL-VIEW X-RAY & MATRIX INSPECTION", 10.0, 3.2, "#F59E0B");
-xrFloorDecal.position.set(-5.0, 0.035, -18.5);
+const xrFloorDecal = makeFloorDecal("SECURITY SCREENING", "DUAL-VIEW X-RAY MATRIX", 4.2, 1.6, "#F59E0B");
+xrFloorDecal.position.set(-8.75, 0.035, -14.65);
 signsGroup.add(xrFloorDecal);
 
+const xrDivDecal = makeFloorDecal("PNEUMATIC DIVERTER", "AUTO ROUTE KARANTINA 3B", 4.2, 1.6, "#EF4444");
+xrDivDecal.position.set(-1.25, 0.035, -14.65);
+signsGroup.add(xrDivDecal);
+
 // ─────────────────────────────────────────────────────────────────────────────
-// 8. RUANG KARANTINA RESMI (LOCATION 3B DI X = 22, Z = -16.5)
+// 8. RUANG KARANTINA RESMI (LOCATION 3B DI X = 22, Z = -12.0)
 // ─────────────────────────────────────────────────────────────────────────────
 let sirenRotMesh = null;
 
 function createRealisticQuarantineRoom() {
     const q = new THREE.Group();
-    q.position.set(22, 0, -16.5);
+    q.position.set(22, 0, -12.0);
 
     // Lantai Epoksi Dark Charcoal Anti-Statik
     const f = new THREE.Mesh(new THREE.PlaneGeometry(16, 10), MAT.floorQuarantine);
@@ -6082,7 +6364,7 @@ function createRealisticQuarantineRoom() {
         topCapBack, topCapFront, topCapLeft, topCapRight, hazardStripe, ceil
     );
 
-    // Meja Stainless Steel Pemeriksaan Sekunder (di X = 2.5, Z = 0 -> World: 24.5, -16.5)
+    // Meja Stainless Steel Pemeriksaan Sekunder (di X = 2.5, Z = 0 -> World: 24.5, -12.0)
     const examTable = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.85, 2.6), MAT.metalSilver);
     examTable.position.set(2.5, 0.425, 0);
     const examTop = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.08, 2.8), new THREE.MeshStandardMaterial({ color: 0xF8FAFC, metalness: 0.95, roughness: 0.1 }));
@@ -6108,26 +6390,58 @@ function createRealisticQuarantineRoom() {
     hazmatCab.position.set(-1.2, 1.2, -4.3);
     q.add(hazmatCab);
 
-    // 2 Figur Petugas AVSEC (Inspector & Specialist)
+    // 2 Figur Petugas AVSEC Terartikulasi (Inspector & Specialist)
     function createAvsecOfficer(ox, oz, rotY, role = 'inspector') {
         const off = new THREE.Group();
         off.position.set(ox, 0, oz);
         off.rotation.y = rotY;
 
-        const pants = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.9, 0.3), new THREE.MeshStandardMaterial({ color: 0x0D1C42 }));
-        pants.position.y = 0.55;
+        const legMat = new THREE.MeshStandardMaterial({ color: 0x0D1C42 });
+        let legL = null, legR = null;
+        [-0.12, 0.12].forEach((lx, idx) => {
+            const lp = new THREE.Group();
+            lp.position.set(lx, 0.9, 0);
+            const lm = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.9, 0.24), legMat);
+            lm.position.y = -0.45;
+            lp.add(lm);
+            off.add(lp);
+            if (idx === 0) legL = lp; else legR = lp;
+        });
+
         const vestMat = (role === 'inspector') ? new THREE.MeshStandardMaterial({ color: 0xEA580C }) : new THREE.MeshStandardMaterial({ color: 0xFACC15 });
         const torso = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.75, 0.38), vestMat);
         torso.position.y = 1.35;
+
+        const armL = new THREE.Group();
+        armL.position.set(-0.39, 1.62, 0);
+        const armLM = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.5, 0.16), vestMat);
+        armLM.position.y = -0.24;
+        armL.add(armLM);
+
+        const armR = new THREE.Group();
+        armR.position.set(0.39, 1.62, 0);
+        const armRM = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.5, 0.16), vestMat);
+        armRM.position.y = -0.24;
+        armR.add(armRM);
+
+        const headGroup = new THREE.Group();
+        headGroup.position.y = 1.9;
         const head = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.34, 0.32), new THREE.MeshStandardMaterial({ color: 0xFDE047, roughness: 0.8 }));
-        head.position.y = 1.9;
         const cap = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.12, 0.42), new THREE.MeshStandardMaterial({ color: 0x0D1C42 }));
-        cap.position.set(0, 2.05, 0.04);
-        off.add(pants, torso, head, cap);
+        cap.position.set(0, 0.15, 0.04);
+        headGroup.add(head, cap);
+
+        off.add(torso, armL, armR, headGroup);
+        off.userData.anim = { legL, legR, armL, armR, head: headGroup, laser: null };
         return off;
     }
-    q.add(createAvsecOfficer(2.2, 1.4, Math.PI, 'inspector'));
-    q.add(createAvsecOfficer(5.8, -1.8, Math.PI / 2, 'specialist'));
+    const qOff1 = createAvsecOfficer(-4.0, 2.7, Math.PI, 'inspector');
+    const qOff2 = createAvsecOfficer(5.8, -2.2, -Math.PI / 2, 'specialist');
+    q.add(qOff1, qOff2);
+    ambientWorkers.push(
+        { group: qOff1, mode: 'patrol', waypoints: [[-4.0, 2.7, Math.PI], [3.0, 2.7, Math.PI]], speed: 1.05, dwellSec: 2.5, idx: 0, progress: 0, wait: 0.3, stridePhase: 0 },
+        { group: qOff2, mode: 'patrol', waypoints: [[5.8, -2.2, -Math.PI / 2], [5.8, 1.8, -Math.PI / 2]], speed: 1.0, dwellSec: 2.8, idx: 0, progress: 0, wait: 1.2, stridePhase: 0 }
+    );
 
     // Suar Sirine Merah Alarm Berputar di Puncak Parapet
     const qSiren = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.25, 0.45, 12), new THREE.MeshBasicMaterial({ color: 0xEF4444 }));
@@ -6140,7 +6454,7 @@ function createRealisticQuarantineRoom() {
     q.add(qPlaque);
 
     const qFloorDecal = makeFloorDecal("QUARANTINE AREA", "AUTHORIZED AVSEC ONLY", 7.0, 3.0, "#EF4444");
-    qFloorDecal.position.set(22.0, 0.045, -16.5);
+    qFloorDecal.position.set(22.0, 0.045, -12.0);
     signsGroup.add(qFloorDecal);
 
     return q;
@@ -6154,10 +6468,10 @@ function createDetailedStorage() {
     const cs = new THREE.Group();
     cs.position.set(0, 0, 0);
 
-    // Pad Epoksi Gudang Central Storage
+    // Pad Epoksi Gudang Central Storage (diletakkan pada Y = 0.024 agar seluruh marka jalan tetap terlihat rapi di atasnya)
     const pad = new THREE.Mesh(new THREE.PlaneGeometry(30, 22), new THREE.MeshStandardMaterial({ color: 0xCBD5E1, roughness: 0.55, metalness: 0.12 }));
     pad.rotation.x = -Math.PI / 2;
-    pad.position.set(0, 0.04, 6);
+    pad.position.set(0, 0.024, 6);
     cs.add(pad);
 
     // Garis Zebra Hazard Kuning-Hitam di Tepi Gudang
@@ -6167,18 +6481,12 @@ function createDetailedStorage() {
         const isY = (Math.round((zx + 15) / 1.2) % 2 === 0);
         const zN = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.22), isY ? zebraMatY : zebraMatB);
         zN.rotation.x = -Math.PI / 2;
-        zN.position.set(zx + 0.3, 0.05, -4.85);
+        zN.position.set(zx + 0.3, 0.032, -4.85);
         const zS = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.22), isY ? zebraMatY : zebraMatB);
         zS.rotation.x = -Math.PI / 2;
-        zS.position.set(zx + 0.3, 0.05, 16.85);
+        zS.position.set(zx + 0.3, 0.032, 16.85);
         cs.add(zN, zS);
     }
-
-    // Jalur Hijau Pejalan Kaki (Pedestrian Safety Walkway)
-    const walkway = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 18.0), new THREE.MeshStandardMaterial({ color: 0x059669, roughness: 0.65 }));
-    walkway.rotation.x = -Math.PI / 2;
-    walkway.position.set(-4.5, 0.045, 6.0);
-    cs.add(walkway);
 
     // Sistem Rak Gudang Baja Bertiang Tinggi (Heavy-Duty Pallet Racking)
     const rackBlueMat = new THREE.MeshStandardMaterial({ color: 0x1E40AF, metalness: 0.6, roughness: 0.4 });
@@ -6253,11 +6561,13 @@ function createDetailedStorage() {
 
     // Sistem Rak Dinding Selatan & Timur (High-Bay South & East Racking)
     cs.add(createPalletRack(-8.0, 26.0, 4, 2.5, 1.4, 4.2, 0));
-    cs.add(createPalletRack(28.0, -18.0, 3, 2.4, 1.4, 4.2, Math.PI / 2));
+    cs.add(createPalletRack(34.5, -20.0, 3, 2.4, 1.4, 4.2, Math.PI / 2));
     cs.add(createPalletRack(28.0, 20.0, 3, 2.4, 1.4, 4.2, Math.PI / 2));
 
-    // Forklift Elektrik Reach Truck di Lorong Gudang
-    cs.add(createDetailedForklift(-8.2, 8.5, -Math.PI / 2, true));
+    // Forklift Elektrik Aktif di Lorong Rak Barat Central Storage (X = -10.6, Z = -2.0 .. +6.2)
+    const flCentralW = createDetailedForklift(-10.6, 5.5, Math.PI, true);
+    cs.add(flCentralW);
+    ambientVehicles.push({ type: 'shuttle', group: flCentralW, p0: [-10.6, -2.0], p1: [-10.6, 6.2], speed: 1.9, dwellSec: 2.1, turnMode: 'reverse', t: 0.25, forkAmp: 0.22 });
 
     // Staging Palet di Lantai Bay
     function addFloorPallet(px, pz, count = 2) {
@@ -6341,8 +6651,8 @@ function createDetailedStorage() {
     bayADecal.position.set(-10.5, 0.045, 1.3);
     const bayBDecal = makeFloorDecal("ZONE B : BUFFER STAGING", "EXPORT READY PALLETS", 6.2, 3.0, "#F59E0B");
     bayBDecal.position.set(10.0, 0.045, -3.2);
-    const bayCDecal = makeFloorDecal("ZONE C : ULD ASSEMBLY", "AKE-GA WORKSTATION", 6.2, 3.0, "#10B981");
-    bayCDecal.position.set(10.0, 0.045, 13.5);
+    const bayCDecal = makeFloorDecal("ZONE C : ULD ASSEMBLY", "AKE-GA WORKSTATION", 5.8, 2.2, "#10B981");
+    bayCDecal.position.set(10.0, 0.045, 11.8);
     signsGroup.add(bayADecal, bayBDecal, bayCDecal);
 
     return cs;
@@ -6353,30 +6663,64 @@ storageGroup.add(createDetailedStorage());
 // ARMADA FORKLIFT RAK TINGGI & PERALATAN GUDANG PUSAT (CENTRAL WAREHOUSE FLEET)
 // ─────────────────────────────────────────────────────────────────────────────
 // 1. High-Reach Truck di Rak Tinggi Barat (Terangkat Tinggi Level 3 dengan Palet Boks)
-storageGroup.add(createReachTruck(-39.0, -16.0, Math.PI / 2, 3.2, 'boxes'));
+const rtWest1 = createReachTruck(-40.2, -22.0, 0, 3.2, 'boxes');
+storageGroup.add(rtWest1);
+ambientVehicles.push({ type: 'shuttle', group: rtWest1, p0: [-40.2, -22.2], p1: [-40.2, -12.8], speed: 1.75, dwellSec: 2.6, turnMode: 'reverse', rackFaceYaw: -Math.PI / 2, liftRange: [1.5, 3.4], t: 0.15 });
 
 // 2. High-Reach Truck di Rak Barat Tengah (Terangkat Level 2 dengan Palet Drum Farmasi)
-storageGroup.add(createReachTruck(-39.0, 4.0, -Math.PI / 2, 1.8, 'drums'));
+const rtWest2 = createReachTruck(-40.2, -2.5, 0, 1.8, 'drums');
+storageGroup.add(rtWest2);
+ambientVehicles.push({ type: 'shuttle', group: rtWest2, p0: [-40.2, -3.2], p1: [-40.2, 7.2], speed: 1.8, dwellSec: 2.4, turnMode: 'reverse', rackFaceYaw: -Math.PI / 2, liftRange: [1.4, 3.1], t: 0.6 });
 
 // 3. High-Reach Truck di Rak Timur (Zona Export Buffer)
-storageGroup.add(createReachTruck(26.0, 20.0, Math.PI / 2, 2.4, 'boxes'));
+const rtEast = createReachTruck(25.4, 17.2, 0, 2.4, 'boxes');
+storageGroup.add(rtEast);
+ambientVehicles.push({ type: 'shuttle', group: rtEast, p0: [25.4, 17.2], p1: [25.4, 23.8], speed: 1.7, dwellSec: 2.5, turnMode: 'reverse', rackFaceYaw: Math.PI / 2, liftRange: [1.6, 3.2], t: 0.4 });
 
-// 4. Kereta Tarik Kargo (Industrial Tow Tractor Train dengan Driver & 2 Gerobak Gandeng)
-storageGroup.add(createWarehouseTowTractor(-20.0, 4.0, 0));
+// 4. Kereta Tarik Kargo Terartikulasi (Industrial Tow Tractor Train mengelilingi Koridor Barat)
+const whTowTrain = createWarehouseTowTractor(0, 0, 0);
+storageGroup.add(whTowTrain);
+ambientVehicles.push({
+    type: 'loopTrain',
+    tug: whTowTrain.userData.anim.tug,
+    carts: whTowTrain.userData.anim.carts,
+    wheels: whTowTrain.userData.anim.wheels,
+    head: whTowTrain.userData.anim.head,
+    loopSpec: { xMin: -33.5, xMax: -26.5, zMin: -13.0, zMax: 10.5, r: 3.2 },
+    speed: 2.7,
+    dist: 4.0
+});
 
 // 5. Forklift Elektrik Oranye di Lorong Tengah (Dekat Zone B - Export Ready Pallets)
-storageGroup.add(createDetailedForklift(18.0, 2.0, Math.PI / 2, true, 0xEA580C, 'boxes'));
+const flCentralE = createDetailedForklift(16.5, 0.2, Math.PI / 2, true, 0xEA580C, 'boxes');
+storageGroup.add(flCentralE);
+ambientVehicles.push({ type: 'shuttle', group: flCentralE, p0: [16.5, 0.2], p1: [26.0, 0.2], speed: 2.2, dwellSec: 2.0, turnSec: 0.85, t: 0.2, forkAmp: 0.22 });
 
 // 6. Petugas Supervisor di Dekat Caster Bed ULD (Mengawasi Perakitan Kontainer Pesawat)
-storageGroup.add(createWarehouseWorker(-3.2, 7.5, Math.PI / 4, 'supervisor'));
+const wkStorageUld = createWarehouseWorker(-3.5, 11.4, Math.PI / 2, 'supervisor');
+storageGroup.add(wkStorageUld);
+ambientWorkers.push({ group: wkStorageUld, mode: 'patrol', waypoints: [[-3.5, 11.4, Math.PI], [3.0, 11.4, Math.PI]], speed: 1.15, dwellSec: 2.2, idx: 0, progress: 0, wait: 0.4, stridePhase: 0 });
 
-// 7. Petugas Menarik Hand Pallet Jack Berisi Paket Ekspor
-storageGroup.add(createWarehouseWorker(4.5, 12.0, -Math.PI / 3, 'checker'));
+// 7. Petugas Zone C & Buffer Timur + Hand Pallet Jack Terparkir Aman
+const wkZoneC = createWarehouseWorker(6.8, 13.8, Math.PI / 2, 'checker');
+storageGroup.add(wkZoneC);
+ambientWorkers.push({ group: wkZoneC, mode: 'patrol', waypoints: [[6.8, 13.8, 0], [13.5, 13.8, Math.PI]], speed: 1.3, dwellSec: 1.9, idx: 0, progress: 0, wait: 0.9, stridePhase: 0 });
 storageGroup.add(createHandPalletJack(5.2, 12.4, -Math.PI / 3));
 
-// 8. Stasiun Penampung Tumpahan Bahan Berbahaya (Spill Containment & DG)
+// 8. Stasiun Penampung Tumpahan Bahan Berbahaya (Spill Containment & DG) + Petugas Inspeksi
 storageGroup.add(createSpillContainmentStation(-22.0, -11.0));
-storageGroup.add(createWarehouseWorker(-19.5, -11.0, -Math.PI / 2, 'clipboard'));
+const wkHazmat = createWarehouseWorker(-19.5, -14.0, 0, 'clipboard');
+storageGroup.add(wkHazmat);
+ambientWorkers.push({ group: wkHazmat, mode: 'patrol', waypoints: [[-19.5, -14.2, -Math.PI / 2], [-19.5, -7.8, -Math.PI / 2]], speed: 1.2, dwellSec: 2.4, idx: 0, progress: 0, wait: 0.1, stridePhase: 0 });
+
+// 8B. Petugas Pengawas Koridor AVSEC-Karantina & Teknisi Pemeliharaan Selatan
+const wkAvsecCorr = createWarehouseWorker(6.2, -9.2, Math.PI / 2, 'supervisor');
+storageGroup.add(wkAvsecCorr);
+ambientWorkers.push({ group: wkAvsecCorr, mode: 'patrol', waypoints: [[6.2, -9.2, -Math.PI / 2], [12.5, -9.2, -Math.PI]], speed: 1.2, dwellSec: 2.1, idx: 0, progress: 0, wait: 0.8, stridePhase: 0 });
+
+const wkMaint = createWarehouseWorker(-37.0, 24.0, Math.PI / 2, 'clipboard');
+storageGroup.add(wkMaint);
+ambientWorkers.push({ group: wkMaint, mode: 'patrol', waypoints: [[-37.0, 24.0, 0], [-27.5, 24.0, 0]], speed: 1.1, dwellSec: 2.6, idx: 0, progress: 0, wait: 1.4, stridePhase: 0 });
 
 // 9. Bengkel & Meja Perawatan Alat di Bawah Mezzanine TOC
 storageGroup.add(createMaintenanceWorkbench(-36.0, 26.0));
@@ -6385,7 +6729,7 @@ storageGroup.add(createTrashRecyclingStation(-30.0, 26.0));
 
 // 10. Kaca Cembung Keselamatan Persimpangan Lorong pada Kolom Struktural
 storageGroup.add(createConvexSafetyMirror(-38.0, 0.0, Math.PI / 4));
-storageGroup.add(createConvexSafetyMirror(-20.0, 0.0, -Math.PI / 4));
+storageGroup.add(createConvexSafetyMirror(-22.0, 0.0, -Math.PI / 4));
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 10. SMART FLOOR SCALE 15 TON & DIGITAL DISPLAY (X = 35.0, Z = 8.0)
@@ -8368,6 +8712,9 @@ function createAirportCargoTug(x, z, rotY) {
     tugGroup.position.set(x, 0, z);
     tugGroup.rotation.y = rotY;
 
+    const allWheels = [];
+    const tugCore = new THREE.Group();
+
     // Body Tug Tractor
     const tugBody = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.0, 3.0), MAT.yellowSafety);
     tugBody.position.set(0, 0.6, 0);
@@ -8383,15 +8730,23 @@ function createAirportCargoTug(x, z, rotY) {
         [-0.55, 0.55].forEach(cz => {
             const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.95, 8), MAT.metalSilver);
             pillar.position.set(cx, 1.48, 0.2 + cz);
-            tugGroup.add(pillar);
+            tugCore.add(pillar);
         });
     });
 
     const seat = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.45, 0.5), MAT.metalDark);
     seat.position.set(0, 1.25, 0.1);
 
+    // Pengemudi Tow Tug di Dalam Kabin
+    const drvTorso = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.48, 0.26), new THREE.MeshStandardMaterial({ color: 0xFACC15 }));
+    drvTorso.position.set(0, 1.48, 0.1);
+    const drvHead = new THREE.Mesh(new THREE.SphereGeometry(0.13, 10, 10), new THREE.MeshStandardMaterial({ color: 0xD4A373 }));
+    drvHead.position.set(0, 1.84, 0.1);
+    tugCore.add(drvTorso, drvHead);
+
     // Lampu Peringatan Beacon Kuning Berputar di Atas Kabin
-    const beacon = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.18, 12), new THREE.MeshBasicMaterial({ color: 0xF59E0B }));
+    const beaconMat = new THREE.MeshBasicMaterial({ color: 0xF59E0B });
+    const beacon = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.18, 12), beaconMat);
     beacon.position.set(0, 2.08, 0.2);
 
     // 4 Roda Karet Tug
@@ -8400,12 +8755,15 @@ function createAirportCargoTug(x, z, rotY) {
     [[-0.95, 0.35, -0.9], [0.95, 0.35, -0.9], [-0.95, 0.35, 0.9], [0.95, 0.35, 0.9]].forEach(([wx, wy, wz]) => {
         const w = new THREE.Mesh(wGeo, MAT.truckTire);
         w.position.set(wx, wy, wz);
-        tugGroup.add(w);
+        tugCore.add(w);
+        allWheels.push({ mesh: w, radius: 0.35 });
     });
 
-    tugGroup.add(tugBody, bumperF, bumperR, cabRoof, seat, beacon);
+    tugCore.add(tugBody, bumperF, bumperR, cabRoof, seat, beacon);
+    tugGroup.add(tugCore);
 
     // Gandengan Dolly 1 & 2 (Low-Bed ULD Dollies with AKE Containers)
+    const carts = [];
     [4.6, 8.8].forEach((offsetZ, dIdx) => {
         const dolly = new THREE.Group();
         dolly.position.set(0, 0, offsetZ);
@@ -8427,6 +8785,7 @@ function createAirportCargoTug(x, z, rotY) {
             const dw = new THREE.Mesh(dwGeo, MAT.truckTire);
             dw.position.set(wx, wy, wz);
             dolly.add(dw);
+            allWheels.push({ mesh: dw, radius: 0.18 });
         });
 
         // Kontainer ULD AKE di Atas Dolly
@@ -8437,11 +8796,25 @@ function createAirportCargoTug(x, z, rotY) {
         dolly.add(uldBox, uldCurtain);
 
         tugGroup.add(dolly);
+        carts.push({ mesh: dolly, trailDist: offsetZ });
     });
 
+    tugGroup.userData.anim = { tug: tugCore, carts, wheels: allWheels, head: drvHead };
     return tugGroup;
 }
-airsideGroup.add(createAirportCargoTug(54.0, 36.0, -Math.PI / 2));
+const airsideTugTrain = createAirportCargoTug(0, 0, 0);
+airsideGroup.add(airsideTugTrain);
+ambientVehicles.push({
+    type: 'loopTrain',
+    tug: airsideTugTrain.userData.anim.tug,
+    carts: airsideTugTrain.userData.anim.carts,
+    wheels: airsideTugTrain.userData.anim.wheels,
+    head: airsideTugTrain.userData.anim.head,
+    forwardSign: -1,
+    loopSpec: { xMin: 44.5, xMax: 58.5, zMin: 32.0, zMax: 41.0, r: 4.0 },
+    speed: 3.1,
+    dist: 5.0
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PERALATAN KESELAMATAN APRON SISI UDARA & MARSHALLER (AIRSIDE GSE & SAFETY)
@@ -8480,17 +8853,23 @@ function createApronGroundSafetyEquipment() {
     helmet.position.set(0, 1.68, 0);
     marshalGroup.add(head, helmet);
 
-    // Lengan Mengacungkan Tongkat Marshalling Oranye Terang
-    [-0.32, 0.32].forEach((ax, idx) => {
+    // Lengan Berengsel Bahu Mengacungkan Tongkat Marshalling Oranye Terang
+    const mArms = [];
+    [-0.32, 0.32].forEach((ax) => {
+        const armPiv = new THREE.Group();
+        armPiv.position.set(ax, 1.42, 0);
         const arm = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.45, 0.12), vestMat);
-        arm.position.set(ax, 1.25, 0.2);
-        arm.rotation.x = -0.5;
+        arm.position.set(0, -0.17, 0.20);
+        arm.rotation.x = -0.7;
 
         const wand = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.55, 8), new THREE.MeshBasicMaterial({ color: 0xFF5500 }));
-        wand.position.set(ax, 1.48, 0.38);
+        wand.position.set(0, 0.06, 0.38);
         wand.rotation.x = -0.2;
-        marshalGroup.add(arm, wand);
+        armPiv.add(arm, wand);
+        marshalGroup.add(armPiv);
+        mArms.push(armPiv);
     });
+    ambientMarshalWands.push({ armL: mArms[0], armR: mArms[1], group: marshalGroup });
     gseGroup.add(marshalGroup);
 
     // 2. KERUCUT KESELAMATAN PENERBANGAN (AVIATION TRAFFIC SAFETY CONES)
@@ -8552,8 +8931,8 @@ airsideGroup.add(createApronGroundSafetyEquipment());
 // MOVING TRUCK MODEL (TRUK KONTENER DETAIL DENGAN HEADLIGHT & PINTU BUKA)
 // ─────────────────────────────────────────────────────────────────────────────
 const truckGroup = new THREE.Group();
-truckGroup.rotation.y = Math.PI; // Truk menghadap keluar (arah jalan), siap mundur masuk ke dermaga
-truckGroup.position.set(-5.0, 0, -68.0);
+truckGroup.rotation.y = 0; // Truk bersiaga di depan gerbang keamanan menghadap ke terminal (+Z)
+truckGroup.position.set(-5.0, 0, -82.0);
 
 const tCab = new THREE.Mesh(new THREE.BoxGeometry(3.0, 3.2, 3.4), MAT.truckCabBlue);
 tCab.position.set(0, 2.0, 3.6);
@@ -8598,6 +8977,7 @@ leafR.position.set(-0.77, 0, 0);
 tDoorR.add(leafR);
 
 // Lampu Belakang Trailer (Lampu Rem Merah & Lampu Mundur Putih Terang)
+const truckBrakeLightMat = new THREE.MeshBasicMaterial({ color: 0x991B1B });
 const reverseLightMat = new THREE.MeshBasicMaterial({ color: 0x334155 });
 const reverseSpot = new THREE.SpotLight(0xFFFFFF, 0, 28, Math.PI / 4, 0.5);
 reverseSpot.position.set(0, 1.2, -6.5);
@@ -8605,15 +8985,16 @@ reverseSpot.target.position.set(0, 0.0, -25.0);
 truckGroup.add(reverseSpot, reverseSpot.target);
 
 [-1.42, 1.42].forEach(tx => {
-    const bLight = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.35, 0.06), new THREE.MeshBasicMaterial({ color: 0xEF4444 }));
+    const bLight = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.35, 0.06), truckBrakeLightMat);
     bLight.position.set(tx, 0.7, -6.43);
     const rLight = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.25, 0.06), reverseLightMat);
     rLight.position.set(tx - Math.sign(tx) * 0.26, 0.7, -6.43);
     truckGroup.add(bLight, rLight);
 });
 
-// 6 Roda Truk Berputar
+// 6 Roda Truk Berputar + Engsel Kemudi Roda Depan
 const truckWheels = [];
+const truckSteerPivots = [];
 const wheelGeo = new THREE.CylinderGeometry(0.5, 0.5, 0.35, 16);
 wheelGeo.rotateZ(Math.PI / 2);
 const wheelLocs = [
@@ -8621,10 +9002,18 @@ const wheelLocs = [
     [-1.6, 0.5, -1.8], [1.6, 0.5, -1.8],
     [-1.6, 0.5, -4.2], [1.6, 0.5, -4.2]
 ];
-wheelLocs.forEach(([wx, wy, wz]) => {
+wheelLocs.forEach(([wx, wy, wz], idx) => {
     const wheel = new THREE.Mesh(wheelGeo, MAT.truckTire);
-    wheel.position.set(wx, wy, wz);
-    truckGroup.add(wheel);
+    if (idx < 2) {
+        const pivot = new THREE.Group();
+        pivot.position.set(wx, wy, wz);
+        pivot.add(wheel);
+        truckGroup.add(pivot);
+        truckSteerPivots.push(pivot);
+    } else {
+        wheel.position.set(wx, wy, wz);
+        truckGroup.add(wheel);
+    }
     truckWheels.push(wheel);
 });
 
@@ -8683,17 +9072,90 @@ scene.add(activeCargoGroup);
 // ─────────────────────────────────────────────────────────────────────────────
 // WAYPOINTS KOORDINAT PROSES
 // ─────────────────────────────────────────────────────────────────────────────
+const BAY_X_COORDS = { 1: -26.0, 2: -5.0, 3: 22.0 };
+function parseDockNum(slot) {
+    const m = String(slot || '').match(/([1-3])/);
+    return m ? parseInt(m[1], 10) : 2;
+}
+let activeBayNum = parseDockNum(<?= json_encode($_GET['bay'] ?? ($_GET['dock'] ?? ($initialCargo['dock_slot'] ?? 'DOCK-02'))) ?>);
+let activeBayX = BAY_X_COORDS[activeBayNum] ?? -5.0;
+
+function setActiveDockBay(bayNum) {
+    const b = [1, 2, 3].includes(Number(bayNum)) ? Number(bayNum) : 2;
+    activeBayNum = b;
+    activeBayX = BAY_X_COORDS[b];
+    if (typeof activeCargoData === 'object' && activeCargoData) {
+        activeCargoData.dockSlot = 'DOCK-0' + b;
+    }
+
+    if (typeof WAYPOINTS !== 'undefined') {
+        WAYPOINTS.truckDock.set(activeBayX, 0, -42.15);
+        WAYPOINTS.cargoInTrailer.set(activeBayX, 0.65, -39.75);
+        WAYPOINTS.cargoUnload.set(activeBayX, 0.65, -33.5);
+        if (typeof getActiveXrayX === 'function') {
+            const xrX = getActiveXrayX(b);
+            WAYPOINTS.cargoXrayIn.set(xrX, 0.65, -21.5);
+            WAYPOINTS.cargoXrayOut.set(xrX, 0.65, -14.8);
+        }
+    }
+
+    if (typeof updateAvsecGantryStatus === 'function') {
+        updateAvsecGantryStatus(b);
+    }
+
+    if (typeof parkedTrucksByBay !== 'undefined') {
+        [1, 2, 3].forEach(idx => {
+            if (parkedTrucksByBay[idx]) parkedTrucksByBay[idx].visible = (idx !== b);
+        });
+    }
+
+    if (window._simBayDoors) {
+        [1, 2, 3].forEach(idx => {
+            const d = window._simBayDoors[idx];
+            if (!d) return;
+            if (d.openDrum) d.openDrum.visible = (idx === b);
+            if (d.closedDoorGroup) d.closedDoorGroup.visible = (idx !== b);
+        });
+    }
+
+    [1, 2, 3].forEach(idx => {
+        const btn = document.getElementById('bay-btn-' + idx);
+        if (!btn) return;
+        btn.className = (idx === b)
+            ? 'px-2 py-0.5 rounded-lg text-[10px] font-extrabold border border-teal-300/60 bg-[#0CA1AF] text-white shadow transition-all cursor-pointer'
+            : 'px-2 py-0.5 rounded-lg text-[10px] font-extrabold border border-white/15 bg-white/10 text-white/80 hover:bg-white/20 transition-all cursor-pointer';
+    });
+}
+
+function selectSimDock(bayNum) {
+    const wasRunning = simActive || simPhase > 0;
+    setActiveDockBay(bayNum);
+    if (wasRunning && typeof startLiveSimulation === 'function') {
+        addSimLog(`🚛 [PILIH TRUK] Mengalihkan simulasi ke Truk ${bayNum} (DOCK-0${bayNum} • X=${activeBayX}m) dan menjalankan ulang...`);
+        startLiveSimulation();
+    } else {
+        resetLiveSimulation(true);
+        const stEl = document.getElementById('hud-stage-name');
+        if (stEl) stEl.innerHTML = `STANDBY &bull; TRUK ${bayNum} (BAY ${bayNum}) SIAP <span class="text-[8px] px-1.5 py-0.5 rounded bg-teal-500/30 text-teal-200 font-extrabold">DOCK-0${bayNum}</span>`;
+        setCameraView('dock');
+        addSimLog(`🚛 [PILIH TRUK] Truk ${bayNum} (Bay ${bayNum} / DOCK-0${bayNum}) dipilih sebagai armada aktif.`);
+        if (typeof showMilestone === 'function') {
+            showMilestone(`TRUK ${bayNum} DIPILIH (BAY ${bayNum})`, `Pintu Dermaga Bay ${bayNum} terbuka. Tekan Play untuk menggerakkan Truk ${bayNum}.`);
+        }
+    }
+}
+
 const WAYPOINTS = {
-    truckStart: new THREE.Vector3(-5.0, 0, -68.0),
+    truckStart: new THREE.Vector3(-5.0, 0, -82.0),
     truckDock:  new THREE.Vector3(-5.0, 0, -42.15),
     
     cargoInTrailer: new THREE.Vector3(-5.0, 0.65, -39.75),
     cargoUnload:    new THREE.Vector3(-5.0, 0.65, -33.5),
-    cargoRfid:      new THREE.Vector3(-5.0, 0.65, -27.0),
-    cargoXrayIn:    new THREE.Vector3(-5.0, 0.65, -21.0),
-    cargoXrayOut:   new THREE.Vector3(-5.0, 0.65, -16.5),
+    cargoRfid:      new THREE.Vector3(-5.0, 0.65, -27.5),
+    cargoXrayIn:    new THREE.Vector3(-5.0, 0.65, -21.5),
+    cargoXrayOut:   new THREE.Vector3(-5.0, 0.65, -14.8),
     
-    cargoQuarantineTable: new THREE.Vector3(24.5, 1.05, -16.5),
+    cargoQuarantineTable: new THREE.Vector3(24.5, 1.05, -12.0),
     cargoTurnCorner:    new THREE.Vector3(-5.0, 0.65, 8.0),
     cargoStorageCenter: new THREE.Vector3(0.0, 0.65, 8.0),
     cargoScalePlatform: new THREE.Vector3(35.0, 0.65, 8.0),
@@ -8706,6 +9168,7 @@ const WAYPOINTS = {
 // ─────────────────────────────────────────────────────────────────────────────
 function startLiveSimulation() {
     if (!activeCargoData.name) {
+        activeCargoData.dockSlot = <?= json_encode($initialCargo['dock_slot'] ?? 'DOCK-02') ?>;
         activeCargoData.name = <?= json_encode($initialCargo['description'] ?? 'Vaksin & Peralatan Medis Biofarma') ?>;
         activeCargoData.commodity = <?= json_encode($initialCargo['commodity_type'] ?? 'PHARMA') ?>;
         activeCargoData.qty = <?= (int)($initialCargo['quantity'] ?? 48) ?>;
@@ -8731,6 +9194,7 @@ function startLiveSimulation() {
     cBox1.material = MAT.cardboardBox;
     cTag.material.color.setHex(0x0CA1AF);
 
+    setActiveDockBay(activeBayNum);
     resetLiveSimulation(false);
 
     simActive = true;
@@ -8747,7 +9211,7 @@ function startLiveSimulation() {
     const pIcon = document.getElementById('scrub-play-icon');
     if (pIcon) pIcon.className = 'fa-solid fa-pause text-[11px]';
 
-    addSimLog(`🚀 [START] Memulai pengiriman kargo "${activeCargoData.name}" dari truk ${activeCargoData.truckPlate}.`);
+    addSimLog(`🚀 [START] Memulai pengiriman kargo "${activeCargoData.name}" menggunakan Truk ${activeBayNum} (${activeCargoData.truckPlate} • DOCK-0${activeBayNum}).`);
     updateStepperUI(1);
     showMilestone('SIMULASI DIMULAI', `Truk ${activeCargoData.truckPlate} melaju ke Terminal Kargo Bandara.`);
 }
@@ -8790,7 +9254,8 @@ function saveToDatabaseApi() {
             quantity: activeCargoData.qty,
             xray_result: activeCargoData.xrayResult,
             truck_plate: activeCargoData.truckPlate,
-            driver_name: activeCargoData.driver
+            driver_name: activeCargoData.driver,
+            dock_slot: activeCargoData.dockSlot || ('DOCK-0' + activeBayNum)
         })
     }).then(r => r.json()).then(res => {
         if (runId !== agentRunId) return; // simulasi sudah di-reset/diulang
@@ -8811,13 +9276,20 @@ function resetLiveSimulation(fullReset = true) {
     simPhase = 0;
     simProgress = 0;
 
-    // Reset Truk (Posisi awal siap mundur ke dermaga)
-    truckGroup.rotation.y = Math.PI;
-    truckGroup.position.set(-5.0, 0, -68.0);
+    // Reset Truk (Posisi awal bersiaga di depan Gatehouse menghadap +Z)
+    truckGroup.rotation.y = 0;
+    truckGroup.position.set(-5.0, 0, -82.0);
+    truckGroup._prevDist = 0;
+    truckGroup._gateOpenedLog = false;
+    truckGroup._reverseLog = false;
     truckBedPallet.visible = true;
     truckBedBox.visible = true;
     tDoorL.rotation.y = 0;
     tDoorR.rotation.y = 0;
+    if (typeof boomInPivot !== 'undefined' && boomInPivot) boomInPivot.rotation.z = 0;
+    if (typeof laneSignalInMat !== 'undefined' && laneSignalInMat) laneSignalInMat.color.setHex(0xEF4444);
+    if (typeof truckBrakeLightMat !== 'undefined' && truckBrakeLightMat) truckBrakeLightMat.color.setHex(0x991B1B);
+    if (typeof truckSteerPivots !== 'undefined') truckSteerPivots.forEach(p => { p.rotation.y = 0; });
     if (typeof reverseSpot !== 'undefined') reverseSpot.intensity = 0;
     if (typeof reverseLightMat !== 'undefined') reverseLightMat.color.setHex(0x334155);
 
@@ -8828,7 +9300,8 @@ function resetLiveSimulation(fullReset = true) {
     palUldGroup.visible = false;
 
     // Reset Diverter Arm
-    divArm.position.x = 0.6;
+    if (typeof resetDiverters === 'function') resetDiverters();
+    activeCargoGroup._divSoundPlayed = false;
 
     // Reset Timbangan
     updateScaleDisplayTexture(activeCargoData.weight, activeCargoData.maxWeight, 'IDLE');
@@ -8842,7 +9315,7 @@ function resetLiveSimulation(fullReset = true) {
     // Reset Lights & RFID
     redAlarmStrobe.intensity = 0;
     xrayScanLight.intensity = 0;
-    xrBeaconMat.color.setHex(0x10B981);
+    Object.values(xrBeaconMats).forEach(m => m.color.setHex(0x10B981));
     if (typeof rfidBeaconMat !== 'undefined' && rfidBeaconMat) rfidBeaconMat.color.setHex(0x0CA1AF);
     if (typeof rfidScanCurtain !== 'undefined' && rfidScanCurtain) rfidScanCurtain.visible = false;
     if (typeof rfidWaveMesh !== 'undefined' && rfidWaveMesh) rfidWaveMesh.material.opacity = 0;
@@ -8903,11 +9376,13 @@ function setCameraView(mode) {
     if (mode === 'iso') {
         smoothCam(-38, 32, -45, 12, 3, -2);
     } else if (mode === 'dock') {
-        smoothCam(-18, 9, -58, -5, 2.5, -42);
+        const camX = Math.min(-18.0, activeBayX - 14.0);
+        const lookX = (activeBayX - 5.0) * 0.55;
+        smoothCam(camX, 14.0, -76.0, lookX, 1.8, -53.0);
     } else if (mode === 'rfid') {
-        smoothCam(3.5, 5.8, -20.5, -5.0, 2.0, -27.0);
+        smoothCam(3.5, 5.8, -21.0, -5.0, 2.0, -27.5);
     } else if (mode === 'xray') {
-        smoothCam(-14, 12, -28, 5, 2, -18);
+        smoothCam(-25.0, 17.5, -31.5, 1.5, 1.4, -15.5);
     } else if (mode === 'scale') {
         smoothCam(20, 12, -6, 35, 2, 8);
     } else if (mode === 'plane') {
@@ -8959,31 +9434,39 @@ function jumpToProcessStep(stepNum) {
     // Reset base elements
     redAlarmStrobe.intensity = 0;
     xrayScanLight.intensity = 0;
-    divArm.position.x = 0.6;
+    if (typeof resetDiverters === 'function') resetDiverters();
+    activeCargoGroup._divSoundPlayed = false;
     if (hlElevatorGroup) hlElevatorGroup.position.y = 0.55;
     if (updateHighLoaderScissors) updateHighLoaderScissors(0.55);
     if (planeCargoDoorHatch) planeCargoDoorHatch.rotation.z = 0;
     airsideShutter.position.y = 2.1;
 
     if (stepNum === 1) {
-        truckGroup.rotation.y = Math.PI;
-        truckGroup.position.set(-5.0, 0, -68.0);
+        truckGroup.rotation.y = 0;
+        truckGroup.position.set(-5.0, 0, -82.0);
+        truckGroup._prevDist = 0;
+        truckGroup._gateOpenedLog = false;
+        truckGroup._reverseLog = false;
+        if (typeof boomInPivot !== 'undefined' && boomInPivot) boomInPivot.rotation.z = 0;
+        if (typeof laneSignalInMat !== 'undefined' && laneSignalInMat) laneSignalInMat.color.setHex(0xEF4444);
+        if (typeof truckBrakeLightMat !== 'undefined' && truckBrakeLightMat) truckBrakeLightMat.color.setHex(0x991B1B);
+        if (typeof truckSteerPivots !== 'undefined') truckSteerPivots.forEach(p => { p.rotation.y = 0; });
         truckBedPallet.visible = true;
         truckBedBox.visible = true;
         tDoorL.rotation.y = 0;
         tDoorR.rotation.y = 0;
         activeCargoGroup.visible = false;
         setCameraView('dock');
-        addSimLog(`⏩ [JUMP] Melompat ke Tahap 1: Truk Mundur Merapat ke Dermaga.`);
+        addSimLog(`⏩ [JUMP] Melompat ke Tahap 1: Truk ${activeBayNum} Masuk Gerbang Keamanan menuju Bay ${activeBayNum}.`);
     } else if (stepNum === 2) {
         truckGroup.rotation.y = Math.PI;
-        truckGroup.position.set(-5.0, 0, -42.15);
+        truckGroup.position.set(activeBayX, 0, -42.15);
         truckBedPallet.visible = false;
         truckBedBox.visible = false;
         tDoorL.rotation.y = -Math.PI * 0.65;
         tDoorR.rotation.y = Math.PI * 0.65;
         activeCargoGroup.visible = true;
-        activeCargoGroup.position.set(-5.0, 0.65, -27.0);
+        activeCargoGroup.position.set(-5.0, 0.65, -27.5);
         palWoodGroup.visible = true;
         palUldGroup.visible = false;
         if (typeof rfidBeaconMat !== 'undefined' && rfidBeaconMat) rfidBeaconMat.color.setHex(0x10B981);
@@ -8996,26 +9479,26 @@ function jumpToProcessStep(stepNum) {
         addSimLog(`⏩ [JUMP] Melompat ke Tahap 2: Validasi RFID Portal & Pembongkaran Kargo.`);
     } else if (stepNum === 3) {
         truckGroup.rotation.y = Math.PI;
-        truckGroup.position.set(-5.0, 0, -42.15);
+        truckGroup.position.set(activeBayX, 0, -42.15);
         truckBedPallet.visible = false;
         truckBedBox.visible = false;
         tDoorL.rotation.y = -Math.PI * 0.65;
         tDoorR.rotation.y = Math.PI * 0.65;
         activeCargoGroup.visible = true;
-        activeCargoGroup.position.set(-5.0, 0.65, -27.0);
+        activeCargoGroup.position.set(-5.0, 0.65, -27.5);
         palWoodGroup.visible = true;
         palUldGroup.visible = false;
         setCameraView('xray');
-        addSimLog(`⏩ [JUMP] Melompat ke Tahap 3: Pemeriksaan X-Ray AVSEC.`);
+        addSimLog(`⏩ [JUMP] Melompat ke Tahap 3: Pemeriksaan X-Ray AVSEC (Line ${activeBayNum}).`);
     } else if (stepNum === 4) {
         truckGroup.rotation.y = Math.PI;
-        truckGroup.position.set(-5.0, 0, -42.15);
+        truckGroup.position.set(activeBayX, 0, -42.15);
         truckBedPallet.visible = false;
         truckBedBox.visible = false;
         tDoorL.rotation.y = -Math.PI * 0.65;
         tDoorR.rotation.y = Math.PI * 0.65;
         activeCargoGroup.visible = true;
-        activeCargoGroup.position.set(-5.0, 0.65, -16.5);
+        activeCargoGroup.position.set(getActiveXrayX(), 0.65, -14.8);
         palWoodGroup.visible = true;
         palUldGroup.visible = false;
         setCameraView('xray');
@@ -9034,7 +9517,7 @@ function jumpToProcessStep(stepNum) {
         loadmasterThinkShown = false;
         liveActualWeightKg = null;
         truckGroup.rotation.y = Math.PI;
-        truckGroup.position.set(-5.0, 0, -42.15);
+        truckGroup.position.set(activeBayX, 0, -42.15);
         truckBedPallet.visible = false;
         truckBedBox.visible = false;
         tDoorL.rotation.y = -Math.PI * 0.65;
@@ -9048,7 +9531,7 @@ function jumpToProcessStep(stepNum) {
         addSimLog(`⏩ [JUMP] Melompat ke Tahap 5: Penimbangan ULD Lantai 15T.`);
     } else if (stepNum === 6) {
         truckGroup.rotation.y = Math.PI;
-        truckGroup.position.set(-5.0, 0, -42.15);
+        truckGroup.position.set(activeBayX, 0, -42.15);
         truckBedPallet.visible = false;
         truckBedBox.visible = false;
         tDoorL.rotation.y = -Math.PI * 0.65;
@@ -9097,8 +9580,8 @@ function updateTimelineHUD() {
 
     const stageNames = [
         '',
-        'Tahap 1: Truk Mundur ke Dermaga',
-        'Tahap 2: Docking Bay 2 & Scan RFID',
+        `Tahap 1: Truk ${activeBayNum} Mundur ke Bay ${activeBayNum}`,
+        `Tahap 2: Docking Bay ${activeBayNum} & Scan RFID`,
         'Tahap 3: Bongkar Kargo & X-Ray AVSEC',
         activeCargoData.xrayResult === 'SUSPECT' ? 'Tahap 3B: Isolasi Karantina' : 'Tahap 4: Storage & Build-up ULD',
         'Tahap 5: Penimbangan Smart Scale 15T',
@@ -9126,6 +9609,266 @@ function updateTimelineHUD() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// SISTEM AKTIVITAS GUDANG & APRON OTONOM (PEKERJA, FORKLIFT, REACH TRUCK, TUG)
+// ─────────────────────────────────────────────────────────────────────────────
+function lerpAngleRad(a, b, alpha) {
+    let diff = ((b - a + Math.PI) % (Math.PI * 2)) - Math.PI;
+    if (diff < -Math.PI) diff += Math.PI * 2;
+    return a + diff * alpha;
+}
+
+function evalRoundedLoop(spec, s) {
+    const xMin = spec.xMin, xMax = spec.xMax, zMin = spec.zMin, zMax = spec.zMax;
+    const r = Math.min(spec.r || 2.5, (xMax - xMin) * 0.45, (zMax - zMin) * 0.45);
+    const wStr = Math.max(0.01, (xMax - xMin) - 2 * r);
+    const hStr = Math.max(0.01, (zMax - zMin) - 2 * r);
+    const cLen = (Math.PI * 0.5) * r;
+    const total = 2 * wStr + 2 * hStr + 4 * cLen;
+    let d = ((s % total) + total) % total;
+
+    if (d < wStr) {
+        return { x: xMin + r + d, z: zMin, dx: 1, dz: 0, total };
+    }
+    d -= wStr;
+    if (d < cLen) {
+        const phi = d / r;
+        return { x: (xMax - r) + r * Math.sin(phi), z: (zMin + r) - r * Math.cos(phi), dx: Math.cos(phi), dz: Math.sin(phi), total };
+    }
+    d -= cLen;
+    if (d < hStr) {
+        return { x: xMax, z: zMin + r + d, dx: 0, dz: 1, total };
+    }
+    d -= hStr;
+    if (d < cLen) {
+        const phi = d / r;
+        return { x: (xMax - r) + r * Math.cos(phi), z: (zMax - r) + r * Math.sin(phi), dx: -Math.sin(phi), dz: Math.cos(phi), total };
+    }
+    d -= cLen;
+    if (d < wStr) {
+        return { x: xMax - r - d, z: zMax, dx: -1, dz: 0, total };
+    }
+    d -= wStr;
+    if (d < cLen) {
+        const phi = d / r;
+        return { x: (xMin + r) - r * Math.sin(phi), z: (zMax - r) + r * Math.cos(phi), dx: -Math.cos(phi), dz: -Math.sin(phi), total };
+    }
+    d -= cLen;
+    if (d < hStr) {
+        return { x: xMin, z: zMax - r - d, dx: 0, dz: -1, total };
+    }
+    d -= hStr;
+    const phi = d / r;
+    return { x: (xMin + r) - r * Math.cos(phi), z: (zMin + r) - r * Math.sin(phi), dx: Math.sin(phi), dz: -Math.cos(phi), total };
+}
+
+function updateAmbientWarehouseActivity(dt, elapsedSec) {
+    // 1. Kendaraan Material Handling (Forklift, Reach Truck, Tow Tractor & Airside Tug)
+    for (let i = 0; i < ambientVehicles.length; i++) {
+        const v = ambientVehicles[i];
+        if (v.type === 'loopTrain') {
+            v.dist += v.speed * dt;
+            const fwd = v.forwardSign || 1;
+            const headPose = evalRoundedLoop(v.loopSpec, v.dist);
+            v.tug.position.set(headPose.x, 0, headPose.z);
+            v.tug.rotation.y = Math.atan2(headPose.dx * fwd, headPose.dz * fwd);
+            if (v.carts) {
+                v.carts.forEach(c => {
+                    const cp = evalRoundedLoop(v.loopSpec, v.dist - c.trailDist);
+                    c.mesh.position.set(cp.x, 0, cp.z);
+                    c.mesh.rotation.y = Math.atan2(cp.dx * fwd, cp.dz * fwd);
+                });
+            }
+            if (v.wheels) {
+                const ds = v.speed * dt;
+                v.wheels.forEach(w => { w.mesh.rotation.x += (ds / (w.radius || 0.22)) * fwd; });
+            }
+            if (v.head) v.head.rotation.y = Math.sin(elapsedSec * 1.1 + i) * 0.22;
+            continue;
+        }
+
+        // Shuttle Vehicles (Forklift & Reach Truck)
+        if (!v._init) {
+            v._init = true;
+            const dx0 = v.p1[0] - v.p0[0], dz0 = v.p1[1] - v.p0[1];
+            v._dist = Math.hypot(dx0, dz0) || 1;
+            v._yawFwd = Math.atan2(dx0, dz0);
+            v._yawRev = v._yawFwd + Math.PI;
+            v._phase = 'moveFwd'; // moveFwd -> dwellB -> moveBack -> dwellA
+            v._u = (typeof v.t === 'number') ? v.t : 0;
+            v._timer = 0;
+            v._curYaw = v._yawFwd;
+            v.group.position.set(
+                THREE.MathUtils.lerp(v.p0[0], v.p1[0], v._u),
+                0,
+                THREE.MathUtils.lerp(v.p0[1], v.p1[1], v._u)
+            );
+            v.group.rotation.y = v._curYaw;
+        }
+
+        const anim = v.group.userData.anim || {};
+        const stepU = (v.speed / v._dist) * dt;
+        let rollDelta = 0;
+        let targetYaw = v._curYaw;
+
+        if (v._phase === 'moveFwd') {
+            v._u = Math.min(1, v._u + stepU);
+            rollDelta = v.speed * dt;
+            targetYaw = v._yawFwd;
+            if (v._u >= 1) { v._phase = 'dwellB'; v._timer = 0; }
+        } else if (v._phase === 'dwellB') {
+            v._timer += dt;
+            const dwellTotal = v.dwellSec + (v.turnMode === 'reverse' ? 0 : (v.turnSec || 0.85));
+            if (v.rackFaceYaw != null) {
+                const half = dwellTotal * 0.5;
+                targetYaw = (v._timer < half + 0.6) ? v.rackFaceYaw : v._yawFwd;
+                if (anim.carriage && v.liftRange) {
+                    const lt = Math.sin(Math.min(1, v._timer / dwellTotal) * Math.PI);
+                    anim.carriage.position.y = THREE.MathUtils.lerp(anim.baseLift, v.liftRange[1], lt);
+                }
+            } else if (v.turnMode === 'reverse') {
+                targetYaw = v._yawFwd;
+            } else {
+                const turnStart = v.dwellSec;
+                targetYaw = (v._timer >= turnStart) ? v._yawRev : v._yawFwd;
+                if (anim.forkCarriage && v.forkAmp) {
+                    anim.forkCarriage.position.y = Math.sin(Math.min(1, v._timer / Math.max(0.1, turnStart)) * Math.PI) * v.forkAmp;
+                }
+            }
+            if (v._timer >= dwellTotal) {
+                v._phase = 'moveBack';
+                v._timer = 0;
+                if (anim.forkCarriage) anim.forkCarriage.position.y = 0;
+            }
+        } else if (v._phase === 'moveBack') {
+            v._u = Math.max(0, v._u - stepU);
+            if (v.turnMode === 'reverse') {
+                rollDelta = -v.speed * dt;
+                targetYaw = v._yawFwd;
+            } else {
+                rollDelta = v.speed * dt;
+                targetYaw = v._yawRev;
+            }
+            if (v._u <= 0) { v._phase = 'dwellA'; v._timer = 0; }
+        } else if (v._phase === 'dwellA') {
+            v._timer += dt;
+            const dwellTotal = v.dwellSec + (v.turnMode === 'reverse' ? 0 : (v.turnSec || 0.85));
+            if (v.rackFaceYaw != null) {
+                const half = dwellTotal * 0.5;
+                targetYaw = (v._timer < half + 0.6) ? v.rackFaceYaw : v._yawFwd;
+                if (anim.carriage && v.liftRange) {
+                    const lt = Math.sin(Math.min(1, v._timer / dwellTotal) * Math.PI);
+                    anim.carriage.position.y = THREE.MathUtils.lerp(anim.baseLift, v.liftRange[0], lt);
+                }
+            } else if (v.turnMode === 'reverse') {
+                targetYaw = v._yawFwd;
+            } else {
+                const turnStart = v.dwellSec;
+                targetYaw = (v._timer >= turnStart) ? v._yawFwd : v._yawRev;
+                if (anim.forkCarriage && v.forkAmp) {
+                    anim.forkCarriage.position.y = Math.sin(Math.min(1, v._timer / Math.max(0.1, turnStart)) * Math.PI) * v.forkAmp;
+                }
+            }
+            if (v._timer >= dwellTotal) {
+                v._phase = 'moveFwd';
+                v._timer = 0;
+                if (anim.forkCarriage) anim.forkCarriage.position.y = 0;
+            }
+        }
+
+        const easeU = easeInOutQuad(v._u);
+        v.group.position.x = THREE.MathUtils.lerp(v.p0[0], v.p1[0], easeU);
+        v.group.position.z = THREE.MathUtils.lerp(v.p0[1], v.p1[1], easeU);
+        v._curYaw = lerpAngleRad(v._curYaw, targetYaw, Math.min(1, dt * 5.0));
+        v.group.rotation.y = v._curYaw;
+
+        if (anim.wheels && rollDelta !== 0) {
+            const rad = anim.wheelRadius || 0.3;
+            const dRot = rollDelta / rad;
+            anim.wheels.forEach(w => { w.rotation.x += dRot; });
+        }
+        if (anim.beaconMat) {
+            anim.beaconMat.color.setHex((Math.sin(elapsedSec * 7.5 + i * 1.7) > 0) ? 0xF59E0B : 0x78350F);
+        }
+        if (anim.head) {
+            anim.head.rotation.y = Math.sin(elapsedSec * 1.6 + i) * 0.25;
+        }
+    }
+
+    // 2. Petugas Gudang, AVSEC Karantina & Dispatcher TOC
+    for (let i = 0; i < ambientWorkers.length; i++) {
+        const w = ambientWorkers[i];
+        const anim = w.group.userData.anim || {};
+        if (w.mode === 'desk') {
+            if (anim.head) anim.head.rotation.y = Math.sin(elapsedSec * 0.9 + (w.phase || 0)) * 0.28;
+            if (anim.upper) anim.upper.rotation.y = Math.sin(elapsedSec * 0.45 + (w.phase || 0)) * 0.1;
+            continue;
+        }
+
+        const pts = w.waypoints;
+        if (!pts || pts.length < 2) continue;
+        const pFrom = pts[w.idx];
+        const pTo = pts[(w.idx + 1) % pts.length];
+        const segDx = pTo[0] - pFrom[0], segDz = pTo[1] - pFrom[1];
+        const segLen = Math.hypot(segDx, segDz) || 1;
+        const baseY = (anim.baseY !== undefined) ? anim.baseY : 0;
+
+        if (w.wait > 0) {
+            w.wait -= dt;
+            const dwellYaw = (pFrom[2] !== undefined) ? pFrom[2] : w.group.rotation.y;
+            w.group.rotation.y = lerpAngleRad(w.group.rotation.y, dwellYaw, Math.min(1, dt * 4.5));
+            w.group.position.y = THREE.MathUtils.lerp(w.group.position.y, baseY, Math.min(1, dt * 8));
+            if (anim.legL) anim.legL.rotation.x = THREE.MathUtils.lerp(anim.legL.rotation.x, 0, Math.min(1, dt * 10));
+            if (anim.legR) anim.legR.rotation.x = THREE.MathUtils.lerp(anim.legR.rotation.x, 0, Math.min(1, dt * 10));
+            if (anim.armL) anim.armL.rotation.x = THREE.MathUtils.lerp(anim.armL.rotation.x, 0, Math.min(1, dt * 8));
+            if (anim.armR) anim.armR.rotation.x = THREE.MathUtils.lerp(anim.armR.rotation.x, -0.15 * Math.abs(Math.sin(elapsedSec * 2.5 + i)), Math.min(1, dt * 8));
+            if (anim.head) anim.head.rotation.y = Math.sin(elapsedSec * 2.1 + i) * 0.32;
+            if (anim.laser) {
+                anim.laser.visible = true;
+                anim.laser.material.opacity = (Math.sin(elapsedSec * 8 + i) > 0) ? 0.9 : 0.2;
+            }
+        } else {
+            const stepFrac = (w.speed / segLen) * dt;
+            w.progress += stepFrac;
+            w.stridePhase += w.speed * dt * 3.1;
+            if (w.progress >= 1.0) {
+                w.progress = 0;
+                w.idx = (w.idx + 1) % pts.length;
+                w.wait = w.dwellSec || 2.0;
+                w.group.position.set(pTo[0], baseY, pTo[1]);
+            } else {
+                const u = easeInOutQuad(w.progress);
+                w.group.position.x = THREE.MathUtils.lerp(pFrom[0], pTo[0], u);
+                w.group.position.z = THREE.MathUtils.lerp(pFrom[1], pTo[1], u);
+                w.group.position.y = baseY + Math.abs(Math.sin(w.stridePhase)) * 0.035;
+                w.group.rotation.y = lerpAngleRad(w.group.rotation.y, Math.atan2(segDx, segDz), Math.min(1, dt * 7));
+                const swing = Math.sin(w.stridePhase);
+                if (anim.legL) anim.legL.rotation.x = swing * 0.45;
+                if (anim.legR) anim.legR.rotation.x = -swing * 0.45;
+                if (anim.armL) anim.armL.rotation.x = -swing * 0.25;
+                if (anim.armR) anim.armR.rotation.x = swing * 0.25;
+                if (anim.head) anim.head.rotation.y = THREE.MathUtils.lerp(anim.head.rotation.y, 0, Math.min(1, dt * 6));
+                if (anim.laser) anim.laser.visible = false;
+            }
+        }
+    }
+
+    // 3. Petugas Marshaller Apron Pesawat Mengayunkan Tongkat Pemandu
+    for (let i = 0; i < ambientMarshalWands.length; i++) {
+        const m = ambientMarshalWands[i];
+        const s = Math.sin(elapsedSec * 4.2 + i);
+        const wave = Math.abs(s);
+        if (m.armL) {
+            m.armL.rotation.z = -0.35 - wave * 0.72;
+            m.armL.rotation.x = -0.35 - s * 0.28;
+        }
+        if (m.armR) {
+            m.armR.rotation.z = 0.35 + wave * 0.72;
+            m.armR.rotation.x = -0.35 + s * 0.28;
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // MAIN ANIMATION LOOP
 // ─────────────────────────────────────────────────────────────────────────────
 const clock = new THREE.Clock();
@@ -9134,6 +9877,9 @@ function animate() {
     requestAnimationFrame(animate);
     const delta = clock.getDelta();
     const dt = Math.min(delta, 0.1) * simSpeed;
+    const elapsedSec = clock.elapsedTime;
+
+    updateAmbientWarehouseActivity(isSimPaused ? 0 : Math.min(delta, 0.1) * Math.max(1.0, simSpeed), elapsedSec);
 
     if (simActive && !isSimPaused) {
         updateSimulationPipeline(dt);
@@ -9227,45 +9973,248 @@ function easeInOutQuad(x) {
     return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
 }
 
+function buildTruckBezierSpline(segments, samplesPerSeg = 64) {
+    const pts = [];
+    let cumS = 0;
+    for (let si = 0; si < segments.length; si++) {
+        const [p0, p1, p2, p3] = segments[si];
+        const startI = (si === 0) ? 0 : 1;
+        for (let i = startI; i <= samplesPerSeg; i++) {
+            const t = i / samplesPerSeg;
+            const u = 1 - t;
+            const x = u * u * u * p0[0] + 3 * u * u * t * p1[0] + 3 * u * t * t * p2[0] + t * t * t * p3[0];
+            const z = u * u * u * p0[1] + 3 * u * u * t * p1[1] + 3 * u * t * t * p2[1] + t * t * t * p3[1];
+            let dx = 3 * u * u * (p1[0] - p0[0]) + 6 * u * t * (p2[0] - p1[0]) + 3 * t * t * (p3[0] - p2[0]);
+            let dz = 3 * u * u * (p1[1] - p0[1]) + 6 * u * t * (p2[1] - p1[1]) + 3 * t * t * (p3[1] - p2[1]);
+            const dLen = Math.hypot(dx, dz) || 1;
+            dx /= dLen;
+            dz /= dLen;
+            if (pts.length > 0) {
+                const prev = pts[pts.length - 1];
+                cumS += Math.hypot(x - prev.x, z - prev.z);
+            }
+            pts.push({ s: cumS, x, z, dx, dz, kappa: 0 });
+        }
+    }
+    for (let i = 1; i < pts.length; i++) {
+        const a = pts[i - 1], b = pts[i];
+        const ds = b.s - a.s;
+        if (ds > 1e-4) {
+            const cross = a.dx * b.dz - a.dz * b.dx;
+            const dot = THREE.MathUtils.clamp(a.dx * b.dx + a.dz * b.dz, -1, 1);
+            b.kappa = (Math.atan2(cross, dot)) / ds;
+        }
+    }
+    if (pts.length > 1) pts[0].kappa = pts[1].kappa;
+    return { pts, totalLen: cumS };
+}
+
+function evalTruckSpline(spline, uFrac) {
+    const u = THREE.MathUtils.clamp(uFrac, 0, 1);
+    const targetS = u * spline.totalLen;
+    const pts = spline.pts;
+    let lo = 0, hi = pts.length - 1;
+    while (lo < hi - 1) {
+        const mid = (lo + hi) >> 1;
+        if (pts[mid].s <= targetS) lo = mid; else hi = mid;
+    }
+    const a = pts[lo], b = pts[hi];
+    const span = b.s - a.s;
+    const f = span > 1e-5 ? (targetS - a.s) / span : 0;
+    const dx = THREE.MathUtils.lerp(a.dx, b.dx, f);
+    const dz = THREE.MathUtils.lerp(a.dz, b.dz, f);
+    const dl = Math.hypot(dx, dz) || 1;
+    return {
+        s: targetS,
+        x: THREE.MathUtils.lerp(a.x, b.x, f),
+        z: THREE.MathUtils.lerp(a.z, b.z, f),
+        dx: dx / dl,
+        dz: dz / dl,
+        kappa: THREE.MathUtils.lerp(a.kappa, b.kappa, f)
+    };
+}
+
+const TRUCK_MANEUVER_PATHS = (() => {
+    const nrm = (x, z) => { const l = Math.hypot(x, z); return [x / l, z / l]; };
+    const d1 = nrm(-0.46, -0.888), pStop1 = [-29.8, -53.8], p2_1 = [pStop1[0] - 4.5 * d1[0], pStop1[1] - 4.5 * d1[1]];
+    const d2 = nrm(-0.38, -0.925), pStop2 = [-11.2, -55.0], p2_2 = [pStop2[0] - 4.8 * d2[0], pStop2[1] - 4.8 * d2[1]];
+    const dB2Mid = nrm(0.28, 0.960), pB2Mid = [4.0, -54.0];
+    const pB2In  = [pB2Mid[0] - 4.2 * dB2Mid[0], pB2Mid[1] - 4.2 * dB2Mid[1]];
+    const pB2Out = [pB2Mid[0] + 4.2 * dB2Mid[0], pB2Mid[1] + 4.2 * dB2Mid[1]];
+    const d3 = nrm(0.45, -0.893),  pStop3 = [25.2, -53.2],  p2_3 = [pStop3[0] - 4.5 * d3[0], pStop3[1] - 4.5 * d3[1]];
+
+    return {
+        1: {
+            fwd: buildTruckBezierSpline([
+                [[-5, -82], [-5, -76], [-5, -70], [-5, -64]],
+                [[-5, -64], [-5, -54.5], [-11.5, -50.2], [-19.5, -50.2]],
+                [[-19.5, -50.2], [-24.5, -50.2], p2_1, pStop1]
+            ]),
+            rev: buildTruckBezierSpline([
+                [pStop1, p2_1, [-26.0, -47.2], [-26.0, -42.15]]
+            ])
+        },
+        2: {
+            fwd: buildTruckBezierSpline([
+                [[-5, -82], [-5, -76], [-5, -70], [-5, -64]],
+                [[-5, -64], [-5, -58.5], pB2In, pB2Mid],
+                [pB2Mid, pB2Out, [6.2, -46.5], [-2.5, -46.5]],
+                [[-2.5, -46.5], [-8.5, -46.5], p2_2, pStop2]
+            ]),
+            rev: buildTruckBezierSpline([
+                [pStop2, p2_2, [-5.0, -47.2], [-5.0, -42.15]]
+            ])
+        },
+        3: {
+            fwd: buildTruckBezierSpline([
+                [[-5, -82], [-5, -76], [-5, -70], [-5, -64]],
+                [[-5, -64], [-5, -54.5], [2.5, -49.5], [12.0, -49.5]],
+                [[12.0, -49.5], [19.0, -49.5], p2_3, pStop3]
+            ]),
+            rev: buildTruckBezierSpline([
+                [pStop3, p2_3, [22.0, -47.2], [22.0, -42.15]]
+            ])
+        }
+    };
+})();
+
+function updateGateBoomByTruckZ(zPos, inForwardStage) {
+    if (typeof boomInPivot === 'undefined' || !boomInPivot) return;
+    if (!inForwardStage) {
+        boomInPivot.rotation.z = THREE.MathUtils.lerp(boomInPivot.rotation.z, 0, 0.15);
+        if (typeof laneSignalInMat !== 'undefined' && laneSignalInMat) laneSignalInMat.color.setHex(0xEF4444);
+        return;
+    }
+    let lift = 0;
+    if (zPos >= -81.0 && zPos < -76.5) {
+        lift = easeInOutQuad((zPos + 81.0) / 4.5);
+    } else if (zPos >= -76.5 && zPos <= -64.5) {
+        lift = 1.0;
+    } else if (zPos > -64.5 && zPos <= -58.5) {
+        lift = 1.0 - easeInOutQuad((zPos + 64.5) / 6.0);
+    }
+    boomInPivot.rotation.z = -Math.PI * 0.44 * lift;
+    if (typeof laneSignalInMat !== 'undefined' && laneSignalInMat) {
+        laneSignalInMat.color.setHex(lift > 0.35 ? 0x10B981 : 0xEF4444);
+    }
+}
+
 function updateSimulationPipeline(dt) {
     if (typeof updateTimelineHUD === 'function') updateTimelineHUD();
 
     // ═════════════════════════════════════════════════════════════════════════
-    // FASE 1: TRUK MUNDUR MERAPAT KE DERMAGA DOCK BAY 2
+    // FASE 1: TRUK MASUK GERBANG KEAMANAN -> MANUVER YARD -> MUNDUR KE DERMAGA
     // ═════════════════════════════════════════════════════════════════════════
     if (simPhase === 1) {
-        document.getElementById('hud-stage-name').innerHTML = 'TAHAP 1: TRUK MUNDUR KE DERMAGA <span class="text-[8px] px-1.5 py-0.5 rounded bg-teal-500/30 text-teal-200 font-extrabold">REVERSING</span>';
-        simProgress += dt * 0.088;
+        const pathPlan = TRUCK_MANEUVER_PATHS[activeBayNum] || TRUCK_MANEUVER_PATHS[2];
+        simProgress += dt * 0.068;
 
-        const easedT = easeInOutCubic(Math.min(1.0, simProgress));
-        // Truk mundur dari Z = -68.0 ke Z = -42.15 (posisi pantat trailer pas menyentuh karet bumper dok di Z = -35.75)
-        const curZ = THREE.MathUtils.lerp(-68.0, -42.15, easedT);
-        truckGroup.position.z = curZ;
+        const p = Math.min(1.0, simProgress);
+        const stageEl = document.getElementById('hud-stage-name');
+        let curX = -5.0, curZ = -82.0;
+        let steerAngle = 0;
 
-        // Lampu mundur putih menyala terang & berkedip saat mundur
-        if (typeof reverseSpot !== 'undefined') reverseSpot.intensity = 2.8;
-        if (typeof reverseLightMat !== 'undefined') {
-            reverseLightMat.color.setHex((Math.sin(Date.now() * 0.015) > 0) ? 0xFFFFFF : 0xAAAAAA);
+        if (p < 0.65) {
+            // Sub-tahap 1A: Melintas palang gerbang keamanan & bermanuver maju menuju titik henti mundur
+            if (stageEl) stageEl.innerHTML = `TAHAP 1: TRUK ${activeBayNum} MASUK YARD <span class="text-[8px] px-1.5 py-0.5 rounded bg-sky-500/30 text-sky-200 font-extrabold">DRIVE</span>`;
+            const uFwd = easeInOutQuad(p / 0.65);
+            const sample = evalTruckSpline(pathPlan.fwd, uFwd);
+            curX = sample.x;
+            curZ = sample.z;
+            truckGroup.position.set(curX, 0, curZ);
+            truckGroup.rotation.y = Math.atan2(sample.dx, sample.dz);
+
+            // Roda berputar maju proporsional jarak tempuh
+            const ds = Math.max(0, sample.s - (truckGroup._prevDist || 0));
+            truckGroup._prevDist = sample.s;
+            truckWheels.forEach(w => { w.rotation.x += ds / 0.50; });
+            steerAngle = THREE.MathUtils.clamp(-sample.kappa * 6.5, -0.42, 0.42);
+
+            // Lampu rem menyala lembut menjelang berhenti di titik P_stop
+            if (typeof truckBrakeLightMat !== 'undefined' && truckBrakeLightMat) {
+                truckBrakeLightMat.color.setHex(p > 0.56 ? 0xFF2222 : 0x991B1B);
+            }
+            if (typeof reverseSpot !== 'undefined') reverseSpot.intensity = 0;
+            if (typeof reverseLightMat !== 'undefined') reverseLightMat.color.setHex(0x334155);
+            updateGateBoomByTruckZ(curZ, true);
+
+            if (!truckGroup._gateOpenedLog && curZ >= -79.5) {
+                truckGroup._gateOpenedLog = true;
+                addSimLog(`🚧 [GATEHOUSE ACCESS] Palang gerbang terbuka untuk Truk ${activeBayNum} (${activeCargoData.truckPlate}) menuju Apron Bay ${activeBayNum}.`);
+            }
+        } else if (p < 0.72) {
+            // Sub-tahap 1B: Berhenti sejenak di titik henti, rem aktif & pindah gigi mundur (R)
+            if (stageEl) stageEl.innerHTML = `TAHAP 1: PERSIAPAN MUNDUR BAY ${activeBayNum} <span class="text-[8px] px-1.5 py-0.5 rounded bg-amber-500/30 text-amber-200 font-extrabold">SHIFT R</span>`;
+            const stopSample = evalTruckSpline(pathPlan.fwd, 1.0);
+            curX = stopSample.x;
+            curZ = stopSample.z;
+            truckGroup.position.set(curX, 0, curZ);
+            truckGroup.rotation.y = Math.atan2(stopSample.dx, stopSample.dz);
+            truckGroup._prevDist = 0;
+
+            const revStartSample = evalTruckSpline(pathPlan.rev, 0.0);
+            steerAngle = THREE.MathUtils.clamp(revStartSample.kappa * 6.5, -0.42, 0.42);
+            if (typeof truckBrakeLightMat !== 'undefined' && truckBrakeLightMat) truckBrakeLightMat.color.setHex(0xFF2222);
+            if (typeof reverseSpot !== 'undefined') reverseSpot.intensity = (p > 0.685) ? 2.4 : 0;
+            if (typeof reverseLightMat !== 'undefined') reverseLightMat.color.setHex((p > 0.685) ? 0xFFFFFF : 0x334155);
+            updateGateBoomByTruckZ(curZ, false);
+
+            if (!truckGroup._reverseLog && p > 0.685) {
+                truckGroup._reverseLog = true;
+                addSimLog(`⏪ [REVERSING] Truk ${activeBayNum} masuk gigi mundur menuju garis parkir Dermaga Bay ${activeBayNum}.`);
+            }
+        } else {
+            // Sub-tahap 1C: Mundur presisi mengikuti kurva halus masuk ke Bay Dermaga
+            if (stageEl) stageEl.innerHTML = `TAHAP 1: TRUK ${activeBayNum} KE BAY ${activeBayNum} <span class="text-[8px] px-1.5 py-0.5 rounded bg-teal-500/30 text-teal-200 font-extrabold">REVERSING</span>`;
+            const uRev = easeInOutQuad((p - 0.72) / 0.28);
+            const sample = evalTruckSpline(pathPlan.rev, uRev);
+            curX = sample.x;
+            curZ = sample.z;
+            truckGroup.position.set(curX, 0, curZ);
+            // Mundur: bagian belakang mengikuti tangent (dx, dz), sehingga hidung kabin mengarah ke (-dx, -dz)
+            truckGroup.rotation.y = Math.atan2(-sample.dx, -sample.dz);
+
+            const ds = Math.max(0, sample.s - (truckGroup._prevDist || 0));
+            truckGroup._prevDist = sample.s;
+            truckWheels.forEach(w => { w.rotation.x -= ds / 0.50; });
+            steerAngle = THREE.MathUtils.clamp(sample.kappa * 6.5, -0.42, 0.42);
+
+            if (typeof truckBrakeLightMat !== 'undefined' && truckBrakeLightMat) {
+                truckBrakeLightMat.color.setHex(p > 0.94 ? 0xFF2222 : 0x991B1B);
+            }
+            if (typeof reverseSpot !== 'undefined') reverseSpot.intensity = 2.8;
+            if (typeof reverseLightMat !== 'undefined') {
+                reverseLightMat.color.setHex((Math.sin(Date.now() * 0.015) > 0) ? 0xFFFFFF : 0xAAAAAA);
+            }
+            updateGateBoomByTruckZ(curZ, false);
         }
 
-        // Roda berputar mundur saat reversing
-        const currentSpeed = (1.0 - Math.abs(easedT - 0.5) * 1.4);
-        truckWheels.forEach(w => { w.rotation.x -= dt * 4.5 * Math.max(0.25, currentSpeed); });
+        if (typeof truckSteerPivots !== 'undefined') {
+            truckSteerPivots.forEach(pv => { pv.rotation.y = THREE.MathUtils.lerp(pv.rotation.y, steerAngle, Math.min(1, dt * 8)); });
+        }
 
         if (simCameraMode === 'follow' && !isUserInteracting) {
-            camera.position.lerp(new THREE.Vector3(-14.0, 7.5, curZ - 10.0), dt * 2.8);
-            controls.target.lerp(new THREE.Vector3(-5.0, 2.2, curZ + 5.0), dt * 2.8);
+            const camX = curX - 11.5;
+            const camZ = Math.min(curZ - 13.5, -55.0);
+            camera.position.lerp(new THREE.Vector3(camX, 11.2, camZ), dt * 2.8);
+            controls.target.lerp(new THREE.Vector3(curX, 2.0, curZ + 2.5), dt * 2.8);
         }
 
         if (simProgress >= 1.0) {
+            truckGroup.position.set(activeBayX, 0, -42.15);
+            truckGroup.rotation.y = Math.PI;
+            truckGroup._prevDist = 0;
+            updateGateBoomByTruckZ(-42.15, false);
+            if (typeof truckSteerPivots !== 'undefined') truckSteerPivots.forEach(pv => { pv.rotation.y = 0; });
+            if (typeof truckBrakeLightMat !== 'undefined' && truckBrakeLightMat) truckBrakeLightMat.color.setHex(0x991B1B);
             if (typeof reverseSpot !== 'undefined') reverseSpot.intensity = 0;
             if (typeof reverseLightMat !== 'undefined') reverseLightMat.color.setHex(0x334155);
             simPhase = 2;
             simProgress = 0;
             updateStepperUI(2);
             playSound('beep');
-            addSimLog(`📡 [DOCKING BAY 2] Truk ${activeCargoData.truckPlate} berhasil mundur & merapat di Bay 2. Membaca Tag GS1 SSCC-18...`);
-            showMilestone('DOCKING BAY 2', `Truk ${activeCargoData.truckPlate} merapat mundur di Bay 2. Membaca RFID Manifest.`);
+            addSimLog(`📡 [DOCKING BAY ${activeBayNum}] Truk ${activeBayNum} (${activeCargoData.truckPlate}) berhasil merapat di Bay ${activeBayNum}. Membaca Tag GS1 SSCC-18...`);
+            showMilestone(`DOCKING BAY ${activeBayNum}`, `Truk ${activeCargoData.truckPlate} merapat di Bay ${activeBayNum}. Membaca RFID Manifest.`);
         }
     }
 
@@ -9274,15 +10223,16 @@ function updateSimulationPipeline(dt) {
     // ═════════════════════════════════════════════════════════════════════════
     else if (simPhase === 2) {
         document.getElementById('hud-stage-name').innerHTML = 'TAHAP 2: VALIDASI RFID &amp; UNLOAD KARGO <span class="text-[8px] px-1.5 py-0.5 rounded bg-teal-500/30 text-teal-200 font-extrabold animate-pulse">SCANNING RFID</span>';
-        simProgress += dt * 0.075;
-        truckGroup.position.z = -42.15;
+        simProgress += dt * (activeBayNum === 2 ? 0.075 : 0.058);
+        truckGroup.position.set(activeBayX, 0, -42.15);
+        truckGroup.rotation.y = Math.PI;
 
         // Pintu belakang trailer truk terbuka mulus ke samping luar
         const doorT = easeOutQuad(Math.min(1.0, simProgress * 2.5));
         tDoorL.rotation.y = THREE.MathUtils.lerp(0, -Math.PI * 0.65, doorT);
         tDoorR.rotation.y = THREE.MathUtils.lerp(0, Math.PI * 0.65, doorT);
 
-        // Kargo dikeluarkan dari bak truk (-39.75) dan mengalir lurus ke gerbang RFID (-27.0)
+        // Kargo dikeluarkan dari bak truk Bay terpilih & bergabung menuju gerbang RFID (-5.0, -27.0)
         if (simProgress > 0.10) {
             truckBedPallet.visible = false;
             truckBedBox.visible = false;
@@ -9290,11 +10240,25 @@ function updateSimulationPipeline(dt) {
             palWoodGroup.visible = true;
             palUldGroup.visible = false;
 
-            const cargoT = (simProgress - 0.10) / 0.90;
-            const curZ = THREE.MathUtils.lerp(-39.75, -27.0, easeInOutQuad(Math.min(1.0, cargoT)));
-            activeCargoGroup.position.set(-5.0, 0.65, curZ);
+            const cargoT = Math.min(1.0, (simProgress - 0.10) / 0.90);
+            let curX = -5.0;
+            let curZ = -27.5;
+            if (activeBayNum === 2) {
+                curX = -5.0;
+                curZ = THREE.MathUtils.lerp(-39.75, -27.5, easeInOutQuad(cargoT));
+            } else if (cargoT < 0.30) {
+                curX = activeBayX;
+                curZ = THREE.MathUtils.lerp(-39.75, -31.0, easeInOutQuad(cargoT / 0.30));
+            } else if (cargoT < 0.78) {
+                curX = THREE.MathUtils.lerp(activeBayX, -5.0, easeInOutQuad((cargoT - 0.30) / 0.48));
+                curZ = -31.0;
+            } else {
+                curX = -5.0;
+                curZ = THREE.MathUtils.lerp(-31.0, -27.5, easeInOutQuad((cargoT - 0.78) / 0.22));
+            }
+            activeCargoGroup.position.set(curX, 0.65, curZ);
 
-            // Efek Pemindaian RFID saat kargo mendekati & berada di portal (-31.0 s.d. -27.0)
+            // Efek Pemindaian RFID saat kargo mendekati & berada di portal (-31.0 s.d. -27.5)
             if (curZ >= -31.0) {
                 const scanIntensity = Math.sin(Date.now() * 0.02) * 0.3 + 0.7;
                 rfidWaveMesh.visible = true;
@@ -9315,7 +10279,7 @@ function updateSimulationPipeline(dt) {
                     telemR.className = 'font-black text-amber-300 font-mono text-xs animate-pulse';
                 }
 
-                if (curZ >= -28.5 && !activeCargoGroup._rfidBeeped) {
+                if (curZ >= -29.0 && !activeCargoGroup._rfidBeeped) {
                     activeCargoGroup._rfidBeeped = true;
                     playSound('beep');
                     addSimLog(`📡 [RFID SCAN] Tag GS1 SSCC terdeteksi di Portal AIDC: e-AWB ${activeCargoData.awb} valid!`);
@@ -9323,15 +10287,17 @@ function updateSimulationPipeline(dt) {
             }
         }
 
-        // Kamera otomatis fokus ke Stasiun RFID Portal (Bebas Halangan Atap Truk!)
+        // Kamera mengikuti pergerakan kargo dari feeder bay menuju Portal RFID (-5.0, -27.5)
         if (simCameraMode === 'follow' && !isUserInteracting) {
-            camera.position.lerp(new THREE.Vector3(3.5, 5.8, -20.5), dt * 2.8);
-            controls.target.lerp(new THREE.Vector3(-5.0, 2.0, -27.0), dt * 2.8);
+            const trackX = activeCargoGroup.visible ? activeCargoGroup.position.x : activeBayX;
+            const trackZ = activeCargoGroup.visible ? activeCargoGroup.position.z : -35.0;
+            camera.position.lerp(new THREE.Vector3(trackX + 8.5, 6.5, trackZ + 7.5), dt * 2.8);
+            controls.target.lerp(new THREE.Vector3(trackX, 1.8, trackZ), dt * 2.8);
         }
 
         if (simProgress >= 1.0) {
             activeCargoGroup._rfidBeeped = false;
-            activeCargoGroup.position.set(-5.0, 0.65, -27.0);
+            activeCargoGroup.position.set(-5.0, 0.65, -27.5);
             if (rfidBeaconMat) rfidBeaconMat.color.setHex(0x10B981); // Hijau sukses verifikasi
             if (rfidScanCurtain) rfidScanCurtain.visible = false;
             if (rfidWaveMesh) rfidWaveMesh.material.opacity = 0;
@@ -9346,49 +10312,73 @@ function updateSimulationPipeline(dt) {
             simPhase = 3;
             simProgress = 0;
             updateStepperUI(3);
-            addSimLog(`✅ [RFID VERIFIED] Tag RFID e-AWB ${activeCargoData.awb} lolos verifikasi. Meluncur ke Terowongan X-Ray Line 2.`);
-            showMilestone('VALIDASI RFID SELESAI', `e-AWB ${activeCargoData.awb} terverifikasi di CMS. Menuju X-Ray AVSEC.`, 'fa-wifi');
+            addSimLog(`✅ [RFID VERIFIED] Tag RFID e-AWB ${activeCargoData.awb} lolos verifikasi. Meluncur ke Terowongan X-Ray Line ${activeBayNum}.`);
+            showMilestone('VALIDASI RFID SELESAI', `e-AWB ${activeCargoData.awb} terverifikasi di CMS. Menuju X-Ray Line ${activeBayNum}.`, 'fa-wifi');
         }
     }
 
     // ═════════════════════════════════════════════════════════════════════════
-    // FASE 3: PEMERIKSAAN DUAL-VIEW X-RAY SCREENING (LINE 2)
+    // FASE 3: PEMERIKSAAN DUAL-VIEW X-RAY SCREENING (LINE 1 / 2 / 3)
     // ═════════════════════════════════════════════════════════════════════════
     else if (simPhase === 3) {
-        document.getElementById('hud-stage-name').innerHTML = 'TAHAP 3: PEMERIKSAAN X-RAY AVSEC <span class="text-[8px] px-1.5 py-0.5 rounded bg-amber-500/30 text-amber-200 font-extrabold">SCANNING</span>';
-        simProgress += dt * 0.082;
+        const lineX = getActiveXrayX();
+        document.getElementById('hud-stage-name').innerHTML = `TAHAP 3: PEMERIKSAAN X-RAY LINE ${activeBayNum} <span class="text-[8px] px-1.5 py-0.5 rounded bg-amber-500/30 text-amber-200 font-extrabold">SCANNING</span>`;
+        simProgress += dt * (activeBayNum === 2 ? 0.082 : 0.068);
         agentTickXray(); // AI Agent AVSEC: Perceive → Think → Act
 
-        // Kargo meluncur dari Portal RFID (-27.0) masuk terowongan X-Ray Line 2 (-18.5) hingga keluar di (-16.5)!
-        const easedZ = THREE.MathUtils.lerp(-27.0, -16.5, easeInOutQuad(Math.min(1.0, simProgress)));
-        activeCargoGroup.position.set(-5.0, 0.65, easedZ);
+        const t = Math.min(1.0, simProgress);
+        let curX = -5.0;
+        let curZ = -27.5;
+        if (activeBayNum === 2) {
+            curX = -5.0;
+            curZ = (t < 0.50)
+                ? THREE.MathUtils.lerp(-27.5, -19.0, easeInOutQuad(t / 0.50))
+                : THREE.MathUtils.lerp(-19.0, -14.8, easeInOutQuad((t - 0.50) / 0.50));
+        } else if (t < 0.14) {
+            curX = -5.0;
+            curZ = THREE.MathUtils.lerp(-27.5, -24.5, easeInOutQuad(t / 0.14));
+        } else if (t < 0.34) {
+            curX = THREE.MathUtils.lerp(-5.0, lineX, easeInOutQuad((t - 0.14) / 0.20));
+            curZ = -24.5;
+        } else if (t < 0.50) {
+            curX = lineX;
+            curZ = THREE.MathUtils.lerp(-24.5, -19.0, easeInOutQuad((t - 0.34) / 0.16));
+        } else {
+            curX = lineX;
+            curZ = THREE.MathUtils.lerp(-19.0, -14.8, easeInOutQuad((t - 0.50) / 0.50));
+        }
+        activeCargoGroup.position.set(curX, 0.65, curZ);
 
-        // Laser scan beam dan lampu terowongan pemindai X-Ray
-        if (easedZ >= -21.5 && easedZ <= -16.8) {
+        // Laser scan beam dan lampu terowongan pemindai X-Ray Line aktif
+        xrayScanLight.position.set(lineX, 2.5, -19.0);
+        if (curZ >= -21.6 && curZ <= -16.4 && Math.abs(curX - lineX) < 0.5) {
             xrayScanLight.intensity = 3.6 + Math.sin(Date.now() * 0.035) * 2.2;
-            xrBeaconMat.color.setHex(activeCargoData.xrayResult === 'SUSPECT' ? 0xEF4444 : 0x10B981);
+            getActiveXrBeaconMat().color.setHex(activeCargoData.xrayResult === 'SUSPECT' ? 0xEF4444 : 0x10B981);
         } else {
             xrayScanLight.intensity = 0;
         }
 
         if (simCameraMode === 'follow' && !isUserInteracting) {
-            camera.position.lerp(new THREE.Vector3(4.5, 6.2, easedZ + 5.5), dt * 2.8);
-            controls.target.lerp(new THREE.Vector3(-5.0, 1.6, easedZ), dt * 2.8);
+            camera.position.lerp(new THREE.Vector3(curX + 6.5, 6.5, curZ + 5.5), dt * 2.8);
+            controls.target.lerp(new THREE.Vector3(curX, 1.6, curZ), dt * 2.8);
         }
 
         if (simProgress >= 1.0) {
+            xrayScanLight.intensity = 0;
+            activeCargoGroup.position.set(lineX, 0.65, -14.8);
             simPhase = 4;
             simProgress = 0;
+            activeCargoGroup._divSoundPlayed = false;
 
             if (activeCargoData.xrayResult === 'SUSPECT') {
                 updateStepperUI(4, 4);
                 redAlarmStrobe.intensity = 6.0;
-                addSimLog(`🚨 [X-RAY ALERT] Terdeteksi anomali berbahaya (${activeCargoData.name})! Diverter mengalihkan kargo ke Ruang Karantina!`, true);
+                addSimLog(`🚨 [X-RAY ALERT] Terdeteksi anomali berbahaya (${activeCargoData.name}) di Line ${activeBayNum}! Diverter mengalihkan kargo ke Ruang Karantina!`, true);
                 showMilestone('BAHAN BERBAHAYA TERDETEKSI', 'Anomali X-Ray! Diverter mendorong kargo ke Ruang Karantina (3B).', 'fa-triangle-exclamation', true);
             } else {
                 updateStepperUI(4);
                 playSound('pass');
-                addSimLog(`✅ [X-RAY PASS] Kargo dinyatakan AMAN (CLEARED). Menerbitkan sertifikat CSD. Mengalir ke Central Storage.`);
+                addSimLog(`✅ [X-RAY PASS] Kargo dinyatakan AMAN (CLEARED) di Line ${activeBayNum}. Menerbitkan sertifikat CSD. Mengalir ke Central Storage.`);
                 showMilestone('X-RAY CLEARED', 'Kargo aman dan diterbitkan CSD. Meluncur lurus ke Central Storage.');
             }
         }
@@ -9398,30 +10388,52 @@ function updateSimulationPipeline(dt) {
     // FASE 4: PERCABANGAN (RUANG KARANTINA vs CENTRAL STORAGE)
     // ═════════════════════════════════════════════════════════════════════════
     else if (simPhase === 4) {
+        const lineX = getActiveXrayX();
         if (activeCargoData.xrayResult === 'SUSPECT') {
-            // ─── CABANG BERBAHAYA: MASUK RUANG KARANTINA & DITAHAN ───
+            // ─── CABANG BERBAHAYA: MANIFOLD -12.0 -> RUANG KARANTINA 3B ───
             document.getElementById('hud-stage-name').innerHTML = 'TAHAP 3B: ISOLASI RUANG KARANTINA <span class="text-[8px] px-1.5 py-0.5 rounded bg-rose-500/30 text-rose-200 font-extrabold">HOLD</span>';
-            simProgress += dt * 0.080;
+            simProgress += dt * (activeBayNum === 1 ? 0.068 : 0.080);
 
-            if (simProgress < 0.22) {
-                const pushT = Math.sin((simProgress / 0.22) * Math.PI);
-                divArm.position.x = 0.6 + pushT * 1.8;
-                if (simProgress > 0.04 && simProgress < 0.08) playSound('hydraulic');
+            const t = Math.min(1.0, simProgress);
+            const divStart = (activeBayNum === 1) ? 0.22 : 0.08;
+            const divEnd   = (activeBayNum === 1) ? 0.52 : 0.30;
+            if (t >= divStart && t <= divEnd) {
+                const pushT = Math.sin(((t - divStart) / (divEnd - divStart)) * Math.PI);
+                setDiverterPush(activeBayNum, pushT);
+                if (!activeCargoGroup._divSoundPlayed && pushT > 0.25) {
+                    activeCargoGroup._divSoundPlayed = true;
+                    playSound('hydraulic');
+                }
             } else {
-                divArm.position.x = 0.6;
+                resetDiverters();
             }
 
-            const curX = THREE.MathUtils.lerp(-5.0, 24.5, easeInOutCubic(Math.min(1.0, simProgress)));
-            activeCargoGroup.position.set(curX, 0.65, -16.5);
+            let curX = lineX;
+            let curY = 0.65;
+            let curZ = -12.0;
+            if (t < 0.14) {
+                curX = lineX;
+                curZ = THREE.MathUtils.lerp(-14.8, -12.0, easeInOutQuad(t / 0.14));
+            } else if (t < 0.90) {
+                curX = THREE.MathUtils.lerp(lineX, 22.0, easeInOutCubic((t - 0.14) / 0.76));
+                curZ = -12.0;
+            } else {
+                const u = easeInOutQuad((t - 0.90) / 0.10);
+                curX = THREE.MathUtils.lerp(22.0, 24.5, u);
+                curY = THREE.MathUtils.lerp(0.65, 1.05, u);
+                curZ = -12.0;
+            }
+            activeCargoGroup.position.set(curX, curY, curZ);
 
             redAlarmStrobe.intensity = (Math.sin(Date.now() * 0.02) > 0) ? 6.5 : 0.8;
 
             if (simCameraMode === 'follow' && !isUserInteracting) {
-                camera.position.lerp(new THREE.Vector3(curX - 7.0, 7.5, -7.5), dt * 2.8);
-                controls.target.lerp(new THREE.Vector3(curX, 1.8, -16.5), dt * 2.8);
+                camera.position.lerp(new THREE.Vector3(curX - 7.0, 7.5, -3.0), dt * 2.8);
+                controls.target.lerp(new THREE.Vector3(curX, 1.8, -12.0), dt * 2.8);
             }
 
             if (simProgress >= 1.0) {
+                resetDiverters();
                 activeCargoGroup.position.copy(WAYPOINTS.cargoQuarantineTable);
                 simActive = false;
                 addSimLog(`🛑 [KARANTINA COMPLETE] Kargo ${activeCargoData.name} diisolasi di Ruang Karantina. DILARANG ke Pesawat!`, true);
@@ -9447,25 +10459,42 @@ function updateSimulationPipeline(dt) {
                 });
             }
         } else {
-            // ─── CABANG AMAN: CENTRAL STORAGE & PERAKITAN ULD ───
+            // ─── CABANG AMAN: MERGE KE CENTRAL STORAGE & PERAKITAN ULD ───
             document.getElementById('hud-stage-name').innerHTML = 'TAHAP 4: STORAGE &amp; PERAKITAN ULD <span class="text-[8px] px-1.5 py-0.5 rounded bg-emerald-500/30 text-emerald-200 font-extrabold">BUILD-UP</span>';
-            simProgress += dt * 0.075;
+            simProgress += dt * (activeBayNum === 2 ? 0.075 : 0.068);
+            const t = Math.min(1.0, simProgress);
 
-            if (simProgress < 0.55) {
-                // Meluncur 100% LURUS di atas konveyor utama dari X-Ray (-16.5) ke Corner Transfer Bed (8.0) di X = -5.0
-                const subT = easeInOutQuad(simProgress / 0.55);
-                activeCargoGroup.position.set(-5.0, 0.65, THREE.MathUtils.lerp(-16.5, 8.0, subT));
-            } else if (simProgress < 0.78) {
-                // Berbelok mulus di corner bed dan meluncur ke timur masuk meja ULD di (0.0, 8.0)
-                const subT = easeInOutQuad((simProgress - 0.55) / 0.23);
-                activeCargoGroup.position.set(THREE.MathUtils.lerp(-5.0, 0.0, subT), 0.65, 8.0);
+            if (activeBayNum === 2) {
+                if (t < 0.55) {
+                    const subT = easeInOutQuad(t / 0.55);
+                    activeCargoGroup.position.set(-5.0, 0.65, THREE.MathUtils.lerp(-14.8, 8.0, subT));
+                } else if (t < 0.78) {
+                    const subT = easeInOutQuad((t - 0.55) / 0.23);
+                    activeCargoGroup.position.set(THREE.MathUtils.lerp(-5.0, 0.0, subT), 0.65, 8.0);
+                } else {
+                    activeCargoGroup.position.set(0.0, 0.65, 8.0);
+                    const buildT = (t - 0.78) / 0.22;
+                    if (buildT > 0.4) {
+                        palWoodGroup.visible = false;
+                        palUldGroup.visible = true;
+                    }
+                }
             } else {
-                // Di stasiun perakitan ULD (0.0, 8.0), kargo dirakit ke kontainer ULD AKE
-                activeCargoGroup.position.set(0.0, 0.65, 8.0);
-                const buildT = (simProgress - 0.78) / 0.22;
-                if (buildT > 0.4) {
-                    palWoodGroup.visible = false;
-                    palUldGroup.visible = true;
+                if (t < 0.10) {
+                    activeCargoGroup.position.set(lineX, 0.65, THREE.MathUtils.lerp(-14.8, -12.0, easeInOutQuad(t / 0.10)));
+                } else if (t < 0.28) {
+                    activeCargoGroup.position.set(THREE.MathUtils.lerp(lineX, -5.0, easeInOutQuad((t - 0.10) / 0.18)), 0.65, -12.0);
+                } else if (t < 0.62) {
+                    activeCargoGroup.position.set(-5.0, 0.65, THREE.MathUtils.lerp(-12.0, 8.0, easeInOutQuad((t - 0.28) / 0.34)));
+                } else if (t < 0.80) {
+                    activeCargoGroup.position.set(THREE.MathUtils.lerp(-5.0, 0.0, easeInOutQuad((t - 0.62) / 0.18)), 0.65, 8.0);
+                } else {
+                    activeCargoGroup.position.set(0.0, 0.65, 8.0);
+                    const buildT = (t - 0.80) / 0.20;
+                    if (buildT > 0.4) {
+                        palWoodGroup.visible = false;
+                        palUldGroup.visible = true;
+                    }
                 }
             }
 
@@ -9652,6 +10681,7 @@ window.addEventListener('resize', () => {
 
 // Auto-start check from URL parameter
 window.addEventListener('DOMContentLoaded', () => {
+    setActiveDockBay(activeBayNum);
     const params = new URLSearchParams(window.location.search);
     if (params.get('autostart') === '1') {
         setTimeout(() => {
